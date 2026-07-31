@@ -56,7 +56,12 @@ export default function LoginPage() {
         </label>
 
         <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
-          Senha
+          <span className="flex items-center justify-between">
+            Senha
+            <Link href="/esqueci-senha" className="text-xs font-normal text-yellow-400 underline underline-offset-2">
+              Esqueci minha senha
+            </Link>
+          </span>
           <input
             required
             type="password"
