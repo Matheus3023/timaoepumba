@@ -126,7 +126,7 @@ export function HomeView({
               <ChatIcon width={19} height={19} />
             </div>
             <div>
-              <p className="font-semibold text-white">Comunidade</p>
+              <p className="font-semibold text-white">Bate-papo</p>
               <p className="text-xs text-neutral-400">
                 {communityUnlocked ? "Salas, enquetes e resenha ao vivo" : "Confirme o cadastro para liberar"}
               </p>

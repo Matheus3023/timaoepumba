@@ -11,6 +11,12 @@ export interface League {
   logoUrl?: string | null;
 }
 
+export interface MatchOdds {
+  home: number;
+  draw: number;
+  away: number;
+}
+
 export interface Match {
   id: string;
   league: League;
@@ -21,6 +27,7 @@ export interface Match {
   status: "scheduled" | "live" | "finished" | "postponed" | "canceled";
   kickoffAt: string;
   minute?: number | null;
+  odds?: MatchOdds | null;
 }
 
 export interface MatchEvent {
@@ -32,9 +39,20 @@ export interface MatchEvent {
   detail?: string | null;
 }
 
+export interface MatchLineup {
+  teamId: string;
+  formation?: string | null;
+  players: string[];
+}
+
+export interface MomentumPoint {
+  minute: number;
+  value: number;
+}
+
 export interface MatchDetails extends Match {
   events: MatchEvent[];
-  lineups?: { teamId: string; players: string[] }[];
+  lineups?: MatchLineup[];
   statistics?: Record<string, { home: number | string; away: number | string }>;
 }
 
@@ -82,6 +100,8 @@ export interface SportsDataProvider {
   getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>>;
   getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]>;
   getTeamRecentMatches(teamId: string, limit?: number): Promise<HeadToHeadMatch[]>;
+  getMatchLineups(matchId: string): Promise<MatchLineup[]>;
+  getMatchMomentum(matchId: string): Promise<MomentumPoint[]>;
   getStandingsForMatch(matchId: string): Promise<Standing[]>;
   getStandings(leagueId: string): Promise<Standing[]>;
   getTeamDetails(teamId: string): Promise<TeamDetails>;

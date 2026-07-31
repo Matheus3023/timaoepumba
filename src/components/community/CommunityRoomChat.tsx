@@ -43,10 +43,12 @@ interface ChatMessage {
 export function CommunityRoomChat({
   roomId,
   currentUserId,
+  currentUserName,
   initialMessages,
 }: {
   roomId: string;
   currentUserId: string;
+  currentUserName: string;
   initialMessages: ChatMessage[];
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -54,8 +56,29 @@ export function CommunityRoomChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
+  const [onlineCount, setOnlineCount] = useState(1);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [supabase] = useState<SupabaseClient<Database>>(() => createClient());
+
+  useEffect(() => {
+    const presenceChannel = supabase.channel(`community_presence:${roomId}`, {
+      config: { presence: { key: currentUserId } },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(presenceChannel.presenceState()).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ name: currentUserName });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [roomId, currentUserId, currentUserName, supabase]);
 
   useEffect(() => {
     const channel = supabase
@@ -132,6 +155,11 @@ export function CommunityRoomChat({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex items-center gap-1.5 border-b border-neutral-800 px-4 py-2 text-xs text-neutral-400">
+        <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-emerald-400" />
+        {onlineCount} {onlineCount === 1 ? "pessoa online agora" : "pessoas online agora"}
+      </div>
+
       <div className="flex-1 overflow-y-auto px-4">
         <div className="flex flex-col gap-2 pb-4">
           {messages.map((message) => {

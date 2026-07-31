@@ -18,11 +18,13 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  const [h2h, standings, homeTeamRecent, awayTeamRecent] = await Promise.all([
+  const [h2h, standings, homeTeamRecent, awayTeamRecent, lineups, momentum] = await Promise.all([
     provider.getHeadToHead(id).catch(() => []),
     provider.getStandingsForMatch(id).catch(() => []),
     provider.getTeamRecentMatches(match.homeTeam.id, 5).catch(() => []),
     provider.getTeamRecentMatches(match.awayTeam.id, 5).catch(() => []),
+    provider.getMatchLineups(id).catch(() => []),
+    provider.getMatchMomentum(id).catch(() => []),
   ]);
 
   const supabase = await createServerSupabaseClient();
@@ -73,6 +75,14 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
             <p className="text-sm font-medium text-white">{match.awayTeam.name}</p>
           </div>
         </div>
+
+        {match.odds && match.status !== "finished" && (
+          <div className="mt-4 flex gap-2 border-t border-white/5 pt-3">
+            <OddsBlock label="Casa" value={match.odds.home} />
+            <OddsBlock label="Empate" value={match.odds.draw} />
+            <OddsBlock label="Fora" value={match.odds.away} />
+          </div>
+        )}
       </div>
 
       <MatchDetailTabs
@@ -81,12 +91,25 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         events={match.events}
         statistics={match.statistics ?? {}}
         standings={standings}
+        homeTeamId={match.homeTeam.id}
+        awayTeamId={match.awayTeam.id}
         homeTeamName={match.homeTeam.name}
         awayTeamName={match.awayTeam.name}
         h2h={h2h}
         homeTeamRecent={homeTeamRecent}
         awayTeamRecent={awayTeamRecent}
+        lineups={lineups}
+        momentum={momentum}
       />
+    </div>
+  );
+}
+
+function OddsBlock({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-xl bg-neutral-900/60 py-2">
+      <span className="text-[10px] uppercase tracking-wide text-neutral-500">{label}</span>
+      <span className="text-sm font-bold text-white">{value.toFixed(2)}</span>
     </div>
   );
 }

@@ -33,12 +33,15 @@ export default async function CommunityRoomPage({ params }: { params: Promise<{ 
     .limit(50);
 
   const authorIds = [...new Set((initialMessages ?? []).map((m) => m.user_id))];
-  const [{ data: authors }, { data: authorMemberships }] = authorIds.length
-    ? await Promise.all([
-        admin.from("users").select("id, full_name").in("id", authorIds),
-        admin.from("community_members").select("user_id, role").eq("room_id", room.id).in("user_id", authorIds),
-      ])
-    : [{ data: [] as { id: string; full_name: string | null }[] }, { data: [] as { user_id: string; role: string }[] }];
+  const [{ data: authors }, { data: authorMemberships }, { data: currentUser }] = await Promise.all([
+    authorIds.length
+      ? admin.from("users").select("id, full_name").in("id", authorIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+    authorIds.length
+      ? admin.from("community_members").select("user_id, role").eq("room_id", room.id).in("user_id", authorIds)
+      : Promise.resolve({ data: [] as { user_id: string; role: string }[] }),
+    admin.from("users").select("full_name").eq("id", user!.id).maybeSingle(),
+  ]);
   const authorNameById = new Map((authors ?? []).map((a) => [a.id, a.full_name ?? "Torcedor"]));
   const authorRoleById = new Map((authorMemberships ?? []).map((m) => [m.user_id, m.role]));
 
@@ -54,6 +57,7 @@ export default async function CommunityRoomPage({ params }: { params: Promise<{ 
       <CommunityRoomChat
         roomId={room.id}
         currentUserId={user!.id}
+        currentUserName={currentUser?.full_name ?? "Torcedor"}
         initialMessages={(initialMessages ?? []).reverse().map((m) => ({
           id: m.id,
           user_id: m.user_id,

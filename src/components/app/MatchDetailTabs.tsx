@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { HeadToHeadMatch, MatchEvent, Standing } from "@/lib/sports/types";
+import type { HeadToHeadMatch, MatchEvent, MatchLineup, MomentumPoint, Standing } from "@/lib/sports/types";
 
-const TABS = ["Resumo", "Eventos", "Estatisticas", "Classificacao", "H2H"] as const;
+const TABS = ["Resumo", "Eventos", "Estatisticas", "Escalacoes", "Momentum", "Classificacao", "H2H"] as const;
 
 const EVENT_LABEL: Record<MatchEvent["type"], string> = {
   goal: "⚽ Gol",
@@ -24,22 +24,30 @@ export function MatchDetailTabs({
   events,
   statistics,
   standings,
+  homeTeamId,
+  awayTeamId,
   homeTeamName,
   awayTeamName,
   h2h,
   homeTeamRecent,
   awayTeamRecent,
+  lineups,
+  momentum,
 }: {
   kickoffLabel: string;
   competition: string;
   events: MatchEvent[];
   statistics: Record<string, { home: number | string; away: number | string }>;
   standings: Standing[];
+  homeTeamId: string;
+  awayTeamId: string;
   homeTeamName: string;
   awayTeamName: string;
   h2h: HeadToHeadMatch[];
   homeTeamRecent: HeadToHeadMatch[];
   awayTeamRecent: HeadToHeadMatch[];
+  lineups: MatchLineup[];
+  momentum: MomentumPoint[];
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
   const statEntries = Object.entries(statistics);
@@ -100,6 +108,50 @@ export function MatchDetailTabs({
             </div>
           ) : (
             <EmptyState text="Estatisticas indisponiveis para esta partida." />
+          ))}
+
+        {tab === "Escalacoes" &&
+          (lineups.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {lineups.map((lineup) => (
+                <div key={lineup.teamId} className="card">
+                  <p className="text-xs text-neutral-500">
+                    {lineup.teamId === homeTeamId ? homeTeamName : lineup.teamId === awayTeamId ? awayTeamName : "Time"}
+                    {lineup.formation && ` • ${lineup.formation}`}
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-200">
+                    {lineup.players.map((player, i) => (
+                      <li key={i}>{player}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState text="Escalacoes indisponiveis para esta partida ainda." />
+          ))}
+
+        {tab === "Momentum" &&
+          (momentum.length > 0 ? (
+            <div className="card">
+              <div className="flex h-32 items-end gap-0.5">
+                {momentum.map((point, i) => {
+                  const height = Math.min(Math.abs(point.value), 100);
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center justify-end" style={{ height: "100%" }}>
+                      <div
+                        className={`w-full rounded-sm ${point.value >= 0 ? "bg-yellow-400" : "bg-neutral-600"}`}
+                        style={{ height: `${height}%` }}
+                        title={`${point.minute}': ${point.value}`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-center text-xs text-neutral-500">Pressao ao longo da partida (amarelo = casa)</p>
+            </div>
+          ) : (
+            <EmptyState text="Momentum indisponivel para esta partida." />
           ))}
 
         {tab === "Classificacao" &&

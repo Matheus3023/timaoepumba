@@ -5,6 +5,8 @@ import type {
   Match,
   MatchDetails,
   MatchEvent,
+  MatchLineup,
+  MomentumPoint,
   SportsDataProvider,
   Standing,
   TeamDetails,
@@ -116,6 +118,14 @@ export class MockSportsDataProvider implements SportsDataProvider {
   }
 
   async getTeamRecentMatches(): Promise<HeadToHeadMatch[]> {
+    return [];
+  }
+
+  async getMatchLineups(): Promise<MatchLineup[]> {
+    return [];
+  }
+
+  async getMatchMomentum(): Promise<MomentumPoint[]> {
     return [];
   }
 

@@ -54,7 +54,24 @@ export function MatchRow({ match }: { match: Match }) {
           highlight={awayWon}
         />
       </div>
+
+      {match.odds && !isFinished && (
+        <div className="flex gap-1.5 pl-1">
+          <OddsPill label="1" value={match.odds.home} />
+          <OddsPill label="X" value={match.odds.draw} />
+          <OddsPill label="2" value={match.odds.away} />
+        </div>
+      )}
     </Link>
+  );
+}
+
+function OddsPill({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="flex flex-1 items-center justify-between rounded-lg bg-neutral-800/70 px-2 py-1 text-xs text-neutral-300">
+      <span className="text-neutral-500">{label}</span>
+      <span className="font-semibold text-white">{value.toFixed(2)}</span>
+    </span>
   );
 }
 

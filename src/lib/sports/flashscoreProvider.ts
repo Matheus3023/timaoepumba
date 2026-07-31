@@ -5,6 +5,8 @@ import type {
   Match,
   MatchDetails,
   MatchEvent,
+  MatchLineup,
+  MomentumPoint,
   SportsDataProvider,
   Standing,
   TeamDetails,
@@ -36,6 +38,7 @@ interface RawMatch {
   home_team: RawTeam;
   away_team: RawTeam;
   scores: { home: number | null; away: number | null };
+  odds?: { "1"?: number | string; X?: number | string; "2"?: number | string } | unknown[];
 }
 
 interface RawTournamentGroup {
@@ -66,6 +69,16 @@ function mapTeam(raw: RawTeam): Match["homeTeam"] {
   return { id: raw.team_id, name: raw.short_name || raw.name, logoUrl: raw.small_image_path ?? null };
 }
 
+/** matches/list odds come back as {"1": home, "X": draw, "2": away} pre-match, or [] when no market exists. */
+function mapOdds(raw: RawMatch["odds"]): Match["odds"] {
+  if (!raw || Array.isArray(raw)) return null;
+  const home = Number(raw["1"]);
+  const draw = Number(raw.X);
+  const away = Number(raw["2"]);
+  if (!Number.isFinite(home) || !Number.isFinite(draw) || !Number.isFinite(away)) return null;
+  return { home, draw, away };
+}
+
 function mapMatch(raw: RawMatch, league: League): Match {
   const minute = raw.match_status.live_minute;
   return {
@@ -78,6 +91,7 @@ function mapMatch(raw: RawMatch, league: League): Match {
     status: mapStatus(raw.match_status),
     kickoffAt: new Date(raw.timestamp * 1000).toISOString(),
     minute: minute === null || minute === undefined ? null : Number(minute),
+    odds: mapOdds(raw.odds),
   };
 }
 
@@ -357,6 +371,44 @@ export class FlashscoreProvider implements SportsDataProvider {
       .map((item, index) => this.mapGenericMatchRow(item, index, `${teamId}_recent`))
       .filter((m): m is HeadToHeadMatch => m !== null)
       .slice(0, limit);
+  }
+
+  async getMatchLineups(matchId: string): Promise<MatchLineup[]> {
+    const payload = await this.request<unknown>("matches/match/lineups", { match_id: matchId });
+    const rows = pickArray(payload, ["lineups", "teams"]);
+
+    return rows
+      .map((item): MatchLineup | null => {
+        const raw = item as Record<string, unknown>;
+        const teamId = pickString(raw, ["team_id", "teamId"]);
+        if (!teamId) return null;
+        const playerRows = pickArray(raw, ["players", "starting_lineup", "lineup"]);
+        const players = playerRows
+          .map((p) => pickString(p as Record<string, unknown>, ["name", "player_name", "short_name"]))
+          .filter(Boolean);
+        if (players.length === 0) return null;
+        return {
+          teamId,
+          formation: pickString(raw, ["formation"]) || null,
+          players,
+        };
+      })
+      .filter((l): l is MatchLineup => l !== null);
+  }
+
+  async getMatchMomentum(matchId: string): Promise<MomentumPoint[]> {
+    const payload = await this.request<unknown>("matches/momentum", { match_id: matchId });
+    const rows = pickArray(payload, ["momentum", "data", "points"]);
+
+    return rows
+      .map((item): MomentumPoint | null => {
+        const raw = item as Record<string, unknown>;
+        const minute = pickNumber(raw, ["minute", "time"], NaN);
+        const value = pickNumber(raw, ["value", "momentum", "power"], NaN);
+        if (Number.isNaN(minute) || Number.isNaN(value)) return null;
+        return { minute, value };
+      })
+      .filter((p): p is MomentumPoint => p !== null);
   }
 
   /** matches/standings (match-scoped, distinct from tournaments/standings) — takes just a match_id. */
