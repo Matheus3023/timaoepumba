@@ -19,18 +19,22 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
-    setSubmitting(false);
+      if (signInError) {
+        setError("E-mail ou senha invalidos.");
+        return;
+      }
 
-    if (signInError) {
-      setError("E-mail ou senha invalidos.");
-      return;
+      router.push("/home");
+      router.refresh();
+    } catch {
+      setError("Nao foi possivel conectar. Verifique sua internet e tente novamente.");
+    } finally {
+      setSubmitting(false);
     }
-
-    router.push("/home");
-    router.refresh();
   }
 
   return (
