@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
+import { SmarticoDebugClient } from "@/components/admin/SmarticoDebugClient";
 
 async function saveConfig(formData: FormData) {
   "use server";
@@ -140,6 +141,10 @@ export default async function AdminAffiliatePage() {
           </p>
         </section>
       )}
+
+      <div className="mt-8 border-t border-neutral-800 pt-6">
+        <SmarticoDebugClient canWrite={canWrite(access, "afiliados")} />
+      </div>
     </div>
   );
 }
