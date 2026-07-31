@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 const PALETTES = [
   "from-emerald-500 to-emerald-700",
   "from-yellow-400 to-amber-600",
@@ -22,7 +26,25 @@ function initialsFor(name: string): string {
     .join("");
 }
 
-export function TeamAvatar({ name, size = 28 }: { name: string; size?: number }) {
+/** Renders the real team crest when available (Flashscore's small_image_path), falling back to a colored-initials avatar if there's no logo or it fails to load. */
+export function TeamAvatar({ name, logoUrl, size = 28 }: { name: string; logoUrl?: string | null; size?: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (logoUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- external, unpredictable Flashscore CDN host; not worth next/image remote-pattern config for a small badge icon
+      <img
+        src={logoUrl}
+        alt={name}
+        width={size}
+        height={size}
+        onError={() => setFailed(true)}
+        className="shrink-0 rounded-full bg-neutral-900 object-contain ring-1 ring-white/10"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   return (
     <div
       className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white/90 ${paletteFor(name)}`}

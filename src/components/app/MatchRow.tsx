@@ -7,8 +7,8 @@ export function MatchRow({ match }: { match: Match }) {
     <Link href={`/jogos/${match.id}`} className="card flex items-center justify-between transition-transform hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
         <div className="flex -space-x-2">
-          <TeamAvatar name={match.homeTeam.name} />
-          <TeamAvatar name={match.awayTeam.name} />
+          <TeamAvatar name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} />
+          <TeamAvatar name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} />
         </div>
         <div>
           <p className="text-[11px] text-neutral-500">{match.league.name}</p>
