@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Match } from "@/lib/sports/types";
-import { TeamAvatar } from "@/components/app/TeamAvatar";
+import { MatchRow } from "@/components/app/MatchRow";
 import { CheckCircleIcon, ChatIcon, LockIcon } from "@/components/icons";
 
 const RISK_STYLE: Record<string, string> = {
@@ -180,34 +180,4 @@ function Section({
 
 function EmptyState({ text }: { text: string }) {
   return <p className="card text-sm text-neutral-500">{text}</p>;
-}
-
-function MatchRow({ match }: { match: Match }) {
-  return (
-    <Link href={`/jogos/${match.id}`} className="card flex items-center justify-between transition-transform hover:-translate-y-0.5">
-      <div className="flex items-center gap-3">
-        <div className="flex -space-x-2">
-          <TeamAvatar name={match.homeTeam.name} />
-          <TeamAvatar name={match.awayTeam.name} />
-        </div>
-        <div>
-          <p className="text-[11px] text-neutral-500">{match.league.name}</p>
-          <p className="text-sm font-medium text-white">
-            {match.homeTeam.name} <span className="text-neutral-600">vs</span> {match.awayTeam.name}
-          </p>
-        </div>
-      </div>
-      <div className="text-right">
-        {match.status === "live" ? (
-          <span className="badge bg-red-500/15 text-red-300">
-            {match.homeScore}-{match.awayScore} • {match.minute}&apos;
-          </span>
-        ) : (
-          <span className="text-xs text-neutral-400">
-            {new Date(match.kickoffAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
-      </div>
-    </Link>
-  );
 }

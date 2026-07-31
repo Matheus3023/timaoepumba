@@ -17,11 +17,14 @@ export default async function CommunityRoomsPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <h1 className="text-xl font-bold text-white">Comunidade</h1>
-      <p className="text-sm text-neutral-400">Salas por campeonato. Comente, reaja e vote em enquetes.</p>
+      <p className="text-sm text-neutral-400">
+        Bate-papo ao vivo com quem tem o app instalado. Salas por campeonato liberam depois do cadastro na parceira.
+      </p>
 
       <div className="mt-4 flex flex-col gap-2">
         {rooms?.map((room) => {
           const unlocked = memberRoomIds.has(room.id);
+          const isLiveChat = room.slug === "resenha-geral";
           return (
             <Link
               key={room.id}
@@ -29,7 +32,10 @@ export default async function CommunityRoomsPage() {
               className="card flex items-center justify-between"
             >
               <div>
-                <p className="font-semibold text-white">{room.name}</p>
+                <p className="flex items-center gap-1.5 font-semibold text-white">
+                  {isLiveChat && unlocked && <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-500" />}
+                  {room.name}
+                </p>
                 {room.description && <p className="text-sm text-neutral-400">{room.description}</p>}
               </div>
               {!unlocked && <span className="badge bg-neutral-700/50 text-neutral-300">🔒</span>}

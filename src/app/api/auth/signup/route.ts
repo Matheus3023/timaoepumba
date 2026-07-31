@@ -7,6 +7,7 @@ import { attachUserIdToLead } from "@/lib/tracking/persistAttribution";
 import { trackServerEvent } from "@/lib/tracking/events";
 import { logTimelineEvent } from "@/lib/crm/timeline";
 import { moveUserToStage } from "@/lib/crm/pipeline";
+import { syncCommunityMembership } from "@/lib/entitlements/rules";
 import { calculateAge, MINIMUM_AGE, PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal/versions";
 
 const bodySchema = z.object({
@@ -84,6 +85,10 @@ export async function POST(request: NextRequest) {
       { user_id: userId, consent_type: "marketing", granted: payload.marketing_consent, version: TERMS_VERSION },
     ]),
     attachUserIdToLead(leadId, userId),
+    // Drops the user straight into every room unlocked at APP_USER (the live
+    // chat) — the rest of the community unlocks progressively via
+    // promoteAccessLevel as the user advances through the funnel.
+    syncCommunityMembership(userId, "APP_USER"),
   ]);
 
   // Automations sec. 19.1 "Conta criada"
