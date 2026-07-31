@@ -13,13 +13,12 @@ export default async function CommunityRoomsPage() {
   // Membership self-heal now runs once per app view in (app)/layout.tsx,
   // covering every page, not just this one.
   const [{ data: rooms }, { data: memberships }] = await Promise.all([
-    supabase.from("community_rooms").select("*").eq("is_active", true).order("position"),
+    supabase.from("community_rooms").select("*").eq("is_active", true).eq("slug", LIVE_CHAT_SLUG).order("position"),
     supabase.from("community_members").select("room_id").eq("user_id", user!.id),
   ]);
 
   const memberRoomIds = new Set((memberships ?? []).map((m) => m.room_id));
   const liveChat = rooms?.find((r) => r.slug === LIVE_CHAT_SLUG);
-  const topicRooms = rooms?.filter((r) => r.slug !== LIVE_CHAT_SLUG) ?? [];
   const liveChatUnlocked = liveChat ? memberRoomIds.has(liveChat.id) : false;
 
   return (
@@ -50,31 +49,6 @@ export default async function CommunityRoomsPage() {
             <span className="badge shrink-0 bg-neutral-700/50 text-neutral-300">🔒</span>
           )}
         </Link>
-      )}
-
-      {topicRooms.length > 0 && (
-        <>
-          <h2 className="mb-2 mt-6 text-sm font-semibold text-neutral-200">Salas por campeonato</h2>
-          <p className="mb-2 text-xs text-neutral-500">Liberam depois do cadastro confirmado na casa parceira.</p>
-          <div className="flex flex-col gap-2">
-            {topicRooms.map((room) => {
-              const unlocked = memberRoomIds.has(room.id);
-              return (
-                <Link
-                  key={room.id}
-                  href={unlocked ? `/comunidade/${room.slug}` : "/home"}
-                  className="card flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-white">{room.name}</p>
-                    {room.description && <p className="text-sm text-neutral-400">{room.description}</p>}
-                  </div>
-                  {!unlocked && <span className="badge bg-neutral-700/50 text-neutral-300">🔒</span>}
-                </Link>
-              );
-            })}
-          </div>
-        </>
       )}
     </div>
   );

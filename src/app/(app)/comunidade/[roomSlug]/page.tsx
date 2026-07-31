@@ -49,13 +49,9 @@ export default async function CommunityRoomPage({ params }: { params: Promise<{ 
 
   return (
     <div className="flex h-[calc(100dvh-4rem)] flex-col">
-      <header className="px-4 py-3">
-        <h1 className="text-lg font-bold text-white">{room.name}</h1>
-        {room.description && <p className="text-sm text-neutral-400">{room.description}</p>}
-      </header>
-
       <CommunityRoomChat
         roomId={room.id}
+        roomName={room.name}
         currentUserId={user!.id}
         currentUserName={currentUser?.full_name ?? "Torcedor"}
         initialMessages={(initialMessages ?? []).reverse().map((m) => ({

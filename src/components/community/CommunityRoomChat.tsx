@@ -42,11 +42,13 @@ interface ChatMessage {
  */
 export function CommunityRoomChat({
   roomId,
+  roomName,
   currentUserId,
   currentUserName,
   initialMessages,
 }: {
   roomId: string;
+  roomName: string;
   currentUserId: string;
   currentUserName: string;
   initialMessages: ChatMessage[];
@@ -155,9 +157,12 @@ export function CommunityRoomChat({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-1.5 border-b border-neutral-800 px-4 py-2 text-xs text-neutral-400">
-        <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-emerald-400" />
-        {onlineCount} {onlineCount === 1 ? "pessoa online agora" : "pessoas online agora"}
+      <div className="flex items-center justify-between gap-2 border-b border-neutral-800 px-4 py-1.5">
+        <h1 className="truncate text-sm font-semibold text-white">{roomName}</h1>
+        <div className="flex shrink-0 items-center gap-1 text-[11px] text-neutral-400">
+          <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-emerald-400" />
+          {onlineCount}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4">
