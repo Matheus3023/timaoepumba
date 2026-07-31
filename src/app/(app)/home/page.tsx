@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getSportsDataProvider } from "@/lib/sports";
+import { CACHE_TTL_SECONDS, getOrSetCache } from "@/lib/sports/cache";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { HomeView } from "@/components/app/HomeView";
 
@@ -20,7 +21,10 @@ export default async function HomePage() {
   ]);
 
   const provider = getSportsDataProvider();
-  const [todayMatches, liveMatches] = await Promise.all([provider.getTodayMatches(), provider.getLiveMatches()]);
+  const [{ data: todayMatches }, { data: liveMatches }] = await Promise.all([
+    getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () => provider.getTodayMatches()),
+    getOrSetCache("live_matches", CACHE_TTL_SECONDS.liveMatches, () => provider.getLiveMatches()),
+  ]);
 
   const accessLevel = appUser?.access_level ?? "APP_USER";
   const registrationDone = accessLevel !== "APP_USER" && accessLevel !== "VISITOR";

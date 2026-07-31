@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { getSportsDataProvider } from "@/lib/sports";
+import { CACHE_TTL_SECONDS, getOrSetCache } from "@/lib/sports/cache";
 
 export default async function MatchesPage() {
   const provider = getSportsDataProvider();
-  const matches = await provider.getTodayMatches();
+  const { data: matches } = await getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () =>
+    provider.getTodayMatches()
+  );
 
   const grouped = matches.reduce<Record<string, typeof matches>>((acc, match) => {
     const key = match.league.name;
