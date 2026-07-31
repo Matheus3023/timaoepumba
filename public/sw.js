@@ -19,7 +19,11 @@ self.addEventListener("activate", (event) => {
 // checks for a fetch handler) and gives a minimal offline shell, per PRD
 // sec. 12.5 "evitar que o aplicativo fique completamente fora do ar".
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  // Only cache same-origin http(s) GETs — the Cache API rejects other
+  // schemes (chrome-extension:, moz-extension:, etc.) that browser
+  // extensions can trigger fetches for.
+  if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(event.request)
