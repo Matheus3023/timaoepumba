@@ -63,6 +63,13 @@ export async function POST(request: NextRequest) {
       method: parsed.data.method,
       headers,
       cache: "no-store",
+      // Without this, a Smartico host that just hangs (e.g. an IP not
+      // allowlisted, silently dropping the connection instead of
+      // rejecting it) lets the serverless function run past its platform
+      // timeout, which kills it with an empty body — the browser then
+      // fails on response.json() with a useless "unexpected end of JSON
+      // input" instead of a real error we can show.
+      signal: AbortSignal.timeout(8000),
     });
 
     const durationMs = Date.now() - startedAt;
@@ -82,8 +89,14 @@ export async function POST(request: NextRequest) {
       body,
     });
   } catch (error) {
+    const isTimeout = error instanceof Error && error.name === "TimeoutError";
     return NextResponse.json(
-      { error: "fetch_failed", message: (error as Error).message },
+      {
+        error: isTimeout ? "timeout" : "fetch_failed",
+        message: isTimeout
+          ? "Smartico nao respondeu em 8s — host pode estar bloqueando o IP do servidor (checar allowlist de IP na Smartico) ou a URL base esta errada."
+          : (error as Error).message,
+      },
       { status: 502 }
     );
   }
