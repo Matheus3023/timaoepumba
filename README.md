@@ -91,17 +91,31 @@ Seguindo a ordem de prioridade do PRD (secao 32: fluxo antes de interface):
    `src/components/ServiceWorkerRegistration.tsx`): instalavel, com
    service worker cuidando de push notifications e um shell offline
    minimo.
+10. **Moderacao de comunidade** (`supabase/migrations/0004_moderation.sql`,
+    `src/lib/moderation/`, `/admin/comunidade`): trigger no banco bloqueia
+    links de usuarios comuns, filtra palavras banidas (mascara, nao
+    rejeita a mensagem inteira) e impede envio de usuarios mutados/
+    restritos — nao depende do client React respeitar as regras. Painel
+    admin com fila de denuncias (excluir mensagem / silenciar na sala /
+    bloquear conta), lista de palavras banidas e log de acoes. Usuario
+    pode denunciar mensagens pelo chat.
+11. **Automacoes de reativacao D3/D7/D15** (`src/lib/automations/
+    reactivation.ts`, `POST /api/automations/run-inactivity`): job
+    protegido por secret (`AUTOMATIONS_CRON_SECRET`) para agendar via n8n
+    ou Vercel Cron. D3 envia push de conteudo, D7 move para o estagio "Em
+    reativacao" do pipeline e envia push, D15 reduz a frequencia de
+    comunicacao. A automacao e interrompida assim que o usuario volta
+    (detectado no flush de sessao — `markUserActive`), que limpa as tags e
+    devolve o usuario ao estagio "Usuario ativo".
 
 ## O que fica para depois
 
 - Integracao real com Flashscore4/RapidAPI (endpoints reais nao foram
   inventados — ver `docs/sports-data-provider.md`).
 - Integracao real com Google Ads Conversions (requer client OAuth completo).
-- Moderacao de comunidade completa (a primitiva `restrictUser` existe em
-  `src/lib/entitlements/rules.ts`, mas nao ha UI dedicada).
-- Segmentacao dinamica de CRM e automacoes agendadas (n8n) — o webhook do
-  n8n ja e chamado para notificar a equipe em FTDs, mas fluxos completos de
-  reativacao (D3/D7/D15) nao foram implementados.
+- Segmentacao dinamica de CRM (criar segmentos salvos via UI) — hoje as
+  tags/pipeline existem e sao usadas pelas automacoes, mas nao ha
+  construtor de segmentos no admin.
 - App nativo para lojas (fora do escopo inicial, por definicao do PRD).
 
 ## Observacoes tecnicas

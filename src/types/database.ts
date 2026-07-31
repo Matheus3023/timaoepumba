@@ -611,6 +611,10 @@ export type Database = {
         { id: string; user_id: string; opted_out_at: string; reason: string | null },
         Partial<{ id: string; user_id: string; opted_out_at: string; reason: string | null }>
       >;
+      banned_words: TableDef<
+        { id: string; word: string; created_at: string },
+        Partial<{ id: string; word: string; created_at: string }>
+      >;
       automation_runs: TableDef<AutomationRunRow, Partial<AutomationRunRow>>;
       audit_logs: TableDef<AuditLogRow, Partial<AuditLogRow>>;
       system_settings: TableDef<SystemSettingRow, Partial<SystemSettingRow>>;

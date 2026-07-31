@@ -5,6 +5,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 
+function mapMessageError(message: string): string {
+  if (message.includes("links_not_allowed")) return "Links nao sao permitidos para usuarios comuns.";
+  if (message.includes("user_muted")) return "Voce foi silenciado nesta sala.";
+  if (message.includes("user_restricted")) return "Sua conta esta restrita e nao pode enviar mensagens.";
+  return "Nao foi possivel enviar a mensagem.";
+}
+
 interface ChatMessage {
   id: string;
   user_id: string;
@@ -32,6 +39,8 @@ export function CommunityRoomChat({
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const [supabase] = useState<SupabaseClient<Database>>(() => createClient());
 
@@ -74,14 +83,29 @@ export function CommunityRoomChat({
     if (!content) return;
 
     setSending(true);
-    const { error } = await supabase.from("community_messages").insert({
+    setError(null);
+    const { error: insertError } = await supabase.from("community_messages").insert({
       room_id: roomId,
       user_id: currentUserId,
       content,
     });
     setSending(false);
 
-    if (!error) setDraft("");
+    if (!insertError) {
+      setDraft("");
+      return;
+    }
+
+    setError(mapMessageError(insertError.message));
+  }
+
+  async function handleReport(messageId: string) {
+    await supabase.from("message_reports").insert({
+      message_id: messageId,
+      reported_by: currentUserId,
+      reason: "Conteudo inadequado",
+    });
+    setReportedIds((prev) => new Set(prev).add(messageId));
   }
 
   return (
@@ -101,11 +125,23 @@ export function CommunityRoomChat({
                 <p className="mb-0.5 text-xs font-semibold opacity-70">{message.author_name}</p>
               )}
               <p>{message.content}</p>
+              {message.user_id !== currentUserId && (
+                <button
+                  type="button"
+                  onClick={() => handleReport(message.id)}
+                  disabled={reportedIds.has(message.id)}
+                  className="mt-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
+                >
+                  {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
+                </button>
+              )}
             </div>
           ))}
           <div ref={bottomRef} />
         </div>
       </div>
+
+      {error && <p className="px-4 pb-2 text-xs text-red-400">{error}</p>}
 
       <form onSubmit={handleSubmit} className="flex gap-2 border-t border-neutral-800 px-4 py-3">
         <input

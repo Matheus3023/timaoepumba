@@ -4,6 +4,7 @@ import { FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, LEAD_ID_COOKIE } from "@/lib/tra
 import { persistAttributionTouch, recordAcquisitionSession } from "@/lib/tracking/persistAttribution";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { AttributionSnapshot } from "@/lib/tracking/attribution";
+import { markUserActive } from "@/lib/automations/reactivation";
 
 const bodySchema = z.object({
   visitor_id: z.string().min(1),
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       os: parsed.data.os,
       userAgent: request.headers.get("user-agent"),
     }),
+    user ? markUserActive(user.id) : Promise.resolve(),
   ]);
 
   return NextResponse.json({ ok: true });
