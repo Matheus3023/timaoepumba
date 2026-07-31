@@ -142,31 +142,31 @@ export function allowedSections(access: AdminAccess): Set<AdminSection> {
   return new Set(all.filter((section) => canRead(access, section)));
 }
 
+type Resolution =
+  | { kind: "unauthenticated" }
+  | { kind: "error"; message: string }
+  | { kind: "not_admin" }
+  | { kind: "ok"; access: AdminAccess };
+
 /**
- * Resolves the current admin's profile. Returns "unauthenticated" when
- * there's no logged-in user at all, "not_admin" when there is one but
- * their access_level isn't ADMIN, or the resolved AdminAccess. Keeping
- * these two failure modes distinct matters: collapsing them into a single
- * outcome previously sent an authenticated-but-non-admin user to /login
- * (as if they weren't logged in at all), which hid which check was
- * actually failing. Never redirects — safe to use from API route
- * handlers, which need a JSON error response rather than an HTTP redirect.
- * An admin with no row in `user_roles` yet is treated as full-access
- * (isFullAccess=true) so existing admin accounts aren't locked out the
- * moment this feature ships — narrowing access requires explicitly
- * assigning a profile in /admin/equipe.
+ * Single source of truth for resolving admin access. Distinguishes three
+ * failure modes that used to be conflated into one redirect (which made a
+ * genuine backend error — e.g. a bad service-role key — look identical to
+ * "you're just not an admin"):
+ *  - unauthenticated: no logged-in user at all
+ *  - error: the service-role lookup itself failed (real bug, not a
+ *    permissions outcome)
+ *  - not_admin: authenticated, lookup succeeded, access_level isn't ADMIN
  */
-export async function resolveAdminAccess(): Promise<AdminAccess | "unauthenticated" | "not_admin"> {
+async function resolve(): Promise<Resolution> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
-    console.error("[admin/access] auth.getUser() failed", userError);
-  }
-  if (!user) return "unauthenticated";
+  if (userError) console.error("[admin/access] auth.getUser() failed", userError);
+  if (!user) return { kind: "unauthenticated" };
 
   const admin = createAdminSupabaseClient();
   const [{ data: appUser, error: appUserError }, { data: userRole, error: userRoleError }] = await Promise.all([
@@ -174,37 +174,67 @@ export async function resolveAdminAccess(): Promise<AdminAccess | "unauthenticat
     admin.from("user_roles").select("role_id").eq("user_id", user.id).limit(1).maybeSingle(),
   ]);
 
-  if (appUserError) console.error("[admin/access] users lookup failed", appUserError);
-  if (userRoleError) console.error("[admin/access] user_roles lookup failed", userRoleError);
+  if (appUserError) {
+    console.error("[admin/access] users lookup failed", appUserError);
+    return { kind: "error", message: `Falha ao consultar users (service role): ${appUserError.message}` };
+  }
+  if (userRoleError) {
+    console.error("[admin/access] user_roles lookup failed", userRoleError);
+    return { kind: "error", message: `Falha ao consultar user_roles (service role): ${userRoleError.message}` };
+  }
 
-  if (appUser?.access_level !== "ADMIN") return "not_admin";
+  if (appUser?.access_level !== "ADMIN") return { kind: "not_admin" };
 
   let profile: AdminProfile | null = null;
   if (userRole?.role_id) {
-    const { data: role } = await admin.from("roles").select("admin_profile").eq("id", userRole.role_id).maybeSingle();
+    const { data: role, error: roleError } = await admin
+      .from("roles")
+      .select("admin_profile")
+      .eq("id", userRole.role_id)
+      .maybeSingle();
+    if (roleError) {
+      console.error("[admin/access] roles lookup failed", roleError);
+      return { kind: "error", message: `Falha ao consultar roles (service role): ${roleError.message}` };
+    }
     profile = (role?.admin_profile as AdminProfile | null) ?? null;
   }
 
   return {
-    adminId: user.id,
-    adminName: appUser.full_name ?? "Admin",
-    profile,
-    isFullAccess: profile === null || profile === "administrador",
+    kind: "ok",
+    access: {
+      adminId: user.id,
+      adminName: appUser.full_name ?? "Admin",
+      profile,
+      isFullAccess: profile === null || profile === "administrador",
+    },
   };
 }
 
 /**
+ * Non-redirecting resolution for API route handlers, which need a JSON
+ * error response rather than an HTTP redirect.
+ */
+export async function resolveAdminAccess(): Promise<AdminAccess | "unauthenticated" | "not_admin" | "error"> {
+  const result = await resolve();
+  if (result.kind === "ok") return result.access;
+  return result.kind;
+}
+
+/**
  * Page/Server Action usage: redirects instead of returning a failure
- * status. Unauthenticated goes to /login; authenticated-but-not-admin
- * goes to /home (matches the pre-RBAC behavior) — these are deliberately
- * different destinations so a real bug in the ADMIN check doesn't look
- * like a logged-out session.
+ * status. Unauthenticated goes to /login, a genuine backend error goes to
+ * /admin-erro with the real message (outside the /admin/* tree so it
+ * isn't itself re-guarded by this same check), and authenticated-but-not-
+ * admin goes to /home (matches the pre-RBAC behavior) — three different
+ * destinations so a real bug in the ADMIN check is never mistaken for a
+ * logged-out session or "you're just not an admin".
  */
 export async function getAdminAccess(): Promise<AdminAccess> {
-  const access = await resolveAdminAccess();
-  if (access === "unauthenticated") redirect("/login");
-  if (access === "not_admin") redirect("/home");
-  return access;
+  const result = await resolve();
+  if (result.kind === "unauthenticated") redirect("/login");
+  if (result.kind === "error") redirect(`/admin-erro?message=${encodeURIComponent(result.message)}`);
+  if (result.kind === "not_admin") redirect("/home");
+  return result.access;
 }
 
 /**

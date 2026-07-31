@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
   if (access === "unauthenticated" || access === "not_admin") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  if (access === "error") {
+    return NextResponse.json({ error: "admin_access_check_failed" }, { status: 500 });
+  }
   if (!canWrite(access, "dados_esportivos")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
