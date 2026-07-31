@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
+import { computeAndSaveUserScore } from "@/lib/scoring/compute";
+import { UserProfileTabs } from "@/components/admin/UserProfileTabs";
 
 async function addNote(userId: string, formData: FormData) {
   "use server";
@@ -12,22 +14,92 @@ async function addNote(userId: string, formData: FormData) {
   const note = String(formData.get("note") ?? "").trim();
   if (!note) return;
 
-  const adminClient = createAdminSupabaseClient();
-  await adminClient.from("crm_notes").insert({ user_id: userId, author_admin_id: access.adminId, note });
+  const admin = createAdminSupabaseClient();
+  await admin.from("crm_notes").insert({ user_id: userId, author_admin_id: access.adminId, note });
   await logAudit({ actorId: access.adminId, action: "crm_note_added", entityType: "user", entityId: userId });
+  revalidatePath(`/admin/usuarios/${userId}`);
+}
+
+async function addTask(userId: string, formData: FormData) {
+  "use server";
+  const access = await requireAdminSection("usuarios");
+  if (!canWrite(access, "usuarios")) redirect(`/admin/usuarios/${userId}`);
+
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return;
+  const dueAt = String(formData.get("due_at") ?? "") || null;
+
+  const admin = createAdminSupabaseClient();
+  await admin.from("crm_tasks").insert({ user_id: userId, assigned_admin_id: access.adminId, title, due_at: dueAt });
+  await logAudit({ actorId: access.adminId, action: "crm_task_created", entityType: "user", entityId: userId });
+  revalidatePath(`/admin/usuarios/${userId}`);
+}
+
+async function completeTask(userId: string, taskId: string) {
+  "use server";
+  const access = await requireAdminSection("usuarios");
+  if (!canWrite(access, "usuarios")) redirect(`/admin/usuarios/${userId}`);
+
+  const admin = createAdminSupabaseClient();
+  await admin.from("crm_tasks").update({ status: "done" }).eq("id", taskId);
+  revalidatePath(`/admin/usuarios/${userId}`);
+}
+
+async function recalculateScore(userId: string) {
+  "use server";
+  const access = await requireAdminSection("usuarios");
+  if (!canWrite(access, "usuarios")) redirect(`/admin/usuarios/${userId}`);
+
+  await computeAndSaveUserScore(userId);
+  await logAudit({ actorId: access.adminId, action: "score_recalculated", entityType: "user", entityId: userId });
   revalidatePath(`/admin/usuarios/${userId}`);
 }
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await requireAdminSection("usuarios");
+  const writable = canWrite(access, "usuarios");
   const admin = createAdminSupabaseClient();
 
-  const [{ data: user }, { data: profile }, { data: timeline }, { data: notes }] = await Promise.all([
+  const [
+    { data: user },
+    { data: profile },
+    { data: timeline },
+    { data: notes },
+    { data: tasks },
+    { data: score },
+    { data: crmStatus },
+    { data: registration },
+    { data: ftd },
+    { data: clicks },
+    { data: communityMemberships },
+    { data: messages },
+    { data: pushDeliveries },
+    { data: consents },
+    { data: optOut },
+    { data: auditLogs },
+  ] = await Promise.all([
     admin.from("users").select("*").eq("id", id).maybeSingle(),
     admin.from("user_profiles").select("*").eq("user_id", id).maybeSingle(),
     admin.from("crm_timeline_events").select("*").eq("user_id", id).order("occurred_at", { ascending: false }).limit(100),
     admin.from("crm_notes").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+    admin.from("crm_tasks").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+    admin.from("user_scores").select("*").eq("user_id", id).maybeSingle(),
+    admin.from("crm_user_status").select("stage_id, moved_at").eq("user_id", id).maybeSingle(),
+    admin.from("registrations").select("confirmed_at").eq("user_id", id).maybeSingle(),
+    admin.from("ftds").select("confirmed_at").eq("user_id", id).maybeSingle(),
+    admin.from("affiliate_clicks").select("id, clicked_at").eq("user_id", id).order("clicked_at", { ascending: false }),
+    admin.from("community_members").select("room_id, role, joined_at").eq("user_id", id),
+    admin.from("community_messages").select("id, content, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
+    admin
+      .from("push_deliveries")
+      .select("id, status, sent_at, opened_at, clicked_at, failure_reason")
+      .eq("user_id", id)
+      .order("sent_at", { ascending: false })
+      .limit(30),
+    admin.from("consents").select("*").eq("user_id", id).order("granted_at", { ascending: false }),
+    admin.from("marketing_optouts").select("*").eq("user_id", id).maybeSingle(),
+    admin.from("audit_logs").select("*").eq("entity_type", "user").eq("entity_id", id).order("created_at", { ascending: false }).limit(50),
   ]);
 
   if (!user) notFound();
@@ -38,77 +110,111 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
     .eq("lead_id", user.lead_id)
     .order("created_at", { ascending: false });
 
-  const firstTouch = attributionRows?.find((a) => a.touch_type === "first");
-  const lastTouch = attributionRows?.find((a) => a.touch_type === "last");
+  const stageName = crmStatus?.stage_id
+    ? (await admin.from("crm_stages").select("name").eq("id", crmStatus.stage_id).maybeSingle()).data?.name ?? null
+    : null;
+
+  const roomIds = [...new Set((communityMemberships ?? []).map((m) => m.room_id))];
+  const { data: rooms } = roomIds.length
+    ? await admin.from("community_rooms").select("id, name").in("id", roomIds)
+    : { data: [] as { id: string; name: string }[] };
+  const roomNameById = new Map((rooms ?? []).map((r) => [r.id, r.name]));
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-white">{user.full_name}</h1>
-      <p className="text-sm text-neutral-400">{user.email} • {user.phone}</p>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <section className="card lg:col-span-1">
-          <h2 className="text-sm font-semibold text-neutral-200">Perfil</h2>
-          <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
-            <Row label="Lead ID" value={user.lead_id} />
-            <Row label="Nivel de acesso" value={user.access_level} />
-            <Row label="Status" value={user.status} />
-            <Row label="Cadastrado em" value={new Date(user.created_at).toLocaleString("pt-BR")} />
-            <Row label="Instalou o app" value={profile?.pwa_install_status ?? "not_requested"} />
-            <Row label="Notificacoes" value={profile?.notification_permission ?? "not_requested"} />
-          </dl>
-
-          <h3 className="mt-4 text-sm font-semibold text-neutral-200">Atribuicao</h3>
-          <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
-            <Row label="Origem (1o toque)" value={firstTouch?.utm_source ?? "—"} />
-            <Row label="Campanha (1o toque)" value={firstTouch?.utm_campaign ?? "—"} />
-            <Row label="Origem (ultimo toque)" value={lastTouch?.utm_source ?? "—"} />
-            <Row label="Campanha (ultimo toque)" value={lastTouch?.utm_campaign ?? "—"} />
-          </dl>
-        </section>
-
-        <section className="card lg:col-span-1">
-          <h2 className="text-sm font-semibold text-neutral-200">Timeline</h2>
-          <ul className="mt-2 flex flex-col gap-2 text-sm">
-            {timeline?.map((t) => (
-              <li key={t.id} className="border-b border-neutral-800 pb-2">
-                <p className="text-neutral-200">{t.description}</p>
-                <p className="text-xs text-neutral-500">{new Date(t.occurred_at).toLocaleString("pt-BR")}</p>
-              </li>
-            ))}
-            {(!timeline || timeline.length === 0) && <p className="text-neutral-500">Sem eventos ainda.</p>}
-          </ul>
-        </section>
-
-        <section className="card lg:col-span-1">
-          <h2 className="text-sm font-semibold text-neutral-200">Notas internas</h2>
-          {canWrite(access, "usuarios") && (
-            <form action={addNote.bind(null, id)} className="mt-2 flex flex-col gap-2">
-              <textarea name="note" rows={3} className="input" placeholder="Adicionar nota..." />
-              <button type="submit" className="btn-secondary self-start">
-                Salvar nota
-              </button>
-            </form>
-          )}
-          <ul className="mt-4 flex flex-col gap-2 text-sm">
-            {notes?.map((n) => (
-              <li key={n.id} className="border-b border-neutral-800 pb-2 text-neutral-300">
-                <p>{n.note}</p>
-                <p className="text-xs text-neutral-500">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-white">{user.full_name}</h1>
+          <p className="text-sm text-neutral-400">
+            {user.email} • {user.phone}
+          </p>
+        </div>
+        {writable && (
+          <form action={recalculateScore.bind(null, id)}>
+            <button type="submit" className="btn-secondary px-3 py-1.5 text-xs">
+              Recalcular score
+            </button>
+          </form>
+        )}
       </div>
-    </div>
-  );
-}
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-2">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="text-right text-neutral-200">{value}</dd>
+      <UserProfileTabs
+        user={{
+          lead_id: user.lead_id,
+          access_level: user.access_level,
+          status: user.status,
+          created_at: user.created_at,
+          date_of_birth: user.date_of_birth,
+        }}
+        profile={
+          profile
+            ? {
+                pwa_install_status: profile.pwa_install_status,
+                pwa_installed_at: profile.pwa_installed_at,
+                notification_permission: profile.notification_permission,
+                last_seen_at: profile.last_seen_at,
+                last_device: profile.last_device,
+                last_browser: profile.last_browser,
+                last_os: profile.last_os,
+                onboarding_completed: profile.onboarding_completed,
+                favorite_team_id: profile.favorite_team_id,
+              }
+            : null
+        }
+        score={
+          score
+            ? {
+                intent_score: score.intent_score,
+                engagement_score: score.engagement_score,
+                relationship_score: score.relationship_score,
+                total_score: score.total_score,
+                risk_blocked: score.risk_blocked,
+                risk_reason: score.risk_reason,
+              }
+            : null
+        }
+        stageName={stageName}
+        firstTouch={attributionRows?.find((a) => a.touch_type === "first") ?? null}
+        lastTouch={attributionRows?.find((a) => a.touch_type === "last") ?? null}
+        timeline={(timeline ?? []).map((t) => ({ id: t.id, description: t.description, occurred_at: t.occurred_at }))}
+        conversion={{
+          clicks: (clicks ?? []).map((c) => ({ id: c.id, clicked_at: c.clicked_at })),
+          registrationConfirmedAt: registration?.confirmed_at ?? null,
+          ftdConfirmedAt: ftd?.confirmed_at ?? null,
+        }}
+        community={{
+          rooms: (communityMemberships ?? []).map((m) => ({
+            room_name: roomNameById.get(m.room_id) ?? "—",
+            role: m.role,
+            joined_at: m.joined_at,
+          })),
+          messages: (messages ?? []).map((m) => ({ id: m.id, content: m.content, created_at: m.created_at })),
+        }}
+        pushDeliveries={(pushDeliveries ?? []).map((d) => ({
+          id: d.id,
+          status: d.status,
+          sent_at: d.sent_at,
+          opened_at: d.opened_at,
+          clicked_at: d.clicked_at,
+          failure_reason: d.failure_reason,
+        }))}
+        privacy={{
+          consents: (consents ?? []).map((c) => ({
+            consent_type: c.consent_type,
+            granted: c.granted,
+            version: c.version,
+            granted_at: c.granted_at,
+          })),
+          optedOutAt: optOut?.opted_out_at ?? null,
+        }}
+        auditLogs={(auditLogs ?? []).map((a) => ({ id: a.id, action: a.action, created_at: a.created_at }))}
+        notes={(notes ?? []).map((n) => ({ id: n.id, note: n.note, created_at: n.created_at }))}
+        tasks={(tasks ?? []).map((t) => ({ id: t.id, title: t.title, status: t.status, due_at: t.due_at }))}
+        writable={writable}
+        addNoteAction={addNote.bind(null, id)}
+        addTaskAction={addTask.bind(null, id)}
+        completeTaskAction={completeTask.bind(null, id)}
+      />
     </div>
   );
 }
