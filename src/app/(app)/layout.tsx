@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/app/BottomNav";
+import { PageTransition } from "@/components/app/PageTransition";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -23,8 +24,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-dvh flex-col pb-16">
-      <div className="flex-1">{children}</div>
+    <div className="flex min-h-dvh flex-col overscroll-y-none pb-[calc(4rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1">
+        <PageTransition>{children}</PageTransition>
+      </div>
       <BottomNav />
     </div>
   );

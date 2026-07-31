@@ -3,7 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTrackEvent } from "@/lib/tracking/useTrackEvent";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -72,7 +74,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12">
+    <AuthLayout>
       <h1 className="text-2xl font-bold text-white">Criar conta</h1>
       <p className="mt-1 text-sm text-neutral-400">
         Jogos, analises e comunidade em um so lugar. Uso restrito a maiores de 18 anos.
@@ -133,45 +135,60 @@ export default function SignupPage() {
           />
         </Field>
 
-        <label className="flex items-start gap-2 text-sm text-neutral-300">
-          <input
-            type="checkbox"
-            checked={ageConfirmed}
-            onChange={(e) => setAgeConfirmed(e.target.checked)}
-            className="mt-1"
-          />
-          Confirmo que tenho 18 anos ou mais.
-        </label>
+        <div className="flex flex-col gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
+          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+            <input
+              type="checkbox"
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              className="mt-0.5 accent-yellow-400"
+            />
+            Confirmo que tenho 18 anos ou mais.
+          </label>
 
-        <label className="flex items-start gap-2 text-sm text-neutral-300">
-          <input
-            type="checkbox"
-            checked={termsAccepted}
-            onChange={(e) => setTermsAccepted(e.target.checked)}
-            className="mt-1"
-          />
-          Li e aceito os{" "}
-          <Link href="/termos" className="text-yellow-400 underline">
-            Termos de Uso
-          </Link>{" "}
-          e a{" "}
-          <Link href="/privacidade" className="text-yellow-400 underline">
-            Politica de Privacidade
-          </Link>
-          .
-        </label>
+          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 accent-yellow-400"
+            />
+            <span>
+              Li e aceito os{" "}
+              <Link href="/termos" className="text-yellow-400 underline underline-offset-2">
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link href="/privacidade" className="text-yellow-400 underline underline-offset-2">
+                Politica de Privacidade
+              </Link>
+              .
+            </span>
+          </label>
 
-        <label className="flex items-start gap-2 text-sm text-neutral-300">
-          <input
-            type="checkbox"
-            checked={marketingConsent}
-            onChange={(e) => setMarketingConsent(e.target.checked)}
-            className="mt-1"
-          />
-          Quero receber novidades, analises e promocoes por notificacao e e-mail (opcional).
-        </label>
+          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+            <input
+              type="checkbox"
+              checked={marketingConsent}
+              onChange={(e) => setMarketingConsent(e.target.checked)}
+              className="mt-0.5 accent-yellow-400"
+            />
+            Quero receber novidades, analises e promocoes por notificacao e e-mail (opcional).
+          </label>
+        </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="text-sm text-red-400"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         <button type="submit" disabled={submitting} className="btn-primary mt-2">
           {submitting ? "Criando conta..." : "Criar conta"}
@@ -179,18 +196,18 @@ export default function SignupPage() {
 
         <p className="text-center text-xs text-neutral-500">
           Ja tem conta?{" "}
-          <Link href="/login" className="text-yellow-400 underline">
+          <Link href="/login" className="text-yellow-400 underline underline-offset-2">
             Entrar
           </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1 text-sm text-neutral-300">
+    <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
       {label}
       {children}
     </label>

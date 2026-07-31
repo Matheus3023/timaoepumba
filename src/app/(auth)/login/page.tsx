@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,12 +34,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12">
-      <h1 className="text-2xl font-bold text-white">Entrar</h1>
+    <AuthLayout>
+      <h1 className="text-2xl font-bold text-white">Bem-vindo de volta</h1>
       <p className="mt-1 text-sm text-neutral-400">Acesse sua conta para continuar.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
           E-mail
           <input
             required
@@ -49,7 +51,7 @@ export default function LoginPage() {
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
           Senha
           <input
             required
@@ -61,7 +63,18 @@ export default function LoginPage() {
           />
         </label>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="text-sm text-red-400"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         <button type="submit" disabled={submitting} className="btn-primary mt-2">
           {submitting ? "Entrando..." : "Entrar"}
@@ -69,11 +82,11 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-neutral-500">
           Ainda nao tem conta?{" "}
-          <Link href="/signup" className="text-yellow-400 underline">
+          <Link href="/signup" className="text-yellow-400 underline underline-offset-2">
             Criar conta
           </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
