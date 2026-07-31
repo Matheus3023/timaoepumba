@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Rascunho",
@@ -11,6 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminAnalysesPage() {
+  const access = await requireAdminSection("analises");
   const admin = createAdminSupabaseClient();
   const { data: analyses } = await admin
     .from("analyses")
@@ -21,9 +23,11 @@ export default async function AdminAnalysesPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-white">Analises</h1>
-        <Link href="/admin/analises/novo" className="btn-primary px-4 py-2 text-sm">
-          Nova analise
-        </Link>
+        {canWrite(access, "analises") && (
+          <Link href="/admin/analises/novo" className="btn-primary px-4 py-2 text-sm">
+            Nova analise
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 flex flex-col gap-2">

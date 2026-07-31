@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdminSection } from "@/lib/admin/access";
 
 const ACCESS_LEVEL_LABEL: Record<string, string> = {
   VISITOR: "Visitante",
@@ -11,6 +12,7 @@ const ACCESS_LEVEL_LABEL: Record<string, string> = {
 };
 
 export default async function AdminUsersPage() {
+  await requireAdminSection("usuarios");
   const admin = createAdminSupabaseClient();
   const { data: users } = await admin
     .from("users")

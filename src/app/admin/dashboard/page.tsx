@@ -1,6 +1,8 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdminSection } from "@/lib/admin/access";
 
 export default async function AdminDashboardPage() {
+  await requireAdminSection("dashboard");
   const admin = createAdminSupabaseClient();
   const [visitors, accounts, clicks, registrations, ftds, pushSent, pushOpened] = await Promise.all([
     admin.from("acquisition_sessions").select("lead_id", { count: "exact", head: true }),

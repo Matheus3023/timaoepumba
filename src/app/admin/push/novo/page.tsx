@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push/fcm";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
 
 async function createAndSendCampaign(formData: FormData) {
   "use server";
 
+  const access = await requireAdminSection("push");
+  if (!canWrite(access, "push")) redirect("/admin/push");
   const admin = createAdminSupabaseClient();
   const category = String(formData.get("category") ?? "content");
   const title = String(formData.get("title") ?? "");
@@ -56,11 +60,24 @@ async function createAndSendCampaign(formData: FormData) {
   );
 
   await admin.from("push_campaigns").update({ status: "sent" }).eq("id", campaign.id);
+  await logAudit({
+    actorId: access.adminId,
+    action: "push_campaign_sent",
+    entityType: "push_campaign",
+    entityId: campaign.id,
+    metadata: { category, recipients: userIds.length },
+  });
 
   redirect("/admin/push");
 }
 
-export default function NewPushCampaignPage() {
+export default async function NewPushCampaignPage() {
+  const access = await requireAdminSection("push");
+  if (!canWrite(access, "push")) redirect("/admin/push");
+  return <NewPushCampaignForm />;
+}
+
+function NewPushCampaignForm() {
   return (
     <div className="max-w-xl">
       <h1 className="text-xl font-bold text-white">Nova campanha de push</h1>

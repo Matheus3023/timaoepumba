@@ -1,9 +1,14 @@
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
 
 async function saveConfig(formData: FormData) {
   "use server";
 
+  const access = await requireAdminSection("afiliados");
+  if (!canWrite(access, "afiliados")) redirect("/admin/afiliados");
   const admin = createAdminSupabaseClient();
 
   // Look up the current active config server-side instead of trusting a
@@ -33,10 +38,19 @@ async function saveConfig(formData: FormData) {
     await admin.from("affiliate_configurations").insert(payload);
   }
 
+  await logAudit({
+    actorId: access.adminId,
+    action: "affiliate_config_saved",
+    entityType: "affiliate_configuration",
+    entityId: existing?.id,
+    metadata: { name: payload.name, domain: payload.domain },
+  });
+
   revalidatePath("/admin/afiliados");
 }
 
 export default async function AdminAffiliatePage() {
+  const access = await requireAdminSection("afiliados");
   const admin = createAdminSupabaseClient();
   const { data: activeConfigs } = await admin
     .from("affiliate_configurations")
@@ -70,32 +84,36 @@ export default async function AdminAffiliatePage() {
       )}
 
       <form action={saveConfig} className="card mt-4 flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Nome da casa
-          <input name="name" defaultValue={config?.name} required className="input" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Dominio
-          <input name="domain" defaultValue={config?.domain} required className="input" placeholder="casa-parceira.bet.br" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          URL de cadastro
-          <input
-            name="registration_url"
-            defaultValue={config?.registration_url}
-            required
-            className="input"
-            placeholder="https://casa-parceira.bet.br/cadastro"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Parametro do identificador
-          <input name="subid_parameter" defaultValue={config?.subid_parameter ?? "subid"} required className="input" />
-        </label>
+        <fieldset disabled={!canWrite(access, "afiliados")} className="flex flex-col gap-3 disabled:opacity-60">
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Nome da casa
+            <input name="name" defaultValue={config?.name} required className="input" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Dominio
+            <input name="domain" defaultValue={config?.domain} required className="input" placeholder="casa-parceira.bet.br" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            URL de cadastro
+            <input
+              name="registration_url"
+              defaultValue={config?.registration_url}
+              required
+              className="input"
+              placeholder="https://casa-parceira.bet.br/cadastro"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Parametro do identificador
+            <input name="subid_parameter" defaultValue={config?.subid_parameter ?? "subid"} required className="input" />
+          </label>
 
-        <button type="submit" className="btn-primary mt-2 self-start px-6">
-          Salvar
-        </button>
+          {canWrite(access, "afiliados") && (
+            <button type="submit" className="btn-primary mt-2 self-start px-6">
+              Salvar
+            </button>
+          )}
+        </fieldset>
       </form>
 
       {config && (

@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
 import type { AccessLevel } from "@/types/database";
 
 async function createAnalysis(formData: FormData) {
   "use server";
 
+  const access = await requireAdminSection("analises");
+  if (!canWrite(access, "analises")) redirect("/admin/analises");
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -31,10 +35,16 @@ async function createAnalysis(formData: FormData) {
     .select("id")
     .single();
 
+  if (data) {
+    await logAudit({ actorId: access.adminId, action: "analysis_created", entityType: "analysis", entityId: data.id, metadata: { status } });
+  }
+
   redirect(data ? "/admin/analises" : "/admin/analises/novo");
 }
 
-export default function NewAnalysisPage() {
+export default async function NewAnalysisPage() {
+  const access = await requireAdminSection("analises");
+  if (!canWrite(access, "analises")) redirect("/admin/analises");
   return (
     <div className="max-w-xl">
       <h1 className="text-xl font-bold text-white">Nova analise</h1>

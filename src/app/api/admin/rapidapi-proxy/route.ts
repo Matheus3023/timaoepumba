@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, resolveAdminAccess } from "@/lib/admin/access";
 
 const bodySchema = z.object({
   path: z.string().min(1).max(200),
@@ -15,17 +15,11 @@ const bodySchema = z.object({
  * never reaches the browser, only the JSON result does.
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  const access = await resolveAdminAccess();
+  if (!access) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
-  const { data: appUser } = await supabase.from("users").select("access_level").eq("id", user.id).single();
-  if (appUser?.access_level !== "ADMIN") {
+  if (!canWrite(access, "dados_esportivos")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

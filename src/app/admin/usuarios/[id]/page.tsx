@@ -1,25 +1,26 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
 
 async function addNote(userId: string, formData: FormData) {
   "use server";
+  const access = await requireAdminSection("usuarios");
+  if (!canWrite(access, "usuarios")) redirect(`/admin/usuarios/${userId}`);
+
   const note = String(formData.get("note") ?? "").trim();
   if (!note) return;
 
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user: admin },
-  } = await supabase.auth.getUser();
-
   const adminClient = createAdminSupabaseClient();
-  await adminClient.from("crm_notes").insert({ user_id: userId, author_admin_id: admin?.id, note });
+  await adminClient.from("crm_notes").insert({ user_id: userId, author_admin_id: access.adminId, note });
+  await logAudit({ actorId: access.adminId, action: "crm_note_added", entityType: "user", entityId: userId });
   revalidatePath(`/admin/usuarios/${userId}`);
 }
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const access = await requireAdminSection("usuarios");
   const admin = createAdminSupabaseClient();
 
   const [{ data: user }, { data: profile }, { data: timeline }, { data: notes }] = await Promise.all([
@@ -81,12 +82,14 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
 
         <section className="card lg:col-span-1">
           <h2 className="text-sm font-semibold text-neutral-200">Notas internas</h2>
-          <form action={addNote.bind(null, id)} className="mt-2 flex flex-col gap-2">
-            <textarea name="note" rows={3} className="input" placeholder="Adicionar nota..." />
-            <button type="submit" className="btn-secondary self-start">
-              Salvar nota
-            </button>
-          </form>
+          {canWrite(access, "usuarios") && (
+            <form action={addNote.bind(null, id)} className="mt-2 flex flex-col gap-2">
+              <textarea name="note" rows={3} className="input" placeholder="Adicionar nota..." />
+              <button type="submit" className="btn-secondary self-start">
+                Salvar nota
+              </button>
+            </form>
+          )}
           <ul className="mt-4 flex flex-col gap-2 text-sm">
             {notes?.map((n) => (
               <li key={n.id} className="border-b border-neutral-800 pb-2 text-neutral-300">

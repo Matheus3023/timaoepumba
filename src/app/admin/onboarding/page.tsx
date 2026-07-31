@@ -1,10 +1,15 @@
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { logAudit } from "@/lib/admin/audit";
 import { DEFAULT_ONBOARDING_CONFIG, type OnboardingConfig } from "@/lib/onboarding/config";
 
 async function saveConfig(formData: FormData) {
   "use server";
 
+  const access = await requireAdminSection("onboarding");
+  if (!canWrite(access, "onboarding")) redirect("/admin/onboarding");
   const admin = createAdminSupabaseClient();
   const { data: row } = await admin.from("system_settings").select("value").eq("key", "onboarding_config").maybeSingle();
   const current: OnboardingConfig = { ...DEFAULT_ONBOARDING_CONFIG, ...((row?.value as Partial<OnboardingConfig>) ?? {}) };
@@ -21,10 +26,12 @@ async function saveConfig(formData: FormData) {
   };
 
   await admin.from("system_settings").upsert({ key: "onboarding_config", value: updated });
+  await logAudit({ actorId: access.adminId, action: "onboarding_config_updated", entityType: "system_settings", entityId: "onboarding_config" });
   revalidatePath("/admin/onboarding");
 }
 
 export default async function AdminOnboardingPage() {
+  const access = await requireAdminSection("onboarding");
   const admin = createAdminSupabaseClient();
 
   const [{ data: row }, { data: profiles }] = await Promise.all([
@@ -60,40 +67,43 @@ export default async function AdminOnboardingPage() {
 
       <form action={saveConfig} className="card mt-6 flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-neutral-200">Textos e etapas</h2>
+        <fieldset disabled={!canWrite(access, "onboarding")} className="flex flex-col gap-3 disabled:opacity-60">
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Titulo (boas-vindas)
+            <input name="welcome_title" defaultValue={config.welcome_title} className="input" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Texto (boas-vindas)
+            <textarea name="welcome_text" defaultValue={config.welcome_text} rows={2} className="input" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Titulo (notificacoes)
+            <input name="notifications_title" defaultValue={config.notifications_title} className="input" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+            Texto (notificacoes)
+            <textarea name="notifications_text" defaultValue={config.notifications_text} rows={2} className="input" />
+          </label>
 
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Titulo (boas-vindas)
-          <input name="welcome_title" defaultValue={config.welcome_title} className="input" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Texto (boas-vindas)
-          <textarea name="welcome_text" defaultValue={config.welcome_text} rows={2} className="input" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Titulo (notificacoes)
-          <input name="notifications_title" defaultValue={config.notifications_title} className="input" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
-          Texto (notificacoes)
-          <textarea name="notifications_text" defaultValue={config.notifications_text} rows={2} className="input" />
-        </label>
+          <label className="flex items-center gap-2 text-sm text-neutral-300">
+            <input type="checkbox" name="install_step_enabled" defaultChecked={config.install_step_enabled} />
+            Etapa de instalacao ativa
+          </label>
+          <label className="flex items-center gap-2 text-sm text-neutral-300">
+            <input type="checkbox" name="notifications_step_enabled" defaultChecked={config.notifications_step_enabled} />
+            Etapa de notificacoes ativa
+          </label>
+          <label className="flex items-center gap-2 text-sm text-neutral-300">
+            <input type="checkbox" name="onboarding_required" defaultChecked={config.onboarding_required} />
+            Onboarding obrigatorio
+          </label>
 
-        <label className="flex items-center gap-2 text-sm text-neutral-300">
-          <input type="checkbox" name="install_step_enabled" defaultChecked={config.install_step_enabled} />
-          Etapa de instalacao ativa
-        </label>
-        <label className="flex items-center gap-2 text-sm text-neutral-300">
-          <input type="checkbox" name="notifications_step_enabled" defaultChecked={config.notifications_step_enabled} />
-          Etapa de notificacoes ativa
-        </label>
-        <label className="flex items-center gap-2 text-sm text-neutral-300">
-          <input type="checkbox" name="onboarding_required" defaultChecked={config.onboarding_required} />
-          Onboarding obrigatorio
-        </label>
-
-        <button type="submit" className="btn-primary mt-2 self-start px-6">
-          Salvar
-        </button>
+          {canWrite(access, "onboarding") && (
+            <button type="submit" className="btn-primary mt-2 self-start px-6">
+              Salvar
+            </button>
+          )}
+        </fieldset>
       </form>
     </div>
   );

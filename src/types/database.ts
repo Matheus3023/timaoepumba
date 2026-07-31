@@ -388,6 +388,43 @@ export type TrackingDeliveryLogRow = {
   attempted_at: string;
 }
 
+export type RoleRow = {
+  id: string;
+  name: string;
+  admin_profile: string | null;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CrmSegmentRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  definition: unknown;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ScoreRuleRow = {
+  key: string;
+  dimension: string;
+  points: number;
+  description: string;
+}
+
+export type UserScoreRow = {
+  user_id: string;
+  intent_score: number;
+  engagement_score: number;
+  relationship_score: number;
+  total_score: number;
+  risk_blocked: boolean;
+  risk_reason: string | null;
+  calculated_at: string;
+}
+
 /**
  * Every table uses `Partial<Row>` as both Insert and Update. This is
  * intentionally permissive (it won't catch a forgotten required column at
@@ -618,6 +655,14 @@ export type Database = {
       automation_runs: TableDef<AutomationRunRow, Partial<AutomationRunRow>>;
       audit_logs: TableDef<AuditLogRow, Partial<AuditLogRow>>;
       system_settings: TableDef<SystemSettingRow, Partial<SystemSettingRow>>;
+      roles: TableDef<RoleRow, Partial<RoleRow>>;
+      user_roles: TableDef<
+        { user_id: string; role_id: string; assigned_at: string },
+        Partial<{ user_id: string; role_id: string; assigned_at: string }>
+      >;
+      crm_segments: TableDef<CrmSegmentRow, Partial<CrmSegmentRow>>;
+      score_rules: TableDef<ScoreRuleRow, Partial<ScoreRuleRow>>;
+      user_scores: TableDef<UserScoreRow, Partial<UserScoreRow>>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

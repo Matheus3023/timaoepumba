@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { canWrite, requireAdminSection } from "@/lib/admin/access";
 
 export default async function AdminPushPage() {
+  const access = await requireAdminSection("push");
   const admin = createAdminSupabaseClient();
   const { data: campaigns } = await admin
     .from("push_campaigns")
@@ -12,9 +14,11 @@ export default async function AdminPushPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-white">Campanhas de push</h1>
-        <Link href="/admin/push/novo" className="btn-primary px-4 py-2 text-sm">
-          Nova campanha
-        </Link>
+        {canWrite(access, "push") && (
+          <Link href="/admin/push/novo" className="btn-primary px-4 py-2 text-sm">
+            Nova campanha
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
