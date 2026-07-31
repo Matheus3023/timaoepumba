@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileActions } from "@/components/app/ProfileActions";
+import { InstallNotificationsCard } from "@/components/app/InstallNotificationsCard";
 
 const ACCESS_LEVEL_LABEL: Record<string, string> = {
   VISITOR: "Visitante",
@@ -51,13 +52,10 @@ export default async function ProfilePage() {
         </Link>
       )}
 
-      <section className="card mt-4">
-        <h2 className="text-sm font-semibold text-neutral-200">Instalacao e notificacoes</h2>
-        <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
-          <li>Aplicativo instalado: {profile?.pwa_install_status === "installed" ? "sim" : "nao"}</li>
-          <li>Notificacoes: {profile?.notification_permission ?? "not_requested"}</li>
-        </ul>
-      </section>
+      <InstallNotificationsCard
+        initialInstallStatus={profile?.pwa_install_status ?? "not_requested"}
+        initialNotificationPermission={profile?.notification_permission ?? "not_requested"}
+      />
 
       <ProfileActions marketingConsent={latestMarketingConsent?.granted ?? false} />
     </div>

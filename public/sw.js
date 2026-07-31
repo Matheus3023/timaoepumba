@@ -1,4 +1,4 @@
-const CACHE_NAME = "ttp-shell-v1";
+const CACHE_NAME = "ttp-shell-v2";
 const APP_SHELL = ["/", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -15,24 +15,33 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Network-first with cache fallback. Required for installability (Chrome
-// checks for a fetch handler) and gives a minimal offline shell, per PRD
-// sec. 12.5 "evitar que o aplicativo fique completamente fora do ar".
+// Network-first with cache fallback — but ONLY for full-page navigations.
+// Required for installability (Chrome checks for a fetch handler) and
+// gives a minimal offline shell, per PRD sec. 12.5 "evitar que o
+// aplicativo fique completamente fora do ar".
+//
+// Deliberately does NOT intercept anything else (RSC payload fetches for
+// client-side routing, Server Actions, API routes, static assets) —
+// swallowing those into the cache (or racing their streamed responses)
+// risks breaking Next.js App Router navigation between route segments
+// with different layouts (e.g. the main app -> /admin), which can look
+// like a click "doing nothing". Let the browser/Next.js handle those
+// natively.
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  // Only cache same-origin http(s) GETs — the Cache API rejects other
-  // schemes (chrome-extension:, moz-extension:, etc.) that browser
-  // extensions can trigger fetches for.
-  if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
+  const { request } = event;
+  if (request.method !== "GET" || request.mode !== "navigate") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
         const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         return response;
       })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/")))
+      .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
   );
 });
 
