@@ -1,0 +1,64 @@
+import { notFound, redirect } from "next/navigation";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { trackServerEvent } from "@/lib/tracking/events";
+import { CommunityRoomChat } from "@/components/community/CommunityRoomChat";
+
+export default async function CommunityRoomPage({ params }: { params: Promise<{ roomSlug: string }> }) {
+  const { roomSlug } = await params;
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: room } = await supabase.from("community_rooms").select("*").eq("slug", roomSlug).maybeSingle();
+  if (!room) notFound();
+
+  const { data: membership } = await supabase
+    .from("community_members")
+    .select("room_id")
+    .eq("room_id", room.id)
+    .eq("user_id", user!.id)
+    .maybeSingle();
+
+  if (!membership) redirect("/comunidade");
+
+  const admin = createAdminSupabaseClient();
+  const { data: initialMessages } = await admin
+    .from("community_messages")
+    .select("id, user_id, content, created_at, is_pinned")
+    .eq("room_id", room.id)
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const authorIds = [...new Set((initialMessages ?? []).map((m) => m.user_id))];
+  const { data: authors } = authorIds.length
+    ? await admin.from("users").select("id, full_name").in("id", authorIds)
+    : { data: [] as { id: string; full_name: string | null }[] };
+  const authorNameById = new Map((authors ?? []).map((a) => [a.id, a.full_name ?? "Torcedor"]));
+
+  await trackServerEvent({ eventName: "CommunityRoomEntered", userId: user!.id, properties: { room_id: room.id } });
+
+  return (
+    <div className="flex h-[calc(100dvh-4rem)] flex-col">
+      <header className="px-4 py-3">
+        <h1 className="text-lg font-bold text-white">{room.name}</h1>
+        {room.description && <p className="text-sm text-neutral-400">{room.description}</p>}
+      </header>
+
+      <CommunityRoomChat
+        roomId={room.id}
+        currentUserId={user!.id}
+        initialMessages={(initialMessages ?? []).reverse().map((m) => ({
+          id: m.id,
+          user_id: m.user_id,
+          content: m.content,
+          created_at: m.created_at,
+          is_pinned: m.is_pinned,
+          author_name: authorNameById.get(m.user_id) ?? "Torcedor",
+        }))}
+      />
+    </div>
+  );
+}
