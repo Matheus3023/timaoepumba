@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { Match } from "@/lib/sports/types";
 import { MatchRow } from "@/components/app/MatchRow";
 import { CheckCircleIcon, ChatIcon, LockIcon } from "@/components/icons";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const RISK_STYLE: Record<string, string> = {
   baixo: "bg-emerald-500/15 text-emerald-300",
@@ -96,14 +97,14 @@ export function HomeView({
       )}
 
       <Section title="Jogos de hoje" delay={2} action={{ href: "/jogos", label: "Ver todos" }}>
-        {todayMatches.length === 0 && <EmptyState text="Nenhum jogo cadastrado para hoje." />}
+        {todayMatches.length === 0 && <EmptyState title="Nenhum jogo cadastrado para hoje." />}
         {todayMatches.slice(0, HOME_MATCHES_PREVIEW_LIMIT).map((match) => (
           <MatchRow key={match.id} match={match} />
         ))}
       </Section>
 
       <Section title="Analises recentes" delay={3} action={{ href: "/analises", label: "Ver todas" }}>
-        {analyses.length === 0 && <EmptyState text="Nenhuma analise publicada ainda." />}
+        {analyses.length === 0 && <EmptyState title="Nenhuma analise publicada ainda." />}
         {analyses.map((analysis) => (
           <Link key={analysis.id} href={`/analises/${analysis.id}`} className="card block transition-transform hover:-translate-y-0.5">
             <div className="flex items-start justify-between gap-2">
@@ -173,6 +174,3 @@ function Section({
   );
 }
 
-function EmptyState({ text }: { text: string }) {
-  return <p className="card text-sm text-neutral-500">{text}</p>;
-}

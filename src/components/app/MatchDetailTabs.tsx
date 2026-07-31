@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { HeadToHeadMatch, MatchEvent, MatchLineup, MomentumPoint, Standing } from "@/lib/sports/types";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const TABS = ["Resumo", "Eventos", "Estatisticas", "Escalacoes", "Momentum", "Classificacao", "H2H"] as const;
 
@@ -13,10 +14,6 @@ const EVENT_LABEL: Record<MatchEvent["type"], string> = {
   var: "📺 VAR",
   unknown: "• Evento",
 };
-
-function EmptyState({ text }: { text: string }) {
-  return <p className="card py-6 text-center text-sm text-neutral-500">{text}</p>;
-}
 
 export function MatchDetailTabs({
   kickoffLabel,
@@ -89,7 +86,7 @@ export function MatchDetailTabs({
               ))}
             </ul>
           ) : (
-            <EmptyState text="Nenhum evento disponivel para esta partida ainda." />
+            <EmptyState title="Nenhum evento disponivel para esta partida ainda." />
           ))}
 
         {tab === "Estatisticas" &&
@@ -107,7 +104,7 @@ export function MatchDetailTabs({
               ))}
             </div>
           ) : (
-            <EmptyState text="Estatisticas indisponiveis para esta partida." />
+            <EmptyState title="Estatisticas indisponiveis para esta partida." />
           ))}
 
         {tab === "Escalacoes" &&
@@ -128,7 +125,7 @@ export function MatchDetailTabs({
               ))}
             </div>
           ) : (
-            <EmptyState text="Escalacoes indisponiveis para esta partida ainda." />
+            <EmptyState title="Escalacoes indisponiveis para esta partida ainda." />
           ))}
 
         {tab === "Momentum" &&
@@ -151,7 +148,7 @@ export function MatchDetailTabs({
               <p className="mt-2 text-center text-xs text-neutral-500">Pressao ao longo da partida (amarelo = casa)</p>
             </div>
           ) : (
-            <EmptyState text="Momentum indisponivel para esta partida." />
+            <EmptyState title="Momentum indisponivel para esta partida." />
           ))}
 
         {tab === "Classificacao" &&
@@ -190,7 +187,7 @@ export function MatchDetailTabs({
               </table>
             </div>
           ) : (
-            <EmptyState text="Classificacao indisponivel para esta partida." />
+            <EmptyState title="Classificacao indisponivel para esta partida." />
           ))}
 
         {tab === "H2H" && (
@@ -214,7 +211,7 @@ export function MatchDetailTabs({
                   ))}
                 </ul>
               ) : (
-                <EmptyState text="Nenhum confronto anterior encontrado." />
+                <EmptyState title="Nenhum confronto anterior encontrado." />
               )}
             </div>
           </div>
@@ -278,7 +275,7 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
           ))}
         </ul>
       ) : (
-        <EmptyState text={`Sem jogos recentes de ${teamName} disponiveis.`} />
+        <EmptyState title={`Sem jogos recentes de ${teamName} disponiveis.`} />
       )}
     </div>
   );

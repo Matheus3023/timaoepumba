@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const RISK_LABEL: Record<string, string> = { baixo: "Risco baixo", medio: "Risco medio", alto: "Risco alto" };
 
@@ -28,7 +29,7 @@ export default async function AnalysesPage() {
 
       <div className="mt-4 flex flex-col gap-3">
         {(!analyses || analyses.length === 0) && (
-          <p className="card text-sm text-neutral-500">Nenhuma analise publicada ainda.</p>
+          <EmptyState title="Nenhuma analise publicada ainda" description="Volte em breve para conferir novas analises." />
         )}
 
         {analyses?.map((analysis) => {

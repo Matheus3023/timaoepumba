@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { Match } from "@/lib/sports/types";
 import { MatchRow } from "@/components/app/MatchRow";
 import { LeagueBadge } from "@/components/app/LeagueBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const LIVE_REFRESH_INTERVAL_MS = 30_000;
 
@@ -65,7 +66,9 @@ export function MatchesFilterTabs({
 
       {showLiveTab && tab === "ao_vivo" && (
         <div className="mt-4 flex flex-col gap-2.5">
-          {liveMatches.length === 0 && <p className="card text-sm text-neutral-500">Nenhum jogo ao vivo agora.</p>}
+          {liveMatches.length === 0 && (
+            <EmptyState title="Nenhum jogo ao vivo agora" description="Volte mais tarde ou confira os jogos de hoje." />
+          )}
           {liveMatches.map((match, i) => (
             <motion.div key={match.id} initial="hidden" animate="show" custom={i} variants={fadeUp}>
               <MatchRow match={match} />
@@ -76,7 +79,7 @@ export function MatchesFilterTabs({
 
       {(!showLiveTab || tab === "hoje") && (
         <div className="mt-4">
-          {groupedUpcoming.length === 0 && <p className="card text-sm text-neutral-500">Nenhum jogo cadastrado para este dia.</p>}
+          {groupedUpcoming.length === 0 && <EmptyState title="Nenhum jogo cadastrado para este dia" />}
           {groupedUpcoming.map(([league, matches], sectionIndex) => (
             <motion.section
               key={league}
