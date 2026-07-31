@@ -3,31 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminProfile, AdminSection } from "@/lib/admin/access";
-
-const LINKS: { href: string; label: string; section: AdminSection }[] = [
-  { href: "/admin/dashboard", label: "Dashboard", section: "dashboard" },
-  { href: "/admin/usuarios", label: "Usuarios / CRM", section: "usuarios" },
-  { href: "/admin/segmentos", label: "Segmentos", section: "segmentos" },
-  { href: "/admin/analises", label: "Analises", section: "analises" },
-  { href: "/admin/comunidade", label: "Moderacao", section: "comunidade" },
-  { href: "/admin/dados-esportivos", label: "Dados esportivos", section: "dados_esportivos" },
-  { href: "/admin/afiliados", label: "Casa parceira", section: "afiliados" },
-  { href: "/admin/push", label: "Push", section: "push" },
-  { href: "/admin/relatorios/retencao", label: "Retencao", section: "relatorios" },
-  { href: "/admin/relatorios/comunicacoes", label: "Comunicacoes", section: "relatorios" },
-  { href: "/admin/onboarding", label: "Onboarding", section: "onboarding" },
-  { href: "/admin/auditoria", label: "Auditoria", section: "auditoria" },
-  { href: "/admin/equipe", label: "Equipe", section: "equipe" },
-];
-
-const PROFILE_LABEL: Record<AdminProfile, string> = {
-  administrador: "Administrador",
-  gestor: "Gestor",
-  analista: "Midia/Analista",
-  moderador: "Moderador",
-  suporte: "Suporte",
-  somente_leitura: "Somente leitura",
-};
+import { ADMIN_NAV_LINKS, ADMIN_PROFILE_LABEL } from "@/lib/admin/navLinks";
 
 export function AdminSidebar({
   adminName,
@@ -39,7 +15,7 @@ export function AdminSidebar({
   allowedSections: Set<AdminSection>;
 }) {
   const pathname = usePathname();
-  const links = LINKS.filter((link) => allowedSections.has(link.section));
+  const links = ADMIN_NAV_LINKS.filter((link) => allowedSections.has(link.section));
 
   return (
     <aside className="hidden w-56 shrink-0 border-r border-neutral-800 bg-neutral-950 px-4 py-6 sm:block">
@@ -61,7 +37,7 @@ export function AdminSidebar({
       </nav>
       <div className="mt-8">
         <p className="text-xs text-neutral-300">{adminName}</p>
-        <p className="text-[11px] text-neutral-600">{profile ? PROFILE_LABEL[profile] : "Administrador (padrao)"}</p>
+        <p className="text-[11px] text-neutral-600">{profile ? ADMIN_PROFILE_LABEL[profile] : "Administrador (padrao)"}</p>
       </div>
     </aside>
   );

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileActions } from "@/components/app/ProfileActions";
 
@@ -36,6 +37,19 @@ export default async function ProfilePage() {
           {ACCESS_LEVEL_LABEL[appUser?.access_level ?? "APP_USER"]}
         </span>
       </section>
+
+      {appUser?.access_level === "ADMIN" && (
+        <Link
+          href="/admin/dashboard"
+          className="card-glow mt-4 flex items-center justify-between transition-transform hover:-translate-y-0.5"
+        >
+          <div>
+            <p className="font-semibold text-white">Painel administrativo</p>
+            <p className="text-xs text-neutral-400">Dashboard, CRM, moderacao, campanhas e mais</p>
+          </div>
+          <span className="text-neutral-500">→</span>
+        </Link>
+      )}
 
       <section className="card mt-4">
         <h2 className="text-sm font-semibold text-neutral-200">Instalacao e notificacoes</h2>
