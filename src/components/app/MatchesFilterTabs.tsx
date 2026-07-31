@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Match } from "@/lib/sports/types";
 import { MatchRow } from "@/components/app/MatchRow";
 import { LeagueBadge } from "@/components/app/LeagueBadge";
+
+const LIVE_REFRESH_INTERVAL_MS = 30_000;
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -18,35 +21,49 @@ const fadeUp = {
 export function MatchesFilterTabs({
   liveMatches,
   groupedUpcoming,
+  showLiveTab = true,
 }: {
   liveMatches: Match[];
   groupedUpcoming: [string, Match[]][];
+  showLiveTab?: boolean;
 }) {
-  const [tab, setTab] = useState<"ao_vivo" | "hoje">(liveMatches.length > 0 ? "ao_vivo" : "hoje");
+  const router = useRouter();
+  const [tab, setTab] = useState<"ao_vivo" | "hoje">(showLiveTab && liveMatches.length > 0 ? "ao_vivo" : "hoje");
+
+  // Keeps live scores/minutes moving without a manual pull-to-refresh —
+  // re-runs the server component (which re-checks the 45s sports_api_cache
+  // TTL) on an interval while this page is open.
+  useEffect(() => {
+    if (!showLiveTab) return;
+    const id = setInterval(() => router.refresh(), LIVE_REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [router, showLiveTab]);
 
   return (
     <div className="mt-4">
-      <div className="flex gap-2">
-        <button
-          onClick={() => setTab("ao_vivo")}
-          className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            tab === "ao_vivo" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
-          }`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-red-600" : "animate-pulse-live bg-red-500"}`} />
-          Ao vivo {liveMatches.length > 0 && `(${liveMatches.length})`}
-        </button>
-        <button
-          onClick={() => setTab("hoje")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            tab === "hoje" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
-          }`}
-        >
-          Hoje
-        </button>
-      </div>
+      {showLiveTab && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTab("ao_vivo")}
+            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              tab === "ao_vivo" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-red-600" : "animate-pulse-live bg-red-500"}`} />
+            Ao vivo {liveMatches.length > 0 && `(${liveMatches.length})`}
+          </button>
+          <button
+            onClick={() => setTab("hoje")}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              tab === "hoje" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
+            }`}
+          >
+            Todos os jogos
+          </button>
+        </div>
+      )}
 
-      {tab === "ao_vivo" && (
+      {showLiveTab && tab === "ao_vivo" && (
         <div className="mt-4 flex flex-col gap-2.5">
           {liveMatches.length === 0 && <p className="card text-sm text-neutral-500">Nenhum jogo ao vivo agora.</p>}
           {liveMatches.map((match, i) => (
@@ -57,9 +74,9 @@ export function MatchesFilterTabs({
         </div>
       )}
 
-      {tab === "hoje" && (
+      {(!showLiveTab || tab === "hoje") && (
         <div className="mt-4">
-          {groupedUpcoming.length === 0 && <p className="card text-sm text-neutral-500">Nenhum jogo cadastrado para hoje.</p>}
+          {groupedUpcoming.length === 0 && <p className="card text-sm text-neutral-500">Nenhum jogo cadastrado para este dia.</p>}
           {groupedUpcoming.map(([league, matches], sectionIndex) => (
             <motion.section
               key={league}

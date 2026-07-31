@@ -74,6 +74,8 @@ export interface TeamDetails extends Team {
  */
 export interface SportsDataProvider {
   getTodayMatches(): Promise<Match[]>;
+  /** dayOffset: 0 = hoje, -1 = ontem, 1 = amanha, etc. */
+  getMatchesForDay(dayOffset: number): Promise<Match[]>;
   getLiveMatches(): Promise<Match[]>;
   getMatchDetails(matchId: string): Promise<MatchDetails>;
   getMatchEvents(matchId: string): Promise<MatchEvent[]>;

@@ -89,6 +89,10 @@ export class MockSportsDataProvider implements SportsDataProvider {
     return MOCK_MATCHES;
   }
 
+  async getMatchesForDay(dayOffset: number): Promise<Match[]> {
+    return dayOffset === 0 ? MOCK_MATCHES : [];
+  }
+
   async getLiveMatches(): Promise<Match[]> {
     return MOCK_MATCHES.filter((m) => m.status === "live");
   }

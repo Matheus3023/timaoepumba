@@ -4,6 +4,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 /** Cache TTLs per PRD sec. 12.4. */
 export const CACHE_TTL_SECONDS = {
   todayMatches: 10 * 60,
+  otherDayMatches: 30 * 60,
   liveMatches: 45,
   standings: 6 * 60 * 60,
   teamsAndLeagues: 24 * 60 * 60,

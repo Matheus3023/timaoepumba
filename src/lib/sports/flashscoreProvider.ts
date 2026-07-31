@@ -203,9 +203,13 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getTodayMatches(): Promise<Match[]> {
+    return this.getMatchesForDay(0);
+  }
+
+  async getMatchesForDay(dayOffset: number): Promise<Match[]> {
     const payload = await this.request<unknown>("matches/list", {
       sport_id: "1",
-      day: "0",
+      day: String(dayOffset),
       timezone: "America/Sao_Paulo",
     });
     return flattenMatchesResponse(payload);
