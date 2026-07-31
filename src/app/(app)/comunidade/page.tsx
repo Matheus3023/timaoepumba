@@ -21,25 +21,25 @@ export default async function CommunityRoomsPage() {
 
   const unlocked = room ? (memberships ?? []).some((m) => m.room_id === room.id) : false;
 
+  if (room && unlocked) {
+    return <CommunityChatEmbed roomId={room.id} roomName={room.name} userId={user!.id} />;
+  }
+
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <h1 className="text-xl font-bold text-white">Bate-papo</h1>
       <p className="text-sm text-neutral-400">Converse, resenhe e acompanhe os jogos com quem tem o app instalado.</p>
 
-      {room && unlocked ? (
-        <CommunityChatEmbed roomId={room.id} roomName={room.name} userId={user!.id} />
-      ) : (
-        <div className="card-glow mt-4 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400">
-            <ChatIcon width={22} height={22} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-white">Bate-papo ao vivo</p>
-            <p className="text-sm text-neutral-400">Libera assim que voce cria sua conta</p>
-          </div>
-          <span className="badge shrink-0 bg-neutral-700/50 text-neutral-300">🔒</span>
+      <div className="card-glow mt-4 flex items-center gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400">
+          <ChatIcon width={22} height={22} />
         </div>
-      )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-white">Bate-papo ao vivo</p>
+          <p className="text-sm text-neutral-400">Libera assim que voce cria sua conta</p>
+        </div>
+        <span className="badge shrink-0 bg-neutral-700/50 text-neutral-300">🔒</span>
+      </div>
     </div>
   );
 }
@@ -70,7 +70,7 @@ async function CommunityChatEmbed({ roomId, roomName, userId }: { roomId: string
   await trackServerEvent({ eventName: "CommunityRoomEntered", userId, properties: { room_id: roomId } });
 
   return (
-    <div className="mt-4 flex h-[55dvh] flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/40">
+    <div className="flex h-[calc(100dvh-4rem)] flex-col">
       <CommunityRoomChat
         roomId={roomId}
         roomName={roomName}
