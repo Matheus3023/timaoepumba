@@ -7,6 +7,8 @@ const LINKS = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/usuarios", label: "Usuarios / CRM" },
   { href: "/admin/analises", label: "Analises" },
+  { href: "/admin/comunidade", label: "Moderacao" },
+  { href: "/admin/dados-esportivos", label: "Dados esportivos" },
   { href: "/admin/afiliados", label: "Casa parceira" },
   { href: "/admin/push", label: "Push" },
   { href: "/admin/onboarding", label: "Onboarding" },
