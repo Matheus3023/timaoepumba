@@ -16,7 +16,7 @@ const bodySchema = z.object({
  */
 export async function POST(request: NextRequest) {
   const access = await resolveAdminAccess();
-  if (!access) {
+  if (access === "unauthenticated" || access === "not_admin") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!canWrite(access, "dados_esportivos")) {
