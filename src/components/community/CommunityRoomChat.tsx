@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { useToast } from "@/components/ui/ToastProvider";
 
 const REPORT_REASONS = ["Spam", "Discurso de odio", "Assedio", "Conteudo inadequado", "Outro"];
 
@@ -65,6 +66,7 @@ export function CommunityRoomChat({
   const [onlineCount, setOnlineCount] = useState(1);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [supabase] = useState<SupabaseClient<Database>>(() => createClient());
+  const { showToast } = useToast();
 
   useEffect(() => {
     const presenceChannel = supabase.channel(`community_presence:${roomId}`, {
@@ -152,11 +154,18 @@ export function CommunityRoomChat({
 
   async function handleReport(messageId: string, reason: string) {
     setReportTarget(null);
-    await supabase.from("message_reports").insert({
+    const { error: reportError } = await supabase.from("message_reports").insert({
       message_id: messageId,
       reported_by: currentUserId,
       reason,
     });
+
+    if (reportError) {
+      showToast("Nao foi possivel enviar a denuncia.", "error");
+      return;
+    }
+
+    showToast("Denuncia enviada. A moderacao vai revisar.", "success");
     setReportedIds((prev) => new Set(prev).add(messageId));
   }
 

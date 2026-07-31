@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export function ProfileActions({ marketingConsent }: { marketingConsent: boolean }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [optedIn, setOptedIn] = useState(marketingConsent);
   const [busy, setBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -15,17 +17,28 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
   async function toggleMarketing() {
     setBusy(true);
     const next = !optedIn;
-    await fetch("/api/account/optout", {
+    const response = await fetch("/api/account/optout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ opted_out: !next }),
     });
-    setOptedIn(next);
     setBusy(false);
+
+    if (!response.ok) {
+      showToast("Nao foi possivel salvar sua preferencia.", "error");
+      return;
+    }
+    setOptedIn(next);
+    showToast(next ? "Voce vai receber novidades e promocoes." : "Voce nao vai mais receber novidades e promocoes.", "success");
   }
 
   async function handleExport() {
     const response = await fetch("/api/account/export");
+    if (!response.ok) {
+      showToast("Nao foi possivel exportar seus dados agora.", "error");
+      return;
+    }
+
     const data = await response.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -34,6 +47,7 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
     a.download = "meus-dados.json";
     a.click();
     URL.revokeObjectURL(url);
+    showToast("Seus dados foram exportados.", "success");
   }
 
   async function confirmDelete() {

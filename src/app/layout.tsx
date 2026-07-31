@@ -4,6 +4,7 @@ import "./globals.css";
 import { RootAttributionTracker } from "@/components/RootAttributionTracker";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPromptProvider } from "@/lib/onboarding/InstallPromptProvider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,9 +55,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#0b0f0c] text-neutral-100">
         <InstallPromptProvider>
-          <RootAttributionTracker />
-          <ServiceWorkerRegistration />
-          {children}
+          <ToastProvider>
+            <RootAttributionTracker />
+            <ServiceWorkerRegistration />
+            {children}
+          </ToastProvider>
         </InstallPromptProvider>
       </body>
     </html>
