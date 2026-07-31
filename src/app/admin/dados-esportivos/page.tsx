@@ -30,6 +30,8 @@ const PRESETS: { label: string; path: string; params: ParamRow[] }[] = [
   { label: "Torneio: proximos jogos", path: "tournaments/fixtures", params: [{ key: "tournament_template_id", value: "" }, { key: "season_id", value: "" }, { key: "page", value: "1" }] },
   { label: "Torneio: classificacao", path: "tournaments/standings", params: [{ key: "tournament_stage_id", value: "" }, { key: "tournament_id", value: "" }, { key: "type", value: "overall" }] },
   { label: "Torneio: artilheiros", path: "tournaments/standings/top-scorers", params: [{ key: "tournament_id", value: "" }, { key: "tournament_stage_id", value: "" }] },
+  // Player — confirmed real paths (nao usado pelo app ainda, mas mapeado)
+  { label: "Jogador: detalhes", path: "players/details", params: [{ key: "player_url", value: "" }] },
   // General — confirmed real paths
   { label: "Buscar", path: "general/search", params: [{ key: "q", value: "real madrid" }] },
   { label: "Esportes", path: "general/sports", params: [] },
