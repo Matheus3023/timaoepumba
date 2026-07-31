@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export function ProfileActions({ marketingConsent }: { marketingConsent: boolean }) {
   const router = useRouter();
   const [optedIn, setOptedIn] = useState(marketingConsent);
   const [busy, setBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   async function toggleMarketing() {
     setBusy(true);
@@ -33,14 +36,15 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
     URL.revokeObjectURL(url);
   }
 
-  async function handleDelete() {
-    if (!confirm("Tem certeza que deseja solicitar a exclusao da sua conta?")) return;
+  async function confirmDelete() {
+    setDeleteOpen(false);
     setBusy(true);
     await fetch("/api/account/delete", { method: "POST" });
     router.push("/");
   }
 
-  async function handleLogout() {
+  async function confirmLogout() {
+    setLogoutOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
@@ -60,13 +64,32 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
         Exportar meus dados
       </button>
 
-      <button onClick={handleDelete} disabled={busy} className="btn-secondary text-red-400">
+      <button onClick={() => setDeleteOpen(true)} disabled={busy} className="btn-secondary text-red-400">
         Solicitar exclusao da conta
       </button>
 
-      <button onClick={handleLogout} className="btn-secondary">
+      <button onClick={() => setLogoutOpen(true)} className="btn-secondary">
         Sair
       </button>
+
+      <ConfirmModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={confirmDelete}
+        title="Excluir sua conta?"
+        description="Isso solicita a exclusao definitiva da sua conta e dos seus dados. Essa acao nao pode ser desfeita."
+        confirmLabel="Excluir conta"
+        destructive
+      />
+
+      <ConfirmModal
+        open={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={confirmLogout}
+        title="Sair da conta?"
+        description="Voce precisara fazer login novamente para acessar o aplicativo."
+        confirmLabel="Sair"
+      />
     </section>
   );
 }

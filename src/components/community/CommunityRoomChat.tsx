@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+
+const REPORT_REASONS = ["Spam", "Discurso de odio", "Assedio", "Conteudo inadequado", "Outro"];
 
 function mapMessageError(message: string): string {
   if (message.includes("links_not_allowed")) return "Links nao sao permitidos para usuarios comuns.";
@@ -58,6 +61,7 @@ export function CommunityRoomChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
   const [onlineCount, setOnlineCount] = useState(1);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [supabase] = useState<SupabaseClient<Database>>(() => createClient());
@@ -146,11 +150,12 @@ export function CommunityRoomChat({
     setError(mapMessageError(insertError.message));
   }
 
-  async function handleReport(messageId: string) {
+  async function handleReport(messageId: string, reason: string) {
+    setReportTarget(null);
     await supabase.from("message_reports").insert({
       message_id: messageId,
       reported_by: currentUserId,
-      reason: "Conteudo inadequado",
+      reason,
     });
     setReportedIds((prev) => new Set(prev).add(messageId));
   }
@@ -196,7 +201,7 @@ export function CommunityRoomChat({
                 {!isOwn && (
                   <button
                     type="button"
-                    onClick={() => handleReport(message.id)}
+                    onClick={() => setReportTarget(message.id)}
                     disabled={reportedIds.has(message.id)}
                     className="mt-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
                   >
@@ -224,6 +229,22 @@ export function CommunityRoomChat({
           Enviar
         </button>
       </form>
+
+      <BottomSheet open={reportTarget !== null} onClose={() => setReportTarget(null)} title="Denunciar mensagem">
+        <p className="mb-3 text-sm text-neutral-400">Qual o motivo da denuncia?</p>
+        <div className="flex flex-col gap-1.5 pb-2">
+          {REPORT_REASONS.map((reason) => (
+            <button
+              key={reason}
+              type="button"
+              onClick={() => reportTarget && handleReport(reportTarget, reason)}
+              className="rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-left text-sm text-neutral-200 transition hover:border-red-400/40 hover:bg-red-500/5 hover:text-red-300"
+            >
+              {reason}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
     </div>
   );
 }
