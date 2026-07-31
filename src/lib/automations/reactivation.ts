@@ -3,6 +3,24 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { logTimelineEvent } from "@/lib/crm/timeline";
 import { moveUserToStage } from "@/lib/crm/pipeline";
 import { sendPushToUser } from "@/lib/push/fcm";
+import { evaluateContactEligibility } from "@/lib/communication/eligibility";
+
+/** Sends a reactivation push only if the eligibility engine clears it, logging suppression like any other campaign send. */
+async function sendReactivationPush(userId: string, push: { title: string; body: string; link: string }) {
+  const admin = createAdminSupabaseClient();
+  const eligibility = await evaluateContactEligibility(userId, "content");
+  if (!eligibility.eligible) {
+    await admin.from("push_deliveries").insert({ user_id: userId, status: "failed", failure_reason: eligibility.reason });
+    return;
+  }
+  const result = await sendPushToUser(userId, push);
+  await admin.from("push_deliveries").insert({
+    user_id: userId,
+    status: result.sent > 0 ? "sent" : "failed",
+    sent_at: result.sent > 0 ? new Date().toISOString() : null,
+    failure_reason: result.sent > 0 ? null : "no_active_subscription_or_send_failed",
+  });
+}
 
 /** Tag names seeded in supabase/migrations/0004_moderation.sql. */
 const REACTIVATION_TAGS = {
@@ -142,7 +160,7 @@ export async function runInactivityAutomation(): Promise<RunSummary> {
         eventType: "reactivation_d7",
         description: "Inativo ha 7 dias — entrou no segmento de reativacao",
       });
-      await sendPushToUser(candidate.user_id, {
+      await sendReactivationPush(candidate.user_id, {
         title: "Sentimos sua falta!",
         body: "Os jogos e analises de hoje estao te esperando.",
         link: "/home",
@@ -156,7 +174,7 @@ export async function runInactivityAutomation(): Promise<RunSummary> {
         eventType: "reactivation_d3",
         description: "Inativo ha 3 dias — enviado conteudo relevante",
       });
-      await sendPushToUser(candidate.user_id, {
+      await sendReactivationPush(candidate.user_id, {
         title: "Novidades esperando por voce",
         body: "Confira as ultimas analises e os jogos de hoje.",
         link: "/home",

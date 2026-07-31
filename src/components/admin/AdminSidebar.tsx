@@ -7,6 +7,7 @@ import type { AdminProfile, AdminSection } from "@/lib/admin/access";
 const LINKS: { href: string; label: string; section: AdminSection }[] = [
   { href: "/admin/dashboard", label: "Dashboard", section: "dashboard" },
   { href: "/admin/usuarios", label: "Usuarios / CRM", section: "usuarios" },
+  { href: "/admin/segmentos", label: "Segmentos", section: "segmentos" },
   { href: "/admin/analises", label: "Analises", section: "analises" },
   { href: "/admin/comunidade", label: "Moderacao", section: "comunidade" },
   { href: "/admin/dados-esportivos", label: "Dados esportivos", section: "dados_esportivos" },
