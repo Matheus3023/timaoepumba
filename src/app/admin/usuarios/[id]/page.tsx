@@ -5,6 +5,7 @@ import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
 import { computeAndSaveUserScore } from "@/lib/scoring/compute";
 import { UserProfileTabs } from "@/components/admin/UserProfileTabs";
+import { BackButton } from "@/components/ui/BackButton";
 
 async function addNote(userId: string, formData: FormData) {
   "use server";
@@ -122,6 +123,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
 
   return (
     <div>
+      <BackButton fallbackHref="/admin/usuarios" className="mb-3" />
+
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">{user.full_name}</h1>

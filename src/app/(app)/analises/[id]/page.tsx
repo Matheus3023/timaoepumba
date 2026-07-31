@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { trackServerEvent } from "@/lib/tracking/events";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default async function AnalysisDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,6 +32,8 @@ export default async function AnalysisDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
+      <BackButton fallbackHref="/analises" className="mb-3" />
+
       {analysis.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={analysis.image_url} alt={analysis.title} className="mb-4 w-full rounded-xl object-cover" />

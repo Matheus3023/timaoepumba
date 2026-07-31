@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSportsDataProvider } from "@/lib/sports";
 import { trackServerEvent } from "@/lib/tracking/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { TeamAvatar } from "@/components/app/TeamAvatar";
 import { MatchDetailTabs } from "@/components/app/MatchDetailTabs";
-import { ArrowLeftIcon } from "@/components/icons";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -42,10 +41,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <Link href="/jogos" className="inline-flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-200">
-        <ArrowLeftIcon width={16} height={16} />
-        Voltar
-      </Link>
+      <BackButton fallbackHref="/jogos" />
 
       <div className="card-glow mt-3">
         <p className="text-center text-xs text-neutral-500">{match.league.name}</p>
