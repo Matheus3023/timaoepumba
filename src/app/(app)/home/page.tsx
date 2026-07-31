@@ -21,10 +21,9 @@ export default async function HomePage() {
   ]);
 
   const provider = getSportsDataProvider();
-  const [{ data: todayMatches }, { data: liveMatches }] = await Promise.all([
-    getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () => provider.getTodayMatches()),
-    getOrSetCache("live_matches", CACHE_TTL_SECONDS.liveMatches, () => provider.getLiveMatches()),
-  ]);
+  const { data: todayMatches } = await getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () =>
+    provider.getTodayMatches()
+  );
 
   const accessLevel = appUser?.access_level ?? "APP_USER";
   const registrationDone = accessLevel !== "APP_USER" && accessLevel !== "VISITOR";
@@ -37,7 +36,6 @@ export default async function HomePage() {
       registrationDone={registrationDone}
       communityUnlocked={communityUnlocked}
       ftdDone={ftdDone}
-      liveMatches={liveMatches}
       todayMatches={todayMatches}
       analyses={analyses ?? []}
     />

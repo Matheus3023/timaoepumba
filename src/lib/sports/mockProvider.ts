@@ -111,6 +111,10 @@ export class MockSportsDataProvider implements SportsDataProvider {
     return [];
   }
 
+  async getTeamRecentMatches(): Promise<HeadToHeadMatch[]> {
+    return [];
+  }
+
   async getStandingsForMatch(): Promise<Standing[]> {
     return [];
   }

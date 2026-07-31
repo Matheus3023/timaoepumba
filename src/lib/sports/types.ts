@@ -79,6 +79,7 @@ export interface SportsDataProvider {
   getMatchEvents(matchId: string): Promise<MatchEvent[]>;
   getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>>;
   getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]>;
+  getTeamRecentMatches(teamId: string, limit?: number): Promise<HeadToHeadMatch[]>;
   getStandingsForMatch(matchId: string): Promise<Standing[]>;
   getStandings(leagueId: string): Promise<Standing[]>;
   getTeamDetails(teamId: string): Promise<TeamDetails>;

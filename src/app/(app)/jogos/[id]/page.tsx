@@ -18,9 +18,11 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  const [h2h, standings] = await Promise.all([
+  const [h2h, standings, homeTeamRecent, awayTeamRecent] = await Promise.all([
     provider.getHeadToHead(id).catch(() => []),
     provider.getStandingsForMatch(id).catch(() => []),
+    provider.getTeamRecentMatches(match.homeTeam.id, 5).catch(() => []),
+    provider.getTeamRecentMatches(match.awayTeam.id, 5).catch(() => []),
   ]);
 
   const supabase = await createServerSupabaseClient();
@@ -82,6 +84,8 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         homeTeamName={match.homeTeam.name}
         awayTeamName={match.awayTeam.name}
         h2h={h2h}
+        homeTeamRecent={homeTeamRecent}
+        awayTeamRecent={awayTeamRecent}
       />
     </div>
   );

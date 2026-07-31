@@ -27,6 +27,8 @@ export function MatchDetailTabs({
   homeTeamName,
   awayTeamName,
   h2h,
+  homeTeamRecent,
+  awayTeamRecent,
 }: {
   kickoffLabel: string;
   competition: string;
@@ -36,6 +38,8 @@ export function MatchDetailTabs({
   homeTeamName: string;
   awayTeamName: string;
   h2h: HeadToHeadMatch[];
+  homeTeamRecent: HeadToHeadMatch[];
+  awayTeamRecent: HeadToHeadMatch[];
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
   const statEntries = Object.entries(statistics);
@@ -137,24 +141,93 @@ export function MatchDetailTabs({
             <EmptyState text="Classificacao indisponivel para esta partida." />
           ))}
 
-        {tab === "H2H" &&
-          (h2h.length > 0 ? (
-            <ul className="flex flex-col gap-2">
-              {h2h.map((m) => (
-                <li key={m.id} className="card text-sm">
-                  <p className="text-xs text-neutral-500">
-                    {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
-                  </p>
-                  <p className="mt-1 font-medium text-white">
-                    {m.homeTeam} {m.homeScore ?? "-"} - {m.awayScore ?? "-"} {m.awayTeam}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState text="Nenhum confronto anterior encontrado." />
-          ))}
+        {tab === "H2H" && (
+          <div className="flex flex-col gap-5">
+            <RecentForm title={`Ultimos jogos — ${homeTeamName}`} teamName={homeTeamName} matches={homeTeamRecent} />
+            <RecentForm title={`Ultimos jogos — ${awayTeamName}`} teamName={awayTeamName} matches={awayTeamRecent} />
+
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-neutral-200">Confronto direto</h3>
+              {h2h.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {h2h.map((m) => (
+                    <li key={m.id} className="card text-sm">
+                      <p className="text-xs text-neutral-500">
+                        {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
+                      </p>
+                      <p className="mt-1 font-medium text-white">
+                        {m.homeTeam} {m.homeScore ?? "-"} - {m.awayScore ?? "-"} {m.awayTeam}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState text="Nenhum confronto anterior encontrado." />
+              )}
+            </div>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function resultForTeam(m: HeadToHeadMatch, teamName: string): "V" | "E" | "D" | null {
+  if (m.homeScore === null || m.awayScore === null) return null;
+  const isHome = m.homeTeam === teamName;
+  const own = isHome ? m.homeScore : m.awayScore;
+  const opp = isHome ? m.awayScore : m.homeScore;
+  if (own === opp) return "E";
+  return own > opp ? "V" : "D";
+}
+
+const RESULT_STYLE: Record<"V" | "E" | "D", string> = {
+  V: "bg-emerald-500/15 text-emerald-300",
+  E: "bg-neutral-700/40 text-neutral-300",
+  D: "bg-red-500/15 text-red-300",
+};
+
+function RecentForm({ title, teamName, matches }: { title: string; teamName: string; matches: HeadToHeadMatch[] }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-neutral-200">{title}</h3>
+        {matches.length > 0 && (
+          <div className="flex gap-1">
+            {matches.map((m) => {
+              const result = resultForTeam(m, teamName);
+              return (
+                <span
+                  key={m.id}
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                    result ? RESULT_STYLE[result] : "bg-neutral-800 text-neutral-500"
+                  }`}
+                >
+                  {result ?? "—"}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {matches.length > 0 ? (
+        <ul className="flex flex-col gap-2">
+          {matches.map((m) => (
+            <li key={m.id} className="card flex items-center justify-between text-sm">
+              <div className="min-w-0">
+                <p className="truncate text-xs text-neutral-500">
+                  {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
+                </p>
+                <p className="truncate font-medium text-white">
+                  {m.homeTeam} {m.homeScore ?? "-"} - {m.awayScore ?? "-"} {m.awayTeam}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState text={`Sem jogos recentes de ${teamName} disponiveis.`} />
+      )}
     </div>
   );
 }

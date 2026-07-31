@@ -28,12 +28,13 @@ const fadeUp = {
   }),
 };
 
+const HOME_MATCHES_PREVIEW_LIMIT = 4;
+
 export function HomeView({
   firstName,
   registrationDone,
   communityUnlocked,
   ftdDone,
-  liveMatches,
   todayMatches,
   analyses,
 }: {
@@ -41,7 +42,6 @@ export function HomeView({
   registrationDone: boolean;
   communityUnlocked: boolean;
   ftdDone: boolean;
-  liveMatches: Match[];
   todayMatches: Match[];
   analyses: AnalysisPreview[];
 }) {
@@ -92,22 +92,14 @@ export function HomeView({
         )}
       </motion.section>
 
-      {liveMatches.length > 0 && (
-        <Section title="Jogos ao vivo" delay={2} live>
-          {liveMatches.map((match) => (
-            <MatchRow key={match.id} match={match} />
-          ))}
-        </Section>
-      )}
-
-      <Section title="Jogos de hoje" delay={3}>
+      <Section title="Jogos de hoje" delay={2} action={{ href: "/jogos", label: "Ver todos" }}>
         {todayMatches.length === 0 && <EmptyState text="Nenhum jogo cadastrado para hoje." />}
-        {todayMatches.map((match) => (
+        {todayMatches.slice(0, HOME_MATCHES_PREVIEW_LIMIT).map((match) => (
           <MatchRow key={match.id} match={match} />
         ))}
       </Section>
 
-      <Section title="Analises recentes" delay={4} action={{ href: "/analises", label: "Ver todas" }}>
+      <Section title="Analises recentes" delay={3} action={{ href: "/analises", label: "Ver todas" }}>
         {analyses.length === 0 && <EmptyState text="Nenhuma analise publicada ainda." />}
         {analyses.map((analysis) => (
           <Link key={analysis.id} href={`/analises/${analysis.id}`} className="card block transition-transform hover:-translate-y-0.5">
@@ -124,7 +116,7 @@ export function HomeView({
         ))}
       </Section>
 
-      <motion.section initial="hidden" animate="show" custom={5} variants={fadeUp} className="mt-6">
+      <motion.section initial="hidden" animate="show" custom={4} variants={fadeUp} className="mt-6">
         <Link
           href="/comunidade"
           className="card-glow group flex items-center justify-between transition-transform hover:-translate-y-0.5"

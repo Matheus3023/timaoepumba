@@ -314,36 +314,45 @@ export class FlashscoreProvider implements SportsDataProvider {
     return stats;
   }
 
+  private mapGenericMatchRow(item: unknown, index: number, idPrefix: string): HeadToHeadMatch | null {
+    const raw = item as Record<string, unknown>;
+    const homeTeam =
+      pickString(raw, ["home_team_name"]) || pickString((raw.home_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
+    const awayTeam =
+      pickString(raw, ["away_team_name"]) || pickString((raw.away_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
+    if (!homeTeam || !awayTeam) return null;
+
+    const scores = (raw.scores ?? {}) as Record<string, unknown>;
+    const timestamp = pickNumber(raw, ["timestamp"], NaN);
+    const homeScoreRaw = pickNumber(scores, ["home"], NaN);
+    const awayScoreRaw = pickNumber(scores, ["away"], NaN);
+    return {
+      id: pickString(raw, ["match_id", "id"], `${idPrefix}_${index}`),
+      date: Number.isNaN(timestamp) ? null : new Date(timestamp * 1000).toISOString(),
+      competition: pickString(raw, ["tournament_name", "competition"]) || null,
+      homeTeam,
+      awayTeam,
+      homeScore: Number.isNaN(homeScoreRaw) ? null : homeScoreRaw,
+      awayScore: Number.isNaN(awayScoreRaw) ? null : awayScoreRaw,
+    };
+  }
+
   async getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]> {
     const payload = await this.request<unknown>("matches/h2h", { match_id: matchId });
     const rows = pickArray(payload, ["h2h", "matches", "meetings"]);
-
     return rows
-      .map((item, index): HeadToHeadMatch | null => {
-        const raw = item as Record<string, unknown>;
-        const homeTeam = pickString(raw, ["home_team_name"]) || pickString((raw.home_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
-        const awayTeam = pickString(raw, ["away_team_name"]) || pickString((raw.away_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
-        if (!homeTeam || !awayTeam) return null;
-
-        const scores = (raw.scores ?? {}) as Record<string, unknown>;
-        const timestamp = pickNumber(raw, ["timestamp"], NaN);
-        return {
-          id: pickString(raw, ["match_id", "id"], `${matchId}_h2h_${index}`),
-          date: Number.isNaN(timestamp) ? null : new Date(timestamp * 1000).toISOString(),
-          competition: pickString(raw, ["tournament_name", "competition"]) || null,
-          homeTeam,
-          awayTeam,
-          homeScore: (() => {
-            const v = pickNumber(scores, ["home"], NaN);
-            return Number.isNaN(v) ? null : v;
-          })(),
-          awayScore: (() => {
-            const v = pickNumber(scores, ["away"], NaN);
-            return Number.isNaN(v) ? null : v;
-          })(),
-        };
-      })
+      .map((item, index) => this.mapGenericMatchRow(item, index, `${matchId}_h2h`))
       .filter((m): m is HeadToHeadMatch => m !== null);
+  }
+
+  /** teams/results — a team's recent match history, used to show "ultimos 5 jogos" per side on the match center. */
+  async getTeamRecentMatches(teamId: string, limit = 5): Promise<HeadToHeadMatch[]> {
+    const payload = await this.request<unknown>("teams/results", { team_id: teamId, page: "1" });
+    const rows = pickArray(payload, ["results", "matches", "data"]);
+    return rows
+      .map((item, index) => this.mapGenericMatchRow(item, index, `${teamId}_recent`))
+      .filter((m): m is HeadToHeadMatch => m !== null)
+      .slice(0, limit);
   }
 
   /** matches/standings (match-scoped, distinct from tournaments/standings) — takes just a match_id. */
