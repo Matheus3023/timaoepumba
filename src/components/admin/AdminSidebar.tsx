@@ -13,6 +13,8 @@ const LINKS: { href: string; label: string; section: AdminSection }[] = [
   { href: "/admin/dados-esportivos", label: "Dados esportivos", section: "dados_esportivos" },
   { href: "/admin/afiliados", label: "Casa parceira", section: "afiliados" },
   { href: "/admin/push", label: "Push", section: "push" },
+  { href: "/admin/relatorios/retencao", label: "Retencao", section: "relatorios" },
+  { href: "/admin/relatorios/comunicacoes", label: "Comunicacoes", section: "relatorios" },
   { href: "/admin/onboarding", label: "Onboarding", section: "onboarding" },
   { href: "/admin/auditoria", label: "Auditoria", section: "auditoria" },
   { href: "/admin/equipe", label: "Equipe", section: "equipe" },
