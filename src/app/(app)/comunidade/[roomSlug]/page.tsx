@@ -33,10 +33,14 @@ export default async function CommunityRoomPage({ params }: { params: Promise<{ 
     .limit(50);
 
   const authorIds = [...new Set((initialMessages ?? []).map((m) => m.user_id))];
-  const { data: authors } = authorIds.length
-    ? await admin.from("users").select("id, full_name").in("id", authorIds)
-    : { data: [] as { id: string; full_name: string | null }[] };
+  const [{ data: authors }, { data: authorMemberships }] = authorIds.length
+    ? await Promise.all([
+        admin.from("users").select("id, full_name").in("id", authorIds),
+        admin.from("community_members").select("user_id, role").eq("room_id", room.id).in("user_id", authorIds),
+      ])
+    : [{ data: [] as { id: string; full_name: string | null }[] }, { data: [] as { user_id: string; role: string }[] }];
   const authorNameById = new Map((authors ?? []).map((a) => [a.id, a.full_name ?? "Torcedor"]));
+  const authorRoleById = new Map((authorMemberships ?? []).map((m) => [m.user_id, m.role]));
 
   await trackServerEvent({ eventName: "CommunityRoomEntered", userId: user!.id, properties: { room_id: room.id } });
 
@@ -57,6 +61,7 @@ export default async function CommunityRoomPage({ params }: { params: Promise<{ 
           created_at: m.created_at,
           is_pinned: m.is_pinned,
           author_name: authorNameById.get(m.user_id) ?? "Torcedor",
+          author_role: authorRoleById.get(m.user_id) ?? "usuario",
         }))}
       />
     </div>

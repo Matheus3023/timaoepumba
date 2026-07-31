@@ -12,6 +12,18 @@ function mapMessageError(message: string): string {
   return "Nao foi possivel enviar a mensagem.";
 }
 
+const STAFF_ROLE_LABEL: Record<string, string> = {
+  administrador: "Admin",
+  gestor: "Gestor",
+  analista: "Analista",
+  moderador: "Moderador",
+  suporte: "Suporte",
+};
+
+function isStaffRole(role: string): boolean {
+  return role in STAFF_ROLE_LABEL;
+}
+
 interface ChatMessage {
   id: string;
   user_id: string;
@@ -19,6 +31,7 @@ interface ChatMessage {
   created_at: string;
   is_pinned: boolean;
   author_name: string;
+  author_role: string;
 }
 
 /**
@@ -52,7 +65,15 @@ export function CommunityRoomChat({
         { event: "INSERT", schema: "public", table: "community_messages", filter: `room_id=eq.${roomId}` },
         async (payload) => {
           const row = payload.new as { id: string; user_id: string; content: string; created_at: string; is_pinned: boolean };
-          const { data: author } = await supabase.from("users").select("full_name").eq("id", row.user_id).maybeSingle();
+          const [{ data: author }, { data: membership }] = await Promise.all([
+            supabase.from("users").select("full_name").eq("id", row.user_id).maybeSingle(),
+            supabase
+              .from("community_members")
+              .select("role")
+              .eq("room_id", roomId)
+              .eq("user_id", row.user_id)
+              .maybeSingle(),
+          ]);
           setMessages((prev) => [
             ...prev,
             {
@@ -62,6 +83,7 @@ export function CommunityRoomChat({
               created_at: row.created_at,
               is_pinned: row.is_pinned,
               author_name: author?.full_name ?? "Torcedor",
+              author_role: membership?.role ?? "usuario",
             },
           ]);
         }
@@ -112,31 +134,45 @@ export function CommunityRoomChat({
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto px-4">
         <div className="flex flex-col gap-2 pb-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                message.user_id === currentUserId
-                  ? "self-end bg-yellow-400 text-neutral-900"
-                  : "self-start bg-neutral-800 text-neutral-100"
-              }`}
-            >
-              {message.user_id !== currentUserId && (
-                <p className="mb-0.5 text-xs font-semibold opacity-70">{message.author_name}</p>
-              )}
-              <p>{message.content}</p>
-              {message.user_id !== currentUserId && (
-                <button
-                  type="button"
-                  onClick={() => handleReport(message.id)}
-                  disabled={reportedIds.has(message.id)}
-                  className="mt-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
-                >
-                  {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
-                </button>
-              )}
-            </div>
-          ))}
+          {messages.map((message) => {
+            const isOwn = message.user_id === currentUserId;
+            const isStaff = isStaffRole(message.author_role);
+
+            return (
+              <div
+                key={message.id}
+                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                  isOwn
+                    ? "self-end bg-yellow-400 text-neutral-900"
+                    : isStaff
+                      ? "self-start border border-emerald-500/30 bg-emerald-500/10 text-neutral-100"
+                      : "self-start bg-neutral-800 text-neutral-100"
+                }`}
+              >
+                {!isOwn && (
+                  <p className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold opacity-90">
+                    <span className={isStaff ? "text-emerald-300" : "opacity-70"}>{message.author_name}</span>
+                    {isStaff && (
+                      <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
+                        {STAFF_ROLE_LABEL[message.author_role]}
+                      </span>
+                    )}
+                  </p>
+                )}
+                <p>{message.content}</p>
+                {!isOwn && (
+                  <button
+                    type="button"
+                    onClick={() => handleReport(message.id)}
+                    disabled={reportedIds.has(message.id)}
+                    className="mt-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
+                  >
+                    {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
           <div ref={bottomRef} />
         </div>
       </div>

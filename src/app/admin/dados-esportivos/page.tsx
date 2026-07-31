@@ -165,11 +165,19 @@ export default function SportsDataDebugPage() {
 
       {result && (
         <div className="card mt-4">
-          <div className="flex items-center gap-3 text-sm">
-            <span className={`badge ${result.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>
-              {String(result.status)}
-            </span>
-            <span className="text-neutral-500">{String(result.duration_ms)}ms</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-sm">
+              <span className={`badge ${result.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>
+                {String(result.status)}
+              </span>
+              <span className="text-neutral-500">{String(result.duration_ms)}ms</span>
+            </div>
+            <button
+              onClick={() => navigator.clipboard.writeText(JSON.stringify(result.body, null, 2))}
+              className="btn-secondary px-3 py-1.5 text-xs"
+            >
+              Copiar JSON
+            </button>
           </div>
           <p className="mt-2 break-all font-mono text-xs text-neutral-500">{String(result.requested_url)}</p>
           <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-neutral-950 p-3 text-xs text-neutral-300">

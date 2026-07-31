@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     .from("affiliate_configurations")
     .select("*")
     .eq("status", "active")
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 

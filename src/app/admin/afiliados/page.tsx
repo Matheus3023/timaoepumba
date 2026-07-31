@@ -5,7 +5,19 @@ async function saveConfig(formData: FormData) {
   "use server";
 
   const admin = createAdminSupabaseClient();
-  const id = String(formData.get("id") ?? "");
+
+  // Look up the current active config server-side instead of trusting a
+  // client-submitted hidden "id" field — that field goes stale after the
+  // first save (React doesn't refresh an uncontrolled input's defaultValue
+  // on re-render), which was silently creating a duplicate "active" row
+  // on every subsequent save instead of updating the existing one.
+  const { data: existing } = await admin
+    .from("affiliate_configurations")
+    .select("id")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const payload = {
     name: String(formData.get("name") ?? ""),
@@ -15,8 +27,8 @@ async function saveConfig(formData: FormData) {
     status: "active",
   };
 
-  if (id) {
-    await admin.from("affiliate_configurations").update(payload).eq("id", id);
+  if (existing) {
+    await admin.from("affiliate_configurations").update(payload).eq("id", existing.id);
   } else {
     await admin.from("affiliate_configurations").insert(payload);
   }
@@ -26,12 +38,14 @@ async function saveConfig(formData: FormData) {
 
 export default async function AdminAffiliatePage() {
   const admin = createAdminSupabaseClient();
-  const { data: config } = await admin
+  const { data: activeConfigs } = await admin
     .from("affiliate_configurations")
     .select("*")
     .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
+
+  const config = activeConfigs?.[0];
+  const duplicates = (activeConfigs?.length ?? 0) - 1;
 
   return (
     <div className="max-w-xl">
@@ -40,8 +54,22 @@ export default async function AdminAffiliatePage() {
         O link de cadastro e gerado dinamicamente com o Lead ID do usuario como subid.
       </p>
 
+      {duplicates > 0 && (
+        <div className="card mt-4 border-red-500/30 bg-red-500/5">
+          <p className="text-sm font-semibold text-red-300">
+            {duplicates} configuracao(oes) duplicada(s) com status ativo encontrada(s).
+          </p>
+          <p className="mt-1 text-sm text-red-200">
+            Isso vinha de um bug no formulario (ja corrigido) que criava um novo registro a cada
+            salvamento em vez de atualizar. Editando e salvando abaixo, esta tela passa a usar
+            sempre o mais recente — mas para limpar de vez, apague as linhas antigas na tabela{" "}
+            <code>affiliate_configurations</code> pelo Supabase (mantenha so uma com status
+            &quot;active&quot;).
+          </p>
+        </div>
+      )}
+
       <form action={saveConfig} className="card mt-4 flex flex-col gap-3">
-        <input type="hidden" name="id" defaultValue={config?.id ?? ""} />
         <label className="flex flex-col gap-1 text-sm text-neutral-300">
           Nome da casa
           <input name="name" defaultValue={config?.name} required className="input" />
