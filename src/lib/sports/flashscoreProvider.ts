@@ -72,6 +72,56 @@ function mapMatch(raw: RawMatch, league: League): Match {
   };
 }
 
+function pickString(obj: Record<string, unknown> | undefined | null, keys: string[], fallback = ""): string {
+  if (!obj) return fallback;
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value === "string" && value) return value;
+  }
+  return fallback;
+}
+
+function pickNumber(obj: Record<string, unknown> | undefined | null, keys: string[], fallback = 0): number {
+  if (!obj) return fallback;
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value !== "" && Number.isFinite(Number(value))) return Number(value);
+  }
+  return fallback;
+}
+
+function pickArray(payload: unknown, keys: string[]): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    for (const key of keys) {
+      const value = (payload as Record<string, unknown>)[key];
+      if (Array.isArray(value)) return value;
+    }
+  }
+  return [];
+}
+
+/**
+ * Extracts standing rows regardless of whether the API returns a flat
+ * array of rows or an array of groups (e.g. home/away or multi-group
+ * tournaments) each holding a nested "rows" array — tournaments/standings'
+ * exact shape wasn't confirmed with a real example at write time, so this
+ * degrades gracefully across the plausible variants instead of assuming one.
+ */
+function extractStandingRows(payload: unknown): unknown[] {
+  const candidates = Array.isArray(payload) ? payload : pickArray(payload, ["standings", "table", "rows", "teams"]);
+  if (
+    candidates.length > 0 &&
+    candidates[0] &&
+    typeof candidates[0] === "object" &&
+    Array.isArray((candidates[0] as Record<string, unknown>).rows)
+  ) {
+    return candidates.flatMap((group) => ((group as Record<string, unknown>).rows as unknown[]) ?? []);
+  }
+  return candidates;
+}
+
 /** Flattens the `matches/list` (and `matches/live`) response — grouped by tournament — into a flat Match[]. */
 function flattenMatchesResponse(payload: unknown): Match[] {
   if (!Array.isArray(payload)) return [];
@@ -180,14 +230,93 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchEvents(matchId: string): Promise<MatchEvent[]> {
-    throw new Error(`FlashscoreProvider.getMatchEvents(${matchId}): matches/match/summary response shape not confirmed yet`);
+    const payload = await this.request<unknown>("matches/match/summary", { match_id: matchId });
+    const rawEvents = pickArray(payload, ["events", "incidents", "summary", "timeline"]);
+
+    const TYPE_MAP: Record<string, MatchEvent["type"]> = {
+      goal: "goal",
+      Goal: "goal",
+      yellow_card: "yellow_card",
+      "yellow-card": "yellow_card",
+      YellowCard: "yellow_card",
+      red_card: "red_card",
+      "red-card": "red_card",
+      RedCard: "red_card",
+      substitution: "substitution",
+      Substitution: "substitution",
+      sub: "substitution",
+      var: "var",
+      VAR: "var",
+    };
+
+    return rawEvents.map((item, index) => {
+      const raw = item as Record<string, unknown>;
+      const rawType = pickString(raw, ["type", "incident_type", "event_type"], "goal");
+      const minute = pickNumber(raw, ["minute", "time", "minute_of_match"], NaN);
+      return {
+        id: pickString(raw, ["id", "incident_id", "event_id"], `${matchId}_evt_${index}`),
+        minute: Number.isNaN(minute) ? null : minute,
+        type: TYPE_MAP[rawType] ?? "goal",
+        teamId: pickString(raw, ["team_id", "teamId"]) || null,
+        playerName: pickString(raw, ["player_name", "player", "playerName"]) || null,
+        detail: pickString(raw, ["detail", "description"]) || null,
+      };
+    });
   }
 
+  /**
+   * tournaments/standings requires BOTH tournament_stage_id and
+   * tournament_id (unlike the rest of this interface, which addresses a
+   * league by one id). Pass leagueId as "stageId:tournamentId"; a bare id
+   * is used for both as a best-effort fallback.
+   */
   async getStandings(leagueId: string): Promise<Standing[]> {
-    throw new Error(`FlashscoreProvider.getStandings(${leagueId}): tournaments/standings response shape not confirmed yet`);
+    const [tournamentStageId, tournamentId] = leagueId.includes(":") ? leagueId.split(":") : [leagueId, leagueId];
+    const payload = await this.request<unknown>("tournaments/standings", {
+      tournament_stage_id: tournamentStageId,
+      tournament_id: tournamentId,
+      type: "overall",
+    });
+
+    return extractStandingRows(payload).map((item, index) => {
+      const raw = item as Record<string, unknown>;
+      const teamRaw = (raw.team ?? raw) as Record<string, unknown>;
+      return {
+        teamId: pickString(teamRaw, ["team_id", "id"], `team_${index}`),
+        teamName: pickString(teamRaw, ["name", "team_name", "short_name"], "Time"),
+        position: pickNumber(raw, ["position", "rank", "place"], index + 1),
+        played: pickNumber(raw, ["played", "matches_played", "games"]),
+        wins: pickNumber(raw, ["wins", "won"]),
+        draws: pickNumber(raw, ["draws", "drawn", "ties"]),
+        losses: pickNumber(raw, ["losses", "lost", "defeats"]),
+        goalsFor: pickNumber(raw, ["goals_for", "scored", "goalsFor"]),
+        goalsAgainst: pickNumber(raw, ["goals_against", "conceded", "goalsAgainst"]),
+        points: pickNumber(raw, ["points", "pts"]),
+      };
+    });
   }
 
+  /** teamId is expected to be a team_url (e.g. "/team/corinthians/abc123/"), which is what teams/details and teams/squad require. */
   async getTeamDetails(teamId: string): Promise<TeamDetails> {
-    throw new Error(`FlashscoreProvider.getTeamDetails(${teamId}): teams/details response shape not confirmed yet`);
+    const payload = await this.request<unknown>("teams/details", { team_url: teamId });
+    const raw = (payload && typeof payload === "object" && "team" in (payload as object)
+      ? (payload as Record<string, unknown>).team
+      : payload) as Record<string, unknown>;
+
+    const squad = await this.request<unknown>("teams/squad", { team_url: teamId })
+      .then((squadPayload) =>
+        pickArray(squadPayload, ["squad", "players"])
+          .map((p) => pickString(p as Record<string, unknown>, ["name", "player_name", "short_name"]))
+          .filter(Boolean)
+      )
+      .catch(() => [] as string[]);
+
+    return {
+      id: pickString(raw, ["team_id", "id"], teamId),
+      name: pickString(raw, ["name", "team_name"], "Time"),
+      logoUrl: pickString(raw, ["image_path", "small_image_path", "logo"]) || null,
+      country: pickString(raw, ["country_name", "country"]) || null,
+      squad,
+    };
   }
 }
