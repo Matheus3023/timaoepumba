@@ -21,35 +21,47 @@ alter table marketing_optouts enable row level security;
 alter table push_subscriptions enable row level security;
 alter table sessions enable row level security;
 
+drop policy if exists "users_select_own" on users;
 create policy "users_select_own" on users
   for select using (auth.uid() = id);
+drop policy if exists "users_update_own" on users;
 create policy "users_update_own" on users
   for update using (auth.uid() = id);
 
+drop policy if exists "user_profiles_select_own" on user_profiles;
 create policy "user_profiles_select_own" on user_profiles
   for select using (auth.uid() = user_id);
+drop policy if exists "user_profiles_update_own" on user_profiles;
 create policy "user_profiles_update_own" on user_profiles
   for update using (auth.uid() = user_id);
 
+drop policy if exists "user_preferences_all_own" on user_preferences;
 create policy "user_preferences_all_own" on user_preferences
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "user_presence_all_own" on user_presence;
 create policy "user_presence_all_own" on user_presence
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "consents_select_own" on consents;
 create policy "consents_select_own" on consents
   for select using (auth.uid() = user_id);
+drop policy if exists "consents_insert_own" on consents;
 create policy "consents_insert_own" on consents
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "marketing_optouts_select_own" on marketing_optouts;
 create policy "marketing_optouts_select_own" on marketing_optouts
   for select using (auth.uid() = user_id);
+drop policy if exists "marketing_optouts_insert_own" on marketing_optouts;
 create policy "marketing_optouts_insert_own" on marketing_optouts
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "push_subscriptions_all_own" on push_subscriptions;
 create policy "push_subscriptions_all_own" on push_subscriptions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "sessions_select_own" on sessions;
 create policy "sessions_select_own" on sessions
   for select using (auth.uid() = user_id);
 
@@ -62,10 +74,15 @@ alter table matches enable row level security;
 alter table match_events enable row level security;
 alter table standings enable row level security;
 
+drop policy if exists "leagues_public_read" on leagues;
 create policy "leagues_public_read" on leagues for select using (true);
+drop policy if exists "teams_public_read" on teams;
 create policy "teams_public_read" on teams for select using (true);
+drop policy if exists "matches_public_read" on matches;
 create policy "matches_public_read" on matches for select using (true);
+drop policy if exists "match_events_public_read" on match_events;
 create policy "match_events_public_read" on match_events for select using (true);
+drop policy if exists "standings_public_read" on standings;
 create policy "standings_public_read" on standings for select using (true);
 
 -- ----------------------------------------------------------------------------
@@ -75,12 +92,15 @@ alter table analyses enable row level security;
 alter table analysis_views enable row level security;
 alter table analysis_reactions enable row level security;
 
+drop policy if exists "analyses_published_read" on analyses;
 create policy "analyses_published_read" on analyses
   for select using (status = 'published' and auth.role() = 'authenticated');
 
+drop policy if exists "analysis_views_insert_own" on analysis_views;
 create policy "analysis_views_insert_own" on analysis_views
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "analysis_reactions_all_own" on analysis_reactions;
 create policy "analysis_reactions_all_own" on analysis_reactions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -93,14 +113,18 @@ alter table community_messages enable row level security;
 alter table message_reactions enable row level security;
 alter table message_reports enable row level security;
 
+drop policy if exists "community_rooms_public_read" on community_rooms;
 create policy "community_rooms_public_read" on community_rooms
   for select using (is_active = true);
 
+drop policy if exists "community_members_select_own_or_room" on community_members;
 create policy "community_members_select_own_or_room" on community_members
   for select using (auth.uid() = user_id);
+drop policy if exists "community_members_insert_own" on community_members;
 create policy "community_members_insert_own" on community_members
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "community_messages_select_member" on community_messages;
 create policy "community_messages_select_member" on community_messages
   for select using (
     exists (
@@ -108,6 +132,7 @@ create policy "community_messages_select_member" on community_messages
       where m.room_id = community_messages.room_id and m.user_id = auth.uid()
     )
   );
+drop policy if exists "community_messages_insert_member" on community_messages;
 create policy "community_messages_insert_member" on community_messages
   for insert with check (
     auth.uid() = user_id
@@ -116,14 +141,18 @@ create policy "community_messages_insert_member" on community_messages
       where m.room_id = community_messages.room_id and m.user_id = auth.uid()
     )
   );
+drop policy if exists "community_messages_update_own" on community_messages;
 create policy "community_messages_update_own" on community_messages
   for update using (auth.uid() = user_id);
 
+drop policy if exists "message_reactions_all_own" on message_reactions;
 create policy "message_reactions_all_own" on message_reactions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "message_reports_insert_own" on message_reports;
 create policy "message_reports_insert_own" on message_reports
   for insert with check (auth.uid() = reported_by);
+drop policy if exists "message_reports_select_own" on message_reports;
 create policy "message_reports_select_own" on message_reports
   for select using (auth.uid() = reported_by);
 
@@ -166,5 +195,6 @@ alter table user_roles enable row level security;
 
 -- entitlements are read by the app to know which features are released
 -- per access level (non-sensitive), so allow public read.
+drop policy if exists "entitlements_public_read" on entitlements;
 create policy "entitlements_public_read" on entitlements
   for select using (true);

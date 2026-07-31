@@ -9,7 +9,7 @@
 -- straight through RLS, with no server-side route in between).
 -- ============================================================================
 
-create table banned_words (
+create table if not exists banned_words (
   id uuid primary key default gen_random_uuid(),
   word text unique not null,
   created_at timestamptz not null default now()
@@ -70,6 +70,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_enforce_message_content_rules on community_messages;
 create trigger trg_enforce_message_content_rules
   before insert on community_messages
   for each row execute function enforce_message_content_rules();

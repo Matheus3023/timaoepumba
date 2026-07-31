@@ -22,26 +22,32 @@ $$;
 -- ----------------------------------------------------------------------------
 -- ROLES & PERMISSIONS (secao 10 / 21.1)
 -- ----------------------------------------------------------------------------
-create type access_level as enum (
-  'VISITOR',
-  'APP_USER',
-  'REGISTERED_USER',
-  'FTD_USER',
-  'RESTRICTED_USER',
-  'ADMIN'
-);
+do $$ begin
+  create type access_level as enum (
+    'VISITOR',
+    'APP_USER',
+    'REGISTERED_USER',
+    'FTD_USER',
+    'RESTRICTED_USER',
+    'ADMIN'
+  );
+exception when duplicate_object then null;
+end $$;
 
-create type admin_profile as enum (
-  'administrador',
-  'gestor',
-  'midia',
-  'analista',
-  'moderador',
-  'suporte',
-  'somente_leitura'
-);
+do $$ begin
+  create type admin_profile as enum (
+    'administrador',
+    'gestor',
+    'midia',
+    'analista',
+    'moderador',
+    'suporte',
+    'somente_leitura'
+  );
+exception when duplicate_object then null;
+end $$;
 
-create table roles (
+create table if not exists roles (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
   admin_profile admin_profile,
@@ -50,14 +56,14 @@ create table roles (
   updated_at timestamptz not null default now()
 );
 
-create table permissions (
+create table if not exists permissions (
   id uuid primary key default gen_random_uuid(),
   code text unique not null,
   description text,
   created_at timestamptz not null default now()
 );
 
-create table role_permissions (
+create table if not exists role_permissions (
   role_id uuid not null references roles(id) on delete cascade,
   permission_id uuid not null references permissions(id) on delete cascade,
   primary key (role_id, permission_id)
@@ -66,7 +72,7 @@ create table role_permissions (
 -- ----------------------------------------------------------------------------
 -- USERS (extends auth.users)
 -- ----------------------------------------------------------------------------
-create table users (
+create table if not exists users (
   id uuid primary key references auth.users(id) on delete cascade,
   lead_id text unique not null,
   email text unique not null,
@@ -83,12 +89,13 @@ create table users (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index idx_users_lead_id on users(lead_id);
-create index idx_users_access_level on users(access_level);
+create index if not exists idx_users_lead_id on users(lead_id);
+create index if not exists idx_users_access_level on users(access_level);
+drop trigger if exists trg_users_updated_at on users;
 create trigger trg_users_updated_at before update on users
   for each row execute function set_updated_at();
 
-create table user_roles (
+create table if not exists user_roles (
   user_id uuid not null references users(id) on delete cascade,
   role_id uuid not null references roles(id) on delete cascade,
   assigned_at timestamptz not null default now(),
@@ -96,7 +103,7 @@ create table user_roles (
 );
 
 -- user_profiles: extended CRM/behavioral/onboarding fields (secao 15.1 + onboarding spec secao 7)
-create table user_profiles (
+create table if not exists user_profiles (
   user_id uuid primary key references users(id) on delete cascade,
 
   -- favorites / preferences
@@ -146,19 +153,26 @@ create table user_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+drop trigger if exists trg_user_profiles_updated_at on user_profiles;
 create trigger trg_user_profiles_updated_at before update on user_profiles
   for each row execute function set_updated_at();
 
 -- check constraints for enumerated status text fields
-alter table user_profiles add constraint chk_pwa_install_status
-  check (pwa_install_status in ('not_requested','prompt_viewed','accepted','dismissed','installed','unavailable'));
-alter table user_profiles add constraint chk_notification_permission
-  check (notification_permission in ('not_requested','default','granted','denied','unsupported','subscription_failed'));
+do $$ begin
+  alter table user_profiles add constraint chk_pwa_install_status
+    check (pwa_install_status in ('not_requested','prompt_viewed','accepted','dismissed','installed','unavailable'));
+exception when duplicate_object then null;
+end $$;
+do $$ begin
+  alter table user_profiles add constraint chk_notification_permission
+    check (notification_permission in ('not_requested','default','granted','denied','unsupported','subscription_failed'));
+exception when duplicate_object then null;
+end $$;
 
 -- ----------------------------------------------------------------------------
 -- TRACKING & ATTRIBUTION (secao 6)
 -- ----------------------------------------------------------------------------
-create table acquisition_sessions (
+create table if not exists acquisition_sessions (
   id uuid primary key default gen_random_uuid(),
   lead_id text not null,
   user_id uuid references users(id) on delete set null,
@@ -172,10 +186,10 @@ create table acquisition_sessions (
   user_agent text,
   created_at timestamptz not null default now()
 );
-create index idx_acquisition_sessions_lead_id on acquisition_sessions(lead_id);
-create index idx_acquisition_sessions_user_id on acquisition_sessions(user_id);
+create index if not exists idx_acquisition_sessions_lead_id on acquisition_sessions(lead_id);
+create index if not exists idx_acquisition_sessions_user_id on acquisition_sessions(user_id);
 
-create table attribution_data (
+create table if not exists attribution_data (
   id uuid primary key default gen_random_uuid(),
   lead_id text not null,
   user_id uuid references users(id) on delete set null,
@@ -198,10 +212,10 @@ create table attribution_data (
 
   created_at timestamptz not null default now()
 );
-create index idx_attribution_data_lead_id on attribution_data(lead_id);
-create unique index uq_attribution_first_touch on attribution_data(lead_id) where touch_type = 'first';
+create index if not exists idx_attribution_data_lead_id on attribution_data(lead_id);
+create unique index if not exists uq_attribution_first_touch on attribution_data(lead_id) where touch_type = 'first';
 
-create table tracking_events (
+create table if not exists tracking_events (
   id uuid primary key default gen_random_uuid(),
   lead_id text,
   user_id uuid references users(id) on delete set null,
@@ -210,11 +224,11 @@ create table tracking_events (
   source text not null default 'client', -- client | server
   created_at timestamptz not null default now()
 );
-create index idx_tracking_events_lead_id on tracking_events(lead_id);
-create index idx_tracking_events_event_name on tracking_events(event_name);
-create index idx_tracking_events_created_at on tracking_events(created_at);
+create index if not exists idx_tracking_events_lead_id on tracking_events(lead_id);
+create index if not exists idx_tracking_events_event_name on tracking_events(event_name);
+create index if not exists idx_tracking_events_created_at on tracking_events(created_at);
 
-create table tracking_delivery_logs (
+create table if not exists tracking_delivery_logs (
   id uuid primary key default gen_random_uuid(),
   tracking_event_id uuid references tracking_events(id) on delete cascade,
   destination text not null, -- meta | google | tiktok
@@ -227,7 +241,7 @@ create table tracking_delivery_logs (
 -- ----------------------------------------------------------------------------
 -- AFFILIATE / CASA PARCEIRA (secao 9)
 -- ----------------------------------------------------------------------------
-create table affiliate_configurations (
+create table if not exists affiliate_configurations (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   domain text not null,
@@ -242,10 +256,11 @@ create table affiliate_configurations (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+drop trigger if exists trg_affiliate_configurations_updated_at on affiliate_configurations;
 create trigger trg_affiliate_configurations_updated_at before update on affiliate_configurations
   for each row execute function set_updated_at();
 
-create table affiliate_clicks (
+create table if not exists affiliate_clicks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete set null,
   lead_id text not null,
@@ -253,10 +268,10 @@ create table affiliate_clicks (
   generated_url text not null,
   clicked_at timestamptz not null default now()
 );
-create index idx_affiliate_clicks_lead_id on affiliate_clicks(lead_id);
-create index idx_affiliate_clicks_user_id on affiliate_clicks(user_id);
+create index if not exists idx_affiliate_clicks_lead_id on affiliate_clicks(lead_id);
+create index if not exists idx_affiliate_clicks_user_id on affiliate_clicks(user_id);
 
-create table affiliate_events (
+create table if not exists affiliate_events (
   id uuid primary key default gen_random_uuid(),
   affiliate_configuration_id uuid references affiliate_configurations(id) on delete set null,
   user_id uuid references users(id) on delete set null,
@@ -267,10 +282,10 @@ create table affiliate_events (
   status text not null default 'processed', -- processed | duplicate | rejected
   created_at timestamptz not null default now()
 );
-create unique index uq_affiliate_events_txn on affiliate_events(event_type, transaction_id);
-create index idx_affiliate_events_lead_id on affiliate_events(lead_id);
+create unique index if not exists uq_affiliate_events_txn on affiliate_events(event_type, transaction_id);
+create index if not exists idx_affiliate_events_lead_id on affiliate_events(lead_id);
 
-create table affiliate_webhook_logs (
+create table if not exists affiliate_webhook_logs (
   id uuid primary key default gen_random_uuid(),
   affiliate_configuration_id uuid references affiliate_configurations(id) on delete set null,
   status_code integer,
@@ -281,7 +296,7 @@ create table affiliate_webhook_logs (
   created_at timestamptz not null default now()
 );
 
-create table registrations (
+create table if not exists registrations (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   affiliate_configuration_id uuid references affiliate_configurations(id) on delete set null,
@@ -289,9 +304,9 @@ create table registrations (
   confirmed_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
-create index idx_registrations_user_id on registrations(user_id);
+create index if not exists idx_registrations_user_id on registrations(user_id);
 
-create table ftds (
+create table if not exists ftds (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   affiliate_configuration_id uuid references affiliate_configurations(id) on delete set null,
@@ -299,12 +314,12 @@ create table ftds (
   confirmed_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
-create index idx_ftds_user_id on ftds(user_id);
+create index if not exists idx_ftds_user_id on ftds(user_id);
 
 -- ----------------------------------------------------------------------------
 -- ENTITLEMENTS (config-driven feature release, secao 7 / 10)
 -- ----------------------------------------------------------------------------
-create table entitlements (
+create table if not exists entitlements (
   id uuid primary key default gen_random_uuid(),
   access_level access_level not null,
   feature_key text not null,
@@ -316,7 +331,7 @@ create table entitlements (
 -- ----------------------------------------------------------------------------
 -- SESSIONS / PRESENCE / PREFERENCES / CONSENTS
 -- ----------------------------------------------------------------------------
-create table sessions (
+create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   started_at timestamptz not null default now(),
@@ -325,9 +340,9 @@ create table sessions (
   browser text,
   os text
 );
-create index idx_sessions_user_id on sessions(user_id);
+create index if not exists idx_sessions_user_id on sessions(user_id);
 
-create table user_presence (
+create table if not exists user_presence (
   user_id uuid primary key references users(id) on delete cascade,
   status text not null default 'offline' check (status in ('online','away','offline')),
   current_page text,
@@ -336,14 +351,14 @@ create table user_presence (
   device text
 );
 
-create table user_preferences (
+create table if not exists user_preferences (
   user_id uuid primary key references users(id) on delete cascade,
   dark_mode boolean not null default true,
   language text not null default 'pt-BR',
   updated_at timestamptz not null default now()
 );
 
-create table consents (
+create table if not exists consents (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   consent_type text not null check (consent_type in ('terms','privacy','marketing')),
@@ -352,9 +367,9 @@ create table consents (
   granted_at timestamptz not null default now(),
   ip_address inet
 );
-create index idx_consents_user_id on consents(user_id);
+create index if not exists idx_consents_user_id on consents(user_id);
 
-create table marketing_optouts (
+create table if not exists marketing_optouts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   opted_out_at timestamptz not null default now(),
@@ -364,7 +379,7 @@ create table marketing_optouts (
 -- ----------------------------------------------------------------------------
 -- PUSH NOTIFICATIONS (secao 17 + onboarding spec)
 -- ----------------------------------------------------------------------------
-create table push_subscriptions (
+create table if not exists push_subscriptions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   fcm_token text not null unique,
@@ -373,9 +388,9 @@ create table push_subscriptions (
   status text not null default 'active' check (status in ('active','inactive','failed')),
   created_at timestamptz not null default now()
 );
-create index idx_push_subscriptions_user_id on push_subscriptions(user_id);
+create index if not exists idx_push_subscriptions_user_id on push_subscriptions(user_id);
 
-create table push_campaigns (
+create table if not exists push_campaigns (
   id uuid primary key default gen_random_uuid(),
   internal_name text not null,
   category text not null check (category in ('transactional','content','community','promotional')),
@@ -392,10 +407,11 @@ create table push_campaigns (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+drop trigger if exists trg_push_campaigns_updated_at on push_campaigns;
 create trigger trg_push_campaigns_updated_at before update on push_campaigns
   for each row execute function set_updated_at();
 
-create table push_deliveries (
+create table if not exists push_deliveries (
   id uuid primary key default gen_random_uuid(),
   push_campaign_id uuid references push_campaigns(id) on delete cascade,
   user_id uuid references users(id) on delete set null,
@@ -405,28 +421,29 @@ create table push_deliveries (
   clicked_at timestamptz,
   failure_reason text
 );
-create index idx_push_deliveries_campaign on push_deliveries(push_campaign_id);
-create index idx_push_deliveries_user on push_deliveries(user_id);
+create index if not exists idx_push_deliveries_campaign on push_deliveries(push_campaign_id);
+create index if not exists idx_push_deliveries_user on push_deliveries(user_id);
 
 -- ----------------------------------------------------------------------------
 -- CRM (secao 15)
 -- ----------------------------------------------------------------------------
-create table crm_pipelines (
+create table if not exists crm_pipelines (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   is_default boolean not null default false,
   created_at timestamptz not null default now()
 );
 
-create table crm_stages (
+create table if not exists crm_stages (
   id uuid primary key default gen_random_uuid(),
   pipeline_id uuid not null references crm_pipelines(id) on delete cascade,
   name text not null,
   position integer not null default 0,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (pipeline_id, name)
 );
 
-create table crm_user_status (
+create table if not exists crm_user_status (
   user_id uuid primary key references users(id) on delete cascade,
   pipeline_id uuid references crm_pipelines(id) on delete set null,
   stage_id uuid references crm_stages(id) on delete set null,
@@ -434,19 +451,19 @@ create table crm_user_status (
   moved_at timestamptz not null default now()
 );
 
-create table crm_tags (
+create table if not exists crm_tags (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
   color text
 );
 
-create table crm_user_tags (
+create table if not exists crm_user_tags (
   user_id uuid not null references users(id) on delete cascade,
   tag_id uuid not null references crm_tags(id) on delete cascade,
   primary key (user_id, tag_id)
 );
 
-create table crm_notes (
+create table if not exists crm_notes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   author_admin_id uuid,
@@ -454,7 +471,7 @@ create table crm_notes (
   created_at timestamptz not null default now()
 );
 
-create table crm_tasks (
+create table if not exists crm_tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   assigned_admin_id uuid,
@@ -465,7 +482,7 @@ create table crm_tasks (
 );
 
 -- generic CRM/user timeline (secao 15.3)
-create table crm_timeline_events (
+create table if not exists crm_timeline_events (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references users(id) on delete cascade,
   event_type text not null,
@@ -473,12 +490,12 @@ create table crm_timeline_events (
   metadata jsonb not null default '{}'::jsonb,
   occurred_at timestamptz not null default now()
 );
-create index idx_crm_timeline_user_id on crm_timeline_events(user_id, occurred_at desc);
+create index if not exists idx_crm_timeline_user_id on crm_timeline_events(user_id, occurred_at desc);
 
 -- ----------------------------------------------------------------------------
 -- SPORTS DATA (secao 12)
 -- ----------------------------------------------------------------------------
-create table leagues (
+create table if not exists leagues (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'flashscore4',
   provider_league_id text not null,
@@ -489,7 +506,7 @@ create table leagues (
   unique (provider, provider_league_id)
 );
 
-create table teams (
+create table if not exists teams (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'flashscore4',
   provider_team_id text not null,
@@ -500,7 +517,7 @@ create table teams (
   unique (provider, provider_team_id)
 );
 
-create table matches (
+create table if not exists matches (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'flashscore4',
   provider_match_id text not null,
@@ -515,12 +532,13 @@ create table matches (
   updated_at timestamptz not null default now(),
   unique (provider, provider_match_id)
 );
-create index idx_matches_kickoff on matches(kickoff_at);
-create index idx_matches_status on matches(status);
+create index if not exists idx_matches_kickoff on matches(kickoff_at);
+create index if not exists idx_matches_status on matches(status);
+drop trigger if exists trg_matches_updated_at on matches;
 create trigger trg_matches_updated_at before update on matches
   for each row execute function set_updated_at();
 
-create table match_events (
+create table if not exists match_events (
   id uuid primary key default gen_random_uuid(),
   match_id uuid not null references matches(id) on delete cascade,
   minute integer,
@@ -530,9 +548,9 @@ create table match_events (
   detail text,
   created_at timestamptz not null default now()
 );
-create index idx_match_events_match_id on match_events(match_id);
+create index if not exists idx_match_events_match_id on match_events(match_id);
 
-create table standings (
+create table if not exists standings (
   id uuid primary key default gen_random_uuid(),
   league_id uuid not null references leagues(id) on delete cascade,
   team_id uuid not null references teams(id) on delete cascade,
@@ -548,16 +566,16 @@ create table standings (
   unique (league_id, team_id)
 );
 
-create table sports_api_cache (
+create table if not exists sports_api_cache (
   id uuid primary key default gen_random_uuid(),
   cache_key text unique not null,
   payload jsonb not null,
   expires_at timestamptz not null,
   created_at timestamptz not null default now()
 );
-create index idx_sports_api_cache_expires on sports_api_cache(expires_at);
+create index if not exists idx_sports_api_cache_expires on sports_api_cache(expires_at);
 
-create table sports_api_logs (
+create table if not exists sports_api_logs (
   id uuid primary key default gen_random_uuid(),
   endpoint text not null,
   status_code integer,
@@ -570,7 +588,7 @@ create table sports_api_logs (
 -- ----------------------------------------------------------------------------
 -- ANALYSES (secao 13)
 -- ----------------------------------------------------------------------------
-create table analyses (
+create table if not exists analyses (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   summary text,
@@ -594,11 +612,12 @@ create table analyses (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index idx_analyses_status on analyses(status);
+create index if not exists idx_analyses_status on analyses(status);
+drop trigger if exists trg_analyses_updated_at on analyses;
 create trigger trg_analyses_updated_at before update on analyses
   for each row execute function set_updated_at();
 
-create table analysis_views (
+create table if not exists analysis_views (
   id uuid primary key default gen_random_uuid(),
   analysis_id uuid not null references analyses(id) on delete cascade,
   user_id uuid references users(id) on delete set null,
@@ -606,9 +625,9 @@ create table analysis_views (
   read_seconds integer,
   viewed_at timestamptz not null default now()
 );
-create index idx_analysis_views_analysis_id on analysis_views(analysis_id);
+create index if not exists idx_analysis_views_analysis_id on analysis_views(analysis_id);
 
-create table analysis_reactions (
+create table if not exists analysis_reactions (
   id uuid primary key default gen_random_uuid(),
   analysis_id uuid not null references analyses(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
@@ -620,7 +639,7 @@ create table analysis_reactions (
 -- ----------------------------------------------------------------------------
 -- COMMUNITY (secao 14)
 -- ----------------------------------------------------------------------------
-create table community_rooms (
+create table if not exists community_rooms (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null,
   name text not null,
@@ -631,7 +650,7 @@ create table community_rooms (
   created_at timestamptz not null default now()
 );
 
-create table community_members (
+create table if not exists community_members (
   room_id uuid not null references community_rooms(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
   role text not null default 'usuario' check (role in (
@@ -641,7 +660,7 @@ create table community_members (
   primary key (room_id, user_id)
 );
 
-create table community_messages (
+create table if not exists community_messages (
   id uuid primary key default gen_random_uuid(),
   room_id uuid not null references community_rooms(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
@@ -651,9 +670,9 @@ create table community_messages (
   is_deleted boolean not null default false,
   created_at timestamptz not null default now()
 );
-create index idx_community_messages_room_id on community_messages(room_id, created_at desc);
+create index if not exists idx_community_messages_room_id on community_messages(room_id, created_at desc);
 
-create table message_reactions (
+create table if not exists message_reactions (
   id uuid primary key default gen_random_uuid(),
   message_id uuid not null references community_messages(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
@@ -662,7 +681,7 @@ create table message_reactions (
   unique (message_id, user_id, reaction)
 );
 
-create table message_reports (
+create table if not exists message_reports (
   id uuid primary key default gen_random_uuid(),
   message_id uuid not null references community_messages(id) on delete cascade,
   reported_by uuid not null references users(id) on delete cascade,
@@ -671,7 +690,7 @@ create table message_reports (
   created_at timestamptz not null default now()
 );
 
-create table moderation_actions (
+create table if not exists moderation_actions (
   id uuid primary key default gen_random_uuid(),
   target_user_id uuid references users(id) on delete cascade,
   message_id uuid references community_messages(id) on delete set null,
@@ -684,7 +703,7 @@ create table moderation_actions (
 -- ----------------------------------------------------------------------------
 -- AUTOMATIONS / AUDIT / SETTINGS
 -- ----------------------------------------------------------------------------
-create table automation_runs (
+create table if not exists automation_runs (
   id uuid primary key default gen_random_uuid(),
   automation_key text not null, -- account_created | affiliate_clicked | registration_confirmed | ftd_confirmed | inactivity | opt_out
   user_id uuid references users(id) on delete set null,
@@ -693,7 +712,7 @@ create table automation_runs (
   created_at timestamptz not null default now()
 );
 
-create table audit_logs (
+create table if not exists audit_logs (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid,
   actor_type text not null default 'admin', -- admin | system | user
@@ -703,9 +722,9 @@ create table audit_logs (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
-create index idx_audit_logs_entity on audit_logs(entity_type, entity_id);
+create index if not exists idx_audit_logs_entity on audit_logs(entity_type, entity_id);
 
-create table system_settings (
+create table if not exists system_settings (
   key text primary key,
   value jsonb not null,
   updated_at timestamptz not null default now()

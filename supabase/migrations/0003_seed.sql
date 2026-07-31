@@ -13,7 +13,8 @@ insert into roles (name, admin_profile, description) values
   ('Analista', 'analista', 'Publicacao de analises esportivas'),
   ('Moderador', 'moderador', 'Moderacao da comunidade'),
   ('Suporte', 'suporte', 'Atendimento e suporte a usuarios'),
-  ('Somente leitura', 'somente_leitura', 'Acesso de visualizacao aos relatorios');
+  ('Somente leitura', 'somente_leitura', 'Acesso de visualizacao aos relatorios')
+on conflict (name) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- Entitlements: feature releases per access level (admin-configurable)
@@ -72,7 +73,7 @@ insert into crm_stages (pipeline_id, name, position) values
   ('00000000-0000-0000-0000-000000000001', 'Em reativacao', 9),
   ('00000000-0000-0000-0000-000000000001', 'Opt-out', 10),
   ('00000000-0000-0000-0000-000000000001', 'Bloqueado', 11)
-on conflict do nothing;
+on conflict (pipeline_id, name) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- System settings defaults
