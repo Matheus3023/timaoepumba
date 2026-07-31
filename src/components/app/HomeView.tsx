@@ -51,6 +51,7 @@ export function HomeView({
     { label: "Comunidade liberada", done: communityUnlocked },
     { label: "Recursos FTD", done: ftdDone },
   ];
+  const allStepsDone = registrationDone && communityUnlocked && ftdDone;
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
@@ -61,36 +62,38 @@ export function HomeView({
         <p className="text-sm text-neutral-400">Confira os jogos e novidades de hoje.</p>
       </motion.div>
 
-      <motion.section initial="hidden" animate="show" custom={1} variants={fadeUp} className="card-glow mt-5">
-        <h2 className="text-sm font-semibold text-neutral-200">Status da conta</h2>
-        <div className="relative mt-4 flex justify-between">
-          <div className="absolute left-4 right-4 top-3.5 h-px bg-white/10" />
-          {steps.map((step, i) => (
-            <div key={step.label} className="relative z-10 flex flex-1 flex-col items-center gap-2 text-center">
-              <motion.span
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 300, damping: 18 }}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
-                  step.done
-                    ? "border-yellow-400 bg-yellow-400/15 text-yellow-400"
-                    : "border-neutral-700 bg-neutral-900 text-neutral-600"
-                }`}
-              >
-                {step.done ? <CheckCircleIcon width={14} height={14} /> : <LockIcon width={12} height={12} />}
-              </motion.span>
-              <span className={`max-w-[70px] text-[10px] leading-tight ${step.done ? "text-neutral-300" : "text-neutral-600"}`}>
-                {step.label}
-              </span>
-            </div>
-          ))}
-        </div>
-        {!registrationDone && (
-          <a href="/api/affiliate/click" className="btn-primary mt-5 block text-center">
-            Cadastrar na casa parceira
-          </a>
-        )}
-      </motion.section>
+      {!allStepsDone && (
+        <motion.section initial="hidden" animate="show" custom={1} variants={fadeUp} className="card-glow mt-5">
+          <h2 className="text-sm font-semibold text-neutral-200">Status da conta</h2>
+          <div className="relative mt-4 flex justify-between">
+            <div className="absolute left-4 right-4 top-3.5 h-px bg-white/10" />
+            {steps.map((step, i) => (
+              <div key={step.label} className="relative z-10 flex flex-1 flex-col items-center gap-2 text-center">
+                <motion.span
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 300, damping: 18 }}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
+                    step.done
+                      ? "border-yellow-400 bg-yellow-400/15 text-yellow-400"
+                      : "border-neutral-700 bg-neutral-900 text-neutral-600"
+                  }`}
+                >
+                  {step.done ? <CheckCircleIcon width={14} height={14} /> : <LockIcon width={12} height={12} />}
+                </motion.span>
+                <span className={`max-w-[70px] text-[10px] leading-tight ${step.done ? "text-neutral-300" : "text-neutral-600"}`}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          {!registrationDone && (
+            <a href="/api/affiliate/click" className="btn-primary mt-5 block text-center">
+              Cadastrar na casa parceira
+            </a>
+          )}
+        </motion.section>
+      )}
 
       <Section title="Jogos de hoje" delay={2} action={{ href: "/jogos", label: "Ver todos" }}>
         {todayMatches.length === 0 && <EmptyState text="Nenhum jogo cadastrado para hoje." />}
