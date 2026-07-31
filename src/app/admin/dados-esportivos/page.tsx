@@ -23,8 +23,13 @@ const PRESETS: { label: string; path: string; params: ParamRow[] }[] = [
   { label: "Resultados do time", path: "teams/results", params: [{ key: "team_id", value: "" }, { key: "page", value: "1" }] },
   { label: "Elenco do time", path: "teams/squad", params: [{ key: "team_url", value: "" }] },
   { label: "Transferencias do time", path: "teams/transfers", params: [{ key: "team_id", value: "" }] },
-  // Tournament — ainda nao confirmado, tentativa
-  { label: "Torneio: standings (tentativa)", path: "tournament/standings", params: [{ key: "tournament_id", value: "" }] },
+  // Tournament — confirmed real paths
+  { label: "Torneio: IDs", path: "tournaments/ids", params: [{ key: "tournament_url", value: "" }] },
+  { label: "Torneio: detalhes", path: "tournaments/details", params: [{ key: "tournament_stage_id", value: "" }] },
+  { label: "Torneio: resultados", path: "tournaments/results", params: [{ key: "tournament_template_id", value: "" }, { key: "season_id", value: "" }, { key: "page", value: "1" }] },
+  { label: "Torneio: proximos jogos", path: "tournaments/fixtures", params: [{ key: "tournament_template_id", value: "" }, { key: "season_id", value: "" }, { key: "page", value: "1" }] },
+  { label: "Torneio: classificacao", path: "tournaments/standings", params: [{ key: "tournament_stage_id", value: "" }, { key: "tournament_id", value: "" }, { key: "type", value: "overall" }] },
+  { label: "Torneio: artilheiros", path: "tournaments/standings/top-scorers", params: [{ key: "tournament_id", value: "" }, { key: "tournament_stage_id", value: "" }] },
   // General — confirmed real paths
   { label: "Buscar", path: "general/search", params: [{ key: "q", value: "real madrid" }] },
   { label: "Esportes", path: "general/sports", params: [] },
