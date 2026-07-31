@@ -2,9 +2,44 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { deleteMessage, muteUserInRoom, reviewReport } from "@/lib/moderation/actions";
-import { restrictUser } from "@/lib/entitlements/rules";
+import { restrictUser, accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
+
+const LIVE_CHAT_SLUG = "resenha-geral";
+
+async function forceUnlockLiveChat() {
+  "use server";
+  const access = await requireModerationWrite();
+  const admin = createAdminSupabaseClient();
+
+  const { data: room } = await admin.from("community_rooms").select("*").eq("slug", LIVE_CHAT_SLUG).maybeSingle();
+  if (!room) {
+    return;
+  }
+
+  const { data: allUsers } = await admin.from("users").select("id, access_level");
+  const eligibleIds = (allUsers ?? [])
+    .filter((u) => accessLevelSatisfies(u.access_level, room.min_access_level))
+    .map((u) => u.id);
+
+  if (eligibleIds.length > 0) {
+    await admin.from("community_members").upsert(
+      eligibleIds.map((userId) => ({ room_id: room.id, user_id: userId, role: "usuario" })),
+      { onConflict: "room_id,user_id", ignoreDuplicates: true }
+    );
+  }
+
+  await logAudit({
+    actorId: access.adminId,
+    action: "live_chat_force_unlocked",
+    entityType: "community_room",
+    entityId: room.id,
+    metadata: { eligible_count: eligibleIds.length },
+  });
+
+  revalidatePath("/admin/comunidade");
+}
 
 async function requireModerationWrite() {
   const access = await requireAdminSection("comunidade");
@@ -72,11 +107,19 @@ export default async function AdminCommunityModerationPage() {
   const writable = canWrite(access, "comunidade");
   const admin = createAdminSupabaseClient();
 
-  const [{ data: reports }, { data: bannedWords }, { data: recentActions }] = await Promise.all([
+  const [{ data: reports }, { data: bannedWords }, { data: recentActions }, { data: liveChatRoom }] = await Promise.all([
     admin.from("message_reports").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
     admin.from("banned_words").select("*").order("word"),
     admin.from("moderation_actions").select("*").order("created_at", { ascending: false }).limit(30),
+    admin.from("community_rooms").select("*").eq("slug", LIVE_CHAT_SLUG).maybeSingle(),
   ]);
+
+  const [{ count: totalUsers }, { count: liveChatMembers }] = liveChatRoom
+    ? await Promise.all([
+        admin.from("users").select("id", { count: "exact", head: true }),
+        admin.from("community_members").select("user_id", { count: "exact", head: true }).eq("room_id", liveChatRoom.id),
+      ])
+    : [{ count: 0 }, { count: 0 }];
 
   const messageIds = [...new Set((reports ?? []).map((r) => r.message_id))];
   const { data: messages } = messageIds.length
@@ -102,6 +145,52 @@ export default async function AdminCommunityModerationPage() {
     <div>
       <h1 className="text-xl font-bold text-white">Moderacao da comunidade</h1>
       {!writable && <p className="mt-1 text-xs text-neutral-500">Modo somente leitura para o seu perfil.</p>}
+
+      <section className="card mt-4 border-yellow-500/20 bg-yellow-500/[0.03]">
+        <h2 className="text-sm font-semibold text-neutral-200">Diagnostico: Bate-papo ao vivo</h2>
+        {liveChatRoom ? (
+          <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+            <div className="flex justify-between gap-2">
+              <dt>Sala encontrada</dt>
+              <dd className="text-neutral-200">
+                {liveChatRoom.name} ({liveChatRoom.slug})
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Ativa</dt>
+              <dd className={liveChatRoom.is_active ? "text-emerald-300" : "text-red-400"}>
+                {liveChatRoom.is_active ? "sim" : "NAO — isso bloqueia a sala pra todo mundo"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Nivel minimo de acesso</dt>
+              <dd className={liveChatRoom.min_access_level === "APP_USER" ? "text-emerald-300" : "text-red-400"}>
+                {liveChatRoom.min_access_level}
+                {liveChatRoom.min_access_level !== "APP_USER" && " — deveria ser APP_USER"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Membros com acesso liberado</dt>
+              <dd className="text-neutral-200">
+                {liveChatMembers ?? 0} de {totalUsers ?? 0} usuarios
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="mt-2 text-sm text-red-400">
+            Nenhuma sala com slug &quot;{LIVE_CHAT_SLUG}&quot; encontrada — a migration que cria essa sala nunca rodou
+            neste banco.
+          </p>
+        )}
+
+        {writable && liveChatRoom && (
+          <form action={forceUnlockLiveChat} className="mt-3">
+            <button type="submit" className="btn-primary px-4 py-2 text-sm">
+              Forcar liberacao para todos agora
+            </button>
+          </form>
+        )}
+      </section>
 
       <section className="mt-4">
         <h2 className="mb-2 text-sm font-semibold text-neutral-200">Denuncias abertas</h2>
