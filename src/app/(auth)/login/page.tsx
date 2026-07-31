@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { describeClientError } from "@/lib/describeClientError";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,8 +31,8 @@ export default function LoginPage() {
 
       router.push("/home");
       router.refresh();
-    } catch {
-      setError("Nao foi possivel conectar. Verifique sua internet e tente novamente.");
+    } catch (err) {
+      setError(describeClientError(err));
     } finally {
       setSubmitting(false);
     }

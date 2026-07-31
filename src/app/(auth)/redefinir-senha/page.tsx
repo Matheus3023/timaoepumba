@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { describeClientError } from "@/lib/describeClientError";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -20,20 +21,27 @@ export default function ResetPasswordPage() {
     // @supabase/ssr's browser client parses automatically on load,
     // establishing a temporary "recovery" session. We just wait for that
     // to settle before allowing the form to submit.
-    const supabase = createClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setReady(true);
-      }
-    });
+    try {
+      const supabase = createClient();
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+          setReady(true);
+        }
+      });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) setReady(true);
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    } catch (err) {
+      // Deferred so this doesn't count as a synchronous setState-in-effect
+      // (the createClient() throw path is exceptional, not the normal
+      // async-callback flow the other setReady() calls above use).
+      queueMicrotask(() => setError(describeClientError(err)));
+    }
   }, []);
 
   async function handleSubmit(event: FormEvent) {
@@ -64,8 +72,8 @@ export default function ResetPasswordPage() {
         router.push("/home");
         router.refresh();
       }, 1500);
-    } catch {
-      setError("Nao foi possivel conectar. Verifique sua internet e tente novamente.");
+    } catch (err) {
+      setError(describeClientError(err));
     } finally {
       setSubmitting(false);
     }
@@ -83,8 +91,8 @@ export default function ResetPasswordPage() {
       ) : !ready ? (
         <div className="card mt-8">
           <p className="text-sm text-neutral-400">
-            Validando o link de recuperacao... Se voce abriu esta pagina diretamente (sem clicar no
-            link do e-mail), solicite uma nova recuperacao de senha.
+            {error ??
+              "Validando o link de recuperacao... Se voce abriu esta pagina diretamente (sem clicar no link do e-mail), solicite uma nova recuperacao de senha."}
           </p>
         </div>
       ) : (

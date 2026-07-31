@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTrackEvent } from "@/lib/tracking/useTrackEvent";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { describeClientError } from "@/lib/describeClientError";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -66,8 +67,8 @@ export default function SignupPage() {
       }
 
       router.push("/onboarding");
-    } catch {
-      setError("Erro de conexao. Tente novamente.");
+    } catch (err) {
+      setError(describeClientError(err));
     } finally {
       setSubmitting(false);
     }
