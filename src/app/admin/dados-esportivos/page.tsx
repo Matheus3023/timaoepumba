@@ -18,8 +18,12 @@ const PRESETS: { label: string; path: string; params: ParamRow[] }[] = [
   { label: "H2H", path: "matches/h2h", params: [{ key: "match_id", value: "" }] },
   { label: "Classificacao (por partida)", path: "matches/standings", params: [{ key: "match_id", value: "" }, { key: "type", value: "overall" }] },
   { label: "Momentum da partida", path: "matches/momentum", params: [{ key: "match_id", value: "" }] },
-  // Team / Tournament — ainda nao confirmados, tentativas
-  { label: "Detalhes do time (tentativa)", path: "team/details", params: [{ key: "team_id", value: "" }] },
+  // Team — confirmed real paths
+  { label: "Detalhes do time", path: "teams/details", params: [{ key: "team_url", value: "" }] },
+  { label: "Resultados do time", path: "teams/results", params: [{ key: "team_id", value: "" }, { key: "page", value: "1" }] },
+  { label: "Elenco do time", path: "teams/squad", params: [{ key: "team_url", value: "" }] },
+  { label: "Transferencias do time", path: "teams/transfers", params: [{ key: "team_id", value: "" }] },
+  // Tournament — ainda nao confirmado, tentativa
   { label: "Torneio: standings (tentativa)", path: "tournament/standings", params: [{ key: "tournament_id", value: "" }] },
   // General — confirmed real paths
   { label: "Buscar", path: "general/search", params: [{ key: "q", value: "real madrid" }] },
