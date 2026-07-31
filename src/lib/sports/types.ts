@@ -26,7 +26,7 @@ export interface Match {
 export interface MatchEvent {
   id: string;
   minute: number | null;
-  type: "goal" | "yellow_card" | "red_card" | "substitution" | "var";
+  type: "goal" | "yellow_card" | "red_card" | "substitution" | "var" | "unknown";
   teamId: string | null;
   playerName?: string | null;
   detail?: string | null;
@@ -36,6 +36,16 @@ export interface MatchDetails extends Match {
   events: MatchEvent[];
   lineups?: { teamId: string; players: string[] }[];
   statistics?: Record<string, { home: number | string; away: number | string }>;
+}
+
+export interface HeadToHeadMatch {
+  id: string;
+  date: string | null;
+  competition?: string | null;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
 }
 
 export interface Standing {
@@ -67,6 +77,9 @@ export interface SportsDataProvider {
   getLiveMatches(): Promise<Match[]>;
   getMatchDetails(matchId: string): Promise<MatchDetails>;
   getMatchEvents(matchId: string): Promise<MatchEvent[]>;
+  getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>>;
+  getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]>;
+  getStandingsForMatch(matchId: string): Promise<Standing[]>;
   getStandings(leagueId: string): Promise<Standing[]>;
   getTeamDetails(teamId: string): Promise<TeamDetails>;
 }

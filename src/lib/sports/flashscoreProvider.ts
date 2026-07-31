@@ -1,5 +1,14 @@
 import "server-only";
-import type { League, Match, MatchDetails, MatchEvent, SportsDataProvider, Standing, TeamDetails } from "@/lib/sports/types";
+import type {
+  HeadToHeadMatch,
+  League,
+  Match,
+  MatchDetails,
+  MatchEvent,
+  SportsDataProvider,
+  Standing,
+  TeamDetails,
+} from "@/lib/sports/types";
 
 /** Raw shapes as returned by Flashscore4 on RapidAPI (confirmed via /admin/dados-esportivos). */
 interface RawTeam {
@@ -218,15 +227,12 @@ export class FlashscoreProvider implements SportsDataProvider {
       throw new Error(`FlashscoreProvider.getMatchDetails: unexpected response shape for match ${matchId}`);
     }
 
-    let events: MatchEvent[] = [];
-    try {
-      events = await this.getMatchEvents(matchId);
-    } catch {
-      // matches/match/summary response shape not confirmed yet — degrade to
-      // showing the match without an event timeline instead of failing the page.
-    }
+    const [events, statistics] = await Promise.all([
+      this.getMatchEvents(matchId).catch(() => [] as MatchEvent[]),
+      this.getMatchStats(matchId).catch(() => ({}) as Record<string, { home: number | string; away: number | string }>),
+    ]);
 
-    return { ...match, events };
+    return { ...match, events, statistics };
   }
 
   async getMatchEvents(matchId: string): Promise<MatchEvent[]> {
@@ -249,19 +255,101 @@ export class FlashscoreProvider implements SportsDataProvider {
       VAR: "var",
     };
 
-    return rawEvents.map((item, index) => {
+    const events = rawEvents.map((item, index) => {
       const raw = item as Record<string, unknown>;
-      const rawType = pickString(raw, ["type", "incident_type", "event_type"], "goal");
+      const rawType = pickString(raw, ["type", "incident_type", "event_type"]);
       const minute = pickNumber(raw, ["minute", "time", "minute_of_match"], NaN);
       return {
         id: pickString(raw, ["id", "incident_id", "event_id"], `${matchId}_evt_${index}`),
         minute: Number.isNaN(minute) ? null : minute,
-        type: TYPE_MAP[rawType] ?? "goal",
+        type: (TYPE_MAP[rawType] ?? "unknown") as MatchEvent["type"],
         teamId: pickString(raw, ["team_id", "teamId"]) || null,
         playerName: pickString(raw, ["player_name", "player", "playerName"]) || null,
         detail: pickString(raw, ["detail", "description"]) || null,
       };
     });
+
+    // If nothing about a single event could be identified (no minute, no
+    // recognized type, no player), the field-name guesses above almost
+    // certainly don't match this response's real shape — surfacing a wall
+    // of identical "unknown" rows would be worse than showing nothing.
+    const anyRecognized = events.some((e) => e.minute !== null || e.type !== "unknown" || e.playerName);
+    return anyRecognized ? events : [];
+  }
+
+  private mapStandingRow(item: unknown, index: number): Standing {
+    const raw = item as Record<string, unknown>;
+    const teamRaw = (raw.team ?? raw) as Record<string, unknown>;
+    return {
+      teamId: pickString(teamRaw, ["team_id", "id"], `team_${index}`),
+      teamName: pickString(teamRaw, ["name", "team_name", "short_name"], "Time"),
+      position: pickNumber(raw, ["position", "rank", "place"], index + 1),
+      played: pickNumber(raw, ["played", "matches_played", "games"]),
+      wins: pickNumber(raw, ["wins", "won"]),
+      draws: pickNumber(raw, ["draws", "drawn", "ties"]),
+      losses: pickNumber(raw, ["losses", "lost", "defeats"]),
+      goalsFor: pickNumber(raw, ["goals_for", "scored", "goalsFor"]),
+      goalsAgainst: pickNumber(raw, ["goals_against", "conceded", "goalsAgainst"]),
+      points: pickNumber(raw, ["points", "pts"]),
+    };
+  }
+
+  async getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>> {
+    const payload = await this.request<unknown>("matches/match/stats", { match_id: matchId });
+    const rows = pickArray(payload, ["stats", "statistics", "groups"]);
+
+    const stats: Record<string, { home: number | string; away: number | string }> = {};
+    for (const item of rows) {
+      const raw = item as Record<string, unknown>;
+      const label = pickString(raw, ["name", "label", "title", "key"]);
+      if (!label) continue;
+      const home = raw.home ?? (raw.values as Record<string, unknown> | undefined)?.home;
+      const away = raw.away ?? (raw.values as Record<string, unknown> | undefined)?.away;
+      if (home === undefined && away === undefined) continue;
+      stats[label] = {
+        home: (typeof home === "number" || typeof home === "string" ? home : String(home ?? "—")),
+        away: (typeof away === "number" || typeof away === "string" ? away : String(away ?? "—")),
+      };
+    }
+    return stats;
+  }
+
+  async getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]> {
+    const payload = await this.request<unknown>("matches/h2h", { match_id: matchId });
+    const rows = pickArray(payload, ["h2h", "matches", "meetings"]);
+
+    return rows
+      .map((item, index): HeadToHeadMatch | null => {
+        const raw = item as Record<string, unknown>;
+        const homeTeam = pickString(raw, ["home_team_name"]) || pickString((raw.home_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
+        const awayTeam = pickString(raw, ["away_team_name"]) || pickString((raw.away_team ?? {}) as Record<string, unknown>, ["name", "short_name"]);
+        if (!homeTeam || !awayTeam) return null;
+
+        const scores = (raw.scores ?? {}) as Record<string, unknown>;
+        const timestamp = pickNumber(raw, ["timestamp"], NaN);
+        return {
+          id: pickString(raw, ["match_id", "id"], `${matchId}_h2h_${index}`),
+          date: Number.isNaN(timestamp) ? null : new Date(timestamp * 1000).toISOString(),
+          competition: pickString(raw, ["tournament_name", "competition"]) || null,
+          homeTeam,
+          awayTeam,
+          homeScore: (() => {
+            const v = pickNumber(scores, ["home"], NaN);
+            return Number.isNaN(v) ? null : v;
+          })(),
+          awayScore: (() => {
+            const v = pickNumber(scores, ["away"], NaN);
+            return Number.isNaN(v) ? null : v;
+          })(),
+        };
+      })
+      .filter((m): m is HeadToHeadMatch => m !== null);
+  }
+
+  /** matches/standings (match-scoped, distinct from tournaments/standings) — takes just a match_id. */
+  async getStandingsForMatch(matchId: string): Promise<Standing[]> {
+    const payload = await this.request<unknown>("matches/standings", { match_id: matchId, type: "overall" });
+    return extractStandingRows(payload).map((item, index) => this.mapStandingRow(item, index));
   }
 
   /**
@@ -278,22 +366,7 @@ export class FlashscoreProvider implements SportsDataProvider {
       type: "overall",
     });
 
-    return extractStandingRows(payload).map((item, index) => {
-      const raw = item as Record<string, unknown>;
-      const teamRaw = (raw.team ?? raw) as Record<string, unknown>;
-      return {
-        teamId: pickString(teamRaw, ["team_id", "id"], `team_${index}`),
-        teamName: pickString(teamRaw, ["name", "team_name", "short_name"], "Time"),
-        position: pickNumber(raw, ["position", "rank", "place"], index + 1),
-        played: pickNumber(raw, ["played", "matches_played", "games"]),
-        wins: pickNumber(raw, ["wins", "won"]),
-        draws: pickNumber(raw, ["draws", "drawn", "ties"]),
-        losses: pickNumber(raw, ["losses", "lost", "defeats"]),
-        goalsFor: pickNumber(raw, ["goals_for", "scored", "goalsFor"]),
-        goalsAgainst: pickNumber(raw, ["goals_against", "conceded", "goalsAgainst"]),
-        points: pickNumber(raw, ["points", "pts"]),
-      };
-    });
+    return extractStandingRows(payload).map((item, index) => this.mapStandingRow(item, index));
   }
 
   /** teamId is expected to be a team_url (e.g. "/team/corinthians/abc123/"), which is what teams/details and teams/squad require. */

@@ -1,15 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSportsDataProvider } from "@/lib/sports";
 import { trackServerEvent } from "@/lib/tracking/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-
-const EVENT_LABEL: Record<string, string> = {
-  goal: "⚽ Gol",
-  yellow_card: "🟨 Cartao amarelo",
-  red_card: "🟥 Cartao vermelho",
-  substitution: "🔄 Substituicao",
-  var: "📺 VAR",
-};
+import { TeamAvatar } from "@/components/app/TeamAvatar";
+import { MatchDetailTabs } from "@/components/app/MatchDetailTabs";
+import { ArrowLeftIcon } from "@/components/icons";
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,38 +18,71 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
+  const [h2h, standings] = await Promise.all([
+    provider.getHeadToHead(id).catch(() => []),
+    provider.getStandingsForMatch(id).catch(() => []),
+  ]);
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   await trackServerEvent({ eventName: "MatchViewed", userId: user?.id, properties: { match_id: id } });
 
+  const kickoffLabel =
+    match.status === "live"
+      ? `Ao vivo${match.minute ? ` • ${match.minute}'` : ""}`
+      : match.status === "finished"
+        ? `Encerrado • ${new Date(match.kickoffAt).toLocaleDateString("pt-BR")}`
+        : new Date(match.kickoffAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <p className="text-xs text-neutral-500">{match.league.name}</p>
-      <h1 className="mt-1 text-lg font-bold text-white">
-        {match.homeTeam.name} {match.homeScore ?? 0} - {match.awayScore ?? 0} {match.awayTeam.name}
-      </h1>
-      <p className="mt-1 text-sm text-neutral-400">
-        {match.status === "live"
-          ? `Ao vivo • ${match.minute}'`
-          : new Date(match.kickoffAt).toLocaleString("pt-BR")}
-      </p>
+      <Link href="/jogos" className="inline-flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-200">
+        <ArrowLeftIcon width={16} height={16} />
+        Voltar
+      </Link>
 
-      <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-200">Eventos da partida</h2>
-        {match.events.length === 0 && <p className="card text-sm text-neutral-500">Sem eventos registrados.</p>}
-        <ul className="flex flex-col gap-2">
-          {match.events.map((event) => (
-            <li key={event.id} className="card flex items-center justify-between text-sm">
-              <span className="text-neutral-300">
-                {EVENT_LABEL[event.type] ?? event.type} {event.playerName && `— ${event.playerName}`}
-              </span>
-              <span className="text-neutral-500">{event.minute}&apos;</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="card-glow mt-3">
+        <p className="text-center text-xs text-neutral-500">{match.league.name}</p>
+
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex flex-1 flex-col items-center gap-2 text-center">
+            <TeamAvatar name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} size={44} />
+            <p className="text-sm font-medium text-white">{match.homeTeam.name}</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 px-2">
+            <p className="text-2xl font-bold text-white">
+              {match.homeScore ?? 0} - {match.awayScore ?? 0}
+            </p>
+            <span
+              className={`badge ${
+                match.status === "live" ? "bg-red-500/15 text-red-300" : "bg-neutral-700/40 text-neutral-300"
+              }`}
+            >
+              {match.status === "live" && <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-400 align-middle" />}
+              {kickoffLabel}
+            </span>
+          </div>
+
+          <div className="flex flex-1 flex-col items-center gap-2 text-center">
+            <TeamAvatar name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} size={44} />
+            <p className="text-sm font-medium text-white">{match.awayTeam.name}</p>
+          </div>
+        </div>
+      </div>
+
+      <MatchDetailTabs
+        kickoffLabel={new Date(match.kickoffAt).toLocaleString("pt-BR", { dateStyle: "full", timeStyle: "short" })}
+        competition={match.league.name}
+        events={match.events}
+        statistics={match.statistics ?? {}}
+        standings={standings}
+        homeTeamName={match.homeTeam.name}
+        awayTeamName={match.awayTeam.name}
+        h2h={h2h}
+      />
     </div>
   );
 }

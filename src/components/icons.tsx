@@ -88,6 +88,15 @@ export function ArrowRightIcon(props: IconProps) {
   );
 }
 
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M19.5 12h-15" />
+      <path d="M11 17.5 5 12l6-5.5" />
+    </svg>
+  );
+}
+
 export function FlameIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

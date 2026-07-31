@@ -1,0 +1,182 @@
+"use client";
+
+import { useState } from "react";
+import type { HeadToHeadMatch, MatchEvent, Standing } from "@/lib/sports/types";
+
+const TABS = ["Resumo", "Eventos", "Estatisticas", "Classificacao", "H2H"] as const;
+
+const EVENT_LABEL: Record<MatchEvent["type"], string> = {
+  goal: "⚽ Gol",
+  yellow_card: "🟨 Cartao amarelo",
+  red_card: "🟥 Cartao vermelho",
+  substitution: "🔄 Substituicao",
+  var: "📺 VAR",
+  unknown: "• Evento",
+};
+
+function EmptyState({ text }: { text: string }) {
+  return <p className="card py-6 text-center text-sm text-neutral-500">{text}</p>;
+}
+
+export function MatchDetailTabs({
+  kickoffLabel,
+  competition,
+  events,
+  statistics,
+  standings,
+  homeTeamName,
+  awayTeamName,
+  h2h,
+}: {
+  kickoffLabel: string;
+  competition: string;
+  events: MatchEvent[];
+  statistics: Record<string, { home: number | string; away: number | string }>;
+  standings: Standing[];
+  homeTeamName: string;
+  awayTeamName: string;
+  h2h: HeadToHeadMatch[];
+}) {
+  const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
+  const statEntries = Object.entries(statistics);
+
+  return (
+    <div className="mt-5">
+      <div className="scrollbar-none flex gap-1 overflow-x-auto border-b border-neutral-800">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`shrink-0 rounded-t-lg px-3 py-2 text-sm transition ${
+              tab === t ? "border-b-2 border-yellow-400 text-yellow-300" : "text-neutral-500 hover:text-neutral-300"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4">
+        {tab === "Resumo" && (
+          <div className="card flex flex-col gap-2 text-sm">
+            <Row label="Competicao" value={competition} />
+            <Row label="Data" value={kickoffLabel} />
+          </div>
+        )}
+
+        {tab === "Eventos" &&
+          (events.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {events.map((event) => (
+                <li key={event.id} className="card flex items-center justify-between text-sm">
+                  <span className="text-neutral-300">
+                    {EVENT_LABEL[event.type]} {event.playerName && `— ${event.playerName}`}
+                  </span>
+                  {event.minute !== null && <span className="text-neutral-500">{event.minute}&apos;</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState text="Nenhum evento disponivel para esta partida ainda." />
+          ))}
+
+        {tab === "Estatisticas" &&
+          (statEntries.length > 0 ? (
+            <div className="card flex flex-col gap-3">
+              {statEntries.map(([label, values]) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between text-xs text-neutral-400">
+                    <span>{values.home}</span>
+                    <span>{label}</span>
+                    <span>{values.away}</span>
+                  </div>
+                  <StatBar home={values.home} away={values.away} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState text="Estatisticas indisponiveis para esta partida." />
+          ))}
+
+        {tab === "Classificacao" &&
+          (standings.length > 0 ? (
+            <div className="card overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-neutral-500">
+                  <tr>
+                    <th className="py-1 pr-2">#</th>
+                    <th className="py-1 pr-2">Time</th>
+                    <th className="py-1 pr-2 text-center">PJ</th>
+                    <th className="py-1 pr-2 text-center">V</th>
+                    <th className="py-1 pr-2 text-center">E</th>
+                    <th className="py-1 pr-2 text-center">D</th>
+                    <th className="py-1 text-center">Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {standings.map((row) => (
+                    <tr
+                      key={row.teamId}
+                      className={`border-t border-neutral-800 ${
+                        row.teamName === homeTeamName || row.teamName === awayTeamName ? "text-yellow-300" : "text-neutral-300"
+                      }`}
+                    >
+                      <td className="py-1.5 pr-2">{row.position}</td>
+                      <td className="py-1.5 pr-2">{row.teamName}</td>
+                      <td className="py-1.5 pr-2 text-center">{row.played}</td>
+                      <td className="py-1.5 pr-2 text-center">{row.wins}</td>
+                      <td className="py-1.5 pr-2 text-center">{row.draws}</td>
+                      <td className="py-1.5 pr-2 text-center">{row.losses}</td>
+                      <td className="py-1.5 text-center font-semibold">{row.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState text="Classificacao indisponivel para esta partida." />
+          ))}
+
+        {tab === "H2H" &&
+          (h2h.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {h2h.map((m) => (
+                <li key={m.id} className="card text-sm">
+                  <p className="text-xs text-neutral-500">
+                    {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
+                  </p>
+                  <p className="mt-1 font-medium text-white">
+                    {m.homeTeam} {m.homeScore ?? "-"} - {m.awayScore ?? "-"} {m.awayTeam}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState text="Nenhum confronto anterior encontrado." />
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function StatBar({ home, away }: { home: number | string; away: number | string }) {
+  const h = typeof home === "number" ? home : Number(home);
+  const a = typeof away === "number" ? away : Number(away);
+  if (!Number.isFinite(h) || !Number.isFinite(a) || h + a === 0) return null;
+  const homePct = (h / (h + a)) * 100;
+  return (
+    <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-neutral-800">
+      <div className="bg-yellow-400" style={{ width: `${homePct}%` }} />
+      <div className="bg-neutral-600" style={{ width: `${100 - homePct}%` }} />
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <span className="text-neutral-500">{label}</span>
+      <span className="text-right text-neutral-200">{value}</span>
+    </div>
+  );
+}

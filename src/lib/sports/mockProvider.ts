@@ -1,5 +1,14 @@
 import "server-only";
-import type { League, Match, MatchDetails, MatchEvent, SportsDataProvider, Standing, TeamDetails } from "@/lib/sports/types";
+import type {
+  HeadToHeadMatch,
+  League,
+  Match,
+  MatchDetails,
+  MatchEvent,
+  SportsDataProvider,
+  Standing,
+  TeamDetails,
+} from "@/lib/sports/types";
 
 const BRASILEIRAO: League = { id: "league_brasileirao", name: "Brasileirao Serie A", country: "Brasil" };
 const LIBERTADORES: League = { id: "league_libertadores", name: "Libertadores", country: "America do Sul" };
@@ -92,6 +101,18 @@ export class MockSportsDataProvider implements SportsDataProvider {
 
   async getMatchEvents(matchId: string): Promise<MatchEvent[]> {
     return MOCK_EVENTS[matchId] ?? [];
+  }
+
+  async getMatchStats(): Promise<Record<string, { home: number | string; away: number | string }>> {
+    return {};
+  }
+
+  async getHeadToHead(): Promise<HeadToHeadMatch[]> {
+    return [];
+  }
+
+  async getStandingsForMatch(): Promise<Standing[]> {
+    return [];
   }
 
   async getStandings(leagueId: string): Promise<Standing[]> {
