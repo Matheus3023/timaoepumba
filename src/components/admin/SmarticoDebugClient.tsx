@@ -8,12 +8,13 @@ interface ParamRow {
 }
 
 // Nao confirmados — vem so das palavras usadas na doc da Smartico ("Media
-// reports, Balance API and Affiliates data"). Servem de ponto de partida
-// pra testar, nao sao paths garantidos.
-const PATH_SUGGESTIONS = ["affiliates", "media-reports", "balance", "players", "reports"];
+// reports, Balance API and Affiliates data"). O prefixo /api/ foi confirmado
+// pela doc de registro de afiliados (POST /api/register-aff). Servem de
+// ponto de partida pra testar, nao sao paths garantidos.
+const PATH_SUGGESTIONS = ["api/affiliates", "api/media-reports", "api/balance", "api/players", "api/reports"];
 
 export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
-  const [path, setPath] = useState("affiliates");
+  const [path, setPath] = useState("api/affiliates");
   const [method, setMethod] = useState<"GET" | "POST">("GET");
   const [authMode, setAuthMode] = useState<"header" | "query">("header");
   const [authKeyName, setAuthKeyName] = useState("api-key");
