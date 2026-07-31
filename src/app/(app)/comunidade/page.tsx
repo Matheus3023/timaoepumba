@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { syncCommunityMembership } from "@/lib/entitlements/rules";
 import { ChatIcon } from "@/components/icons";
 
 const LIVE_CHAT_SLUG = "resenha-geral";
@@ -11,16 +10,8 @@ export default async function CommunityRoomsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: appUser } = await supabase.from("users").select("access_level").eq("id", user!.id).single();
-
-  // Self-heals membership on every visit instead of relying only on the
-  // signup/webhook hooks having fired correctly — cheap (upsert, no-op if
-  // already a member) and closes the gap for any account created between
-  // a schema change and its rollout, or missed by a one-time backfill.
-  if (appUser) {
-    await syncCommunityMembership(user!.id, appUser.access_level);
-  }
-
+  // Membership self-heal now runs once per app view in (app)/layout.tsx,
+  // covering every page, not just this one.
   const [{ data: rooms }, { data: memberships }] = await Promise.all([
     supabase.from("community_rooms").select("*").eq("is_active", true).order("position"),
     supabase.from("community_members").select("room_id").eq("user_id", user!.id),
