@@ -11,6 +11,7 @@ import type {
   Standing,
   TeamDetails,
 } from "@/lib/sports/types";
+import { isBestLeague } from "@/lib/sports/bestLeagues";
 
 /** Raw shapes as returned by Flashscore4 on RapidAPI (confirmed via /admin/dados-esportivos). */
 interface RawTeam {
@@ -145,13 +146,20 @@ function extractStandingRows(payload: unknown): unknown[] {
   return candidates;
 }
 
-/** Flattens the `matches/list` (and `matches/live`) response — grouped by tournament — into a flat Match[]. */
+/**
+ * Flattens the `matches/list` (and `matches/live`) response — grouped by
+ * tournament — into a flat Match[], keeping only tournaments in the
+ * "best leagues" allowlist (see bestLeagues.ts) since these endpoints
+ * otherwise return every football competition worldwide, unfiltered.
+ */
 function flattenMatchesResponse(payload: unknown): Match[] {
   if (!Array.isArray(payload)) return [];
 
   const matches: Match[] = [];
   for (const item of payload) {
     if (isTournamentGroup(item)) {
+      if (!isBestLeague(item.name, item.country_name)) continue;
+
       const league: League = {
         id: item.tournament_id,
         name: item.name,
@@ -164,8 +172,10 @@ function flattenMatchesResponse(payload: unknown): Match[] {
     } else if (isRawMatch(item)) {
       // Defensive fallback in case an endpoint returns a flat match list
       // instead of grouped-by-tournament (unconfirmed for matches/live at
-      // write time — it returned [] with no live matches to inspect).
-      matches.push(mapMatch(item, { id: "desconhecido", name: "Outros jogos" }));
+      // write time — it returned [] with no live matches to inspect). No
+      // league name/country to check against the allowlist here, so these
+      // are dropped rather than risking non-best-league matches slipping
+      // through unfiltered.
     }
   }
   return matches;
