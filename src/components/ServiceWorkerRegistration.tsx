@@ -2,13 +2,17 @@
 
 import { useEffect } from "react";
 
+const PERIODIC_UPDATE_CHECK_MS = 60_000;
+
 /**
  * Registers the PWA service worker (public/sw.js) — required for
  * installability and push — and makes sure a newly deployed sw.js takes
  * over promptly instead of the app being stuck on a stale cached version:
- * checks for an update immediately and every time the app regains focus
- * (the common case for an installed PWA reopened from the background),
- * and reloads once when the new worker actually takes control.
+ * checks for an update immediately, every time the app regains focus (the
+ * common case for an installed PWA reopened from the background), and on
+ * a 60s interval while open (visibilitychange isn't reliably fired by
+ * every installed-PWA wrapper, so this is a belt-and-suspenders backstop).
+ * Reloads once when the new worker actually takes control.
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {
@@ -34,10 +38,12 @@ export function ServiceWorkerRegistration() {
     }
     checkForUpdate();
     document.addEventListener("visibilitychange", checkForUpdate);
+    const interval = setInterval(checkForUpdate, PERIODIC_UPDATE_CHECK_MS);
 
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
       document.removeEventListener("visibilitychange", checkForUpdate);
+      clearInterval(interval);
     };
   }, []);
 
