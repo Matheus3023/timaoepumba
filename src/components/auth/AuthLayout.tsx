@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BallIcon, ChartIcon, ChatIcon } from "@/components/icons";
@@ -20,9 +21,14 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       {/* Decorative side panel — desktop only */}
       <div className="relative z-10 hidden w-[42%] flex-col justify-between border-r border-white/5 p-10 lg:flex">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-300 to-yellow-500 text-neutral-900 shadow-lg shadow-yellow-500/20">
-            <BallIcon width={18} height={18} strokeWidth={2.2} />
-          </div>
+          <Image
+            src="/icons/icon-512.png"
+            alt="Timao e Pumba Tips"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-xl shadow-lg shadow-yellow-500/20"
+            priority
+          />
           <span className="text-lg font-extrabold tracking-tight text-white">
             Timao<span className="text-yellow-400">&</span>Pumba
           </span>
@@ -56,9 +62,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           className="mx-auto w-full max-w-md"
         >
           <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-300 to-yellow-500 text-neutral-900">
-              <BallIcon width={16} height={16} strokeWidth={2.2} />
-            </div>
+            <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={32} height={32} className="h-8 w-8 rounded-lg" />
             <span className="font-extrabold tracking-tight text-white">
               Timao<span className="text-yellow-400">&</span>Pumba
             </span>

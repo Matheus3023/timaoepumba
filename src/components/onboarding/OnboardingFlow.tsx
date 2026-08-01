@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { OnboardingConfig } from "@/lib/onboarding/config";
 import { useInstallPrompt } from "@/lib/onboarding/InstallPromptProvider";
@@ -207,6 +208,8 @@ function InstallStep({
 }) {
   return (
     <div className="flex flex-col gap-6">
+      <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={64} height={64} className="h-16 w-16 rounded-2xl" priority />
+
       <div>
         <h1 className="text-2xl font-bold text-white">{config.welcome_title}</h1>
         <p className="mt-2 text-neutral-400">{config.welcome_text}</p>

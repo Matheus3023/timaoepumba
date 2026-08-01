@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BallIcon, ChartIcon, ChatIcon, ShieldIcon } from "@/components/icons";
@@ -55,9 +56,14 @@ export default function LandingPage() {
 
       <header className="relative z-10 flex items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-300 to-yellow-500 text-neutral-900 shadow-lg shadow-yellow-500/20">
-            <BallIcon width={18} height={18} strokeWidth={2.2} />
-          </div>
+          <Image
+            src="/icons/icon-512.png"
+            alt="Timao e Pumba Tips"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-xl shadow-lg shadow-yellow-500/20"
+            priority
+          />
           <span className="text-lg font-extrabold tracking-tight text-white">
             Timao<span className="text-yellow-400">&</span>Pumba
           </span>
