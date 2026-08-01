@@ -14,10 +14,11 @@ const ONLINE_STALE_MS = 90_000;
 
 /**
  * Push-notifies community members who are offline about a new chat
- * message. Called fire-and-forget from the client right after a
- * successful send (community_messages inserts go straight through the
- * browser client, RLS-gated — there's no server route in that path to
- * hook this into otherwise).
+ * message from the admin — regular members' messages never trigger a
+ * push, only the admin's. Called fire-and-forget from the client right
+ * after a successful send (community_messages inserts go straight
+ * through the browser client, RLS-gated — there's no server route in
+ * that path to hook this into otherwise).
  */
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
@@ -49,6 +50,20 @@ export async function POST(request: NextRequest) {
 
   if (!message || message.room_id !== roomId || message.user_id !== user.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const { data: senderMembership } = await admin
+    .from("community_members")
+    .select("role")
+    .eq("room_id", roomId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  // Only the admin's own messages page offline members — a message from a
+  // regular torcedor doesn't push anyone, or every back-and-forth in the
+  // room would spam offline members' phones.
+  if (senderMembership?.role !== "administrador") {
+    return NextResponse.json({ sent: 0, skipped: "not_admin" });
   }
 
   const [{ data: room }, { data: sender }, { data: members }] = await Promise.all([
