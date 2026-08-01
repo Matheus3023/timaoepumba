@@ -205,7 +205,7 @@ export function CommunityRoomChat({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4">
-        <div className="flex flex-col gap-2 pb-4">
+        <div className="flex min-h-full flex-col justify-end gap-2 pb-4">
           {messages.map((message) => {
             const isOwn = message.user_id === currentUserId;
             const isStaff = isStaffRole(message.author_role);
