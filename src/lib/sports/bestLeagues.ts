@@ -5,6 +5,12 @@
  * divisions and youth leagues) grouped by tournament, completely
  * unfiltered.
  *
+ * Every match from an allowlisted competition is shown — an earlier
+ * version also required a "well-known club" for cup competitions, but
+ * that caused more confusion than it solved (legitimate Copa do Brasil
+ * matches with real clubs like Cruzeiro got second-guessed) and was
+ * removed.
+ *
  * Matching is keyword + optional country, both normalized (lowercase,
  * accents stripped), because the real tournament name strings returned by
  * the API are unconfirmed for most of these leagues — sponsor prefixes
@@ -18,121 +24,50 @@ interface LeagueRule {
   keyword: string;
   /** Required when the keyword alone is ambiguous between countries. */
   country?: string;
-  /**
-   * "league": show every match — a domestic round-robin (or a national-team
-   * tournament, which is already sparse) is a narrow, relevant list on its
-   * own.
-   * "cup": early/group rounds can have dozens of simultaneous matches
-   * between minor clubs, so also require a well-known club playing (see
-   * BIG_CLUB_KEYWORDS below) instead of showing every fixture.
-   */
-  type: "league" | "cup";
 }
 
 /**
  * Checked before BEST_LEAGUE_RULES — celebrity/7-a-side leagues (Kings
  * League, Baller League, etc.) have tournament names that false-positive
  * match real keywords below (e.g. "Kings World Cup Clubs" contains
- * "world cup"), and their matches don't have official crests in Flashscore,
- * which is what actually surfaced this: a whole Home screen full of
- * initials-only teams from "Kings World Cup Clubs" crowding out real
- * matches, since it matched the "world cup" rule as a league (no big-club
- * filter applied).
+ * "world cup").
  */
 const EXCLUDE_KEYWORDS = ["kings league", "kings world cup", "kings cup", "queens league", "baller league"];
 
 const BEST_LEAGUE_RULES: LeagueRule[] = [
   // Brasil
-  { keyword: "brasileir", country: "brazil", type: "league" },
-  { keyword: "serie a", country: "brazil", type: "league" },
-  { keyword: "serie b", country: "brazil", type: "league" },
-  { keyword: "copa do brasil", country: "brazil", type: "cup" },
+  { keyword: "brasileir", country: "brazil" },
+  { keyword: "serie a", country: "brazil" },
+  { keyword: "serie b", country: "brazil" },
+  { keyword: "copa do brasil", country: "brazil" },
 
   // America do Sul
-  { keyword: "libertadores", type: "cup" },
-  { keyword: "sul-americana", type: "cup" },
-  { keyword: "sudamericana", type: "cup" },
-  { keyword: "recopa", type: "cup" },
+  { keyword: "libertadores" },
+  { keyword: "sul-americana" },
+  { keyword: "sudamericana" },
+  { keyword: "recopa" },
 
   // Europa - competicoes continentais
-  { keyword: "champions league", type: "cup" },
-  { keyword: "europa league", type: "cup" },
-  { keyword: "conference league", type: "cup" },
+  { keyword: "champions league" },
+  { keyword: "europa league" },
+  { keyword: "conference league" },
 
   // Europa - ligas nacionais principais
-  { keyword: "premier league", country: "england", type: "league" },
-  { keyword: "la liga", country: "spain", type: "league" },
-  { keyword: "laliga", country: "spain", type: "league" },
-  { keyword: "serie a", country: "italy", type: "league" },
-  { keyword: "bundesliga", country: "germany", type: "league" },
-  { keyword: "ligue 1", country: "france", type: "league" },
-  { keyword: "primeira liga", country: "portugal", type: "league" },
+  { keyword: "premier league", country: "england" },
+  { keyword: "la liga", country: "spain" },
+  { keyword: "laliga", country: "spain" },
+  { keyword: "serie a", country: "italy" },
+  { keyword: "bundesliga", country: "germany" },
+  { keyword: "ligue 1", country: "france" },
+  { keyword: "primeira liga", country: "portugal" },
 
-  // Selecoes / torneios de selecoes — ja sao listas enxutas por natureza
-  { keyword: "copa america", type: "league" },
-  { keyword: "world cup", type: "league" },
-  { keyword: "eurocopa", type: "league" },
-  { keyword: "euro ", type: "league" },
-  { keyword: "eliminatorias", type: "league" },
-  { keyword: "mundial de clubes", type: "cup" },
-];
-
-/**
- * Clubs big enough that their cup matches are worth showing even in early
- * rounds. Not exhaustive by design — this is a curated "worth showing"
- * list, not a ranking. Easy to extend once real team names from the API
- * are seen in production.
- */
-const BIG_CLUB_KEYWORDS = [
-  // Brasil
-  "corinthians",
-  "palmeiras",
-  "flamengo",
-  "sao paulo",
-  "santos",
-  "vasco",
-  "gremio",
-  "internacional",
-  "atletico mineiro",
-  "atletico-mg",
-  "cruzeiro",
-  "fluminense",
-  "botafogo",
-  "bahia",
-  "fortaleza",
-  "athletico paranaense",
-  "atletico paranaense",
-  // America do Sul
-  "boca juniors",
-  "river plate",
-  "penarol",
-  "nacional",
-  "colo-colo",
-  "universidad de chile",
-  "independiente del valle",
-  "barcelona sc",
-  "olimpia",
-  "cerro porteno",
-  // Europa
-  "real madrid",
-  "barcelona",
-  "manchester city",
-  "manchester united",
-  "liverpool",
-  "chelsea",
-  "arsenal",
-  "tottenham",
-  "bayern",
-  "dortmund",
-  "paris saint",
-  "psg",
-  "juventus",
-  "milan",
-  "napoli",
-  "atletico madrid",
-  "porto",
-  "benfica",
-  "sporting",
+  // Selecoes / torneios de selecoes
+  { keyword: "copa america" },
+  { keyword: "world cup" },
+  { keyword: "eurocopa" },
+  { keyword: "euro " },
+  { keyword: "eliminatorias" },
+  { keyword: "mundial de clubes" },
 ];
 
 function normalize(text: string): string {
@@ -142,24 +77,17 @@ function normalize(text: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/** Returns the matching rule (with its "league"/"cup" type), or null if this tournament isn't in the allowlist. */
-export function getLeagueRule(name: string, country?: string | null): LeagueRule | null {
+/** Returns true if this tournament is in the allowlist (and not an excluded celebrity/7-a-side league). */
+export function isBestLeague(name: string, country?: string | null): boolean {
   const normalizedName = normalize(name);
 
-  if (EXCLUDE_KEYWORDS.some((keyword) => normalizedName.includes(keyword))) return null;
+  if (EXCLUDE_KEYWORDS.some((keyword) => normalizedName.includes(keyword))) return false;
 
   const normalizedCountry = country ? normalize(country) : "";
 
-  return (
-    BEST_LEAGUE_RULES.find((rule) => {
-      if (!normalizedName.includes(rule.keyword)) return false;
-      if (rule.country && !normalizedCountry.includes(rule.country)) return false;
-      return true;
-    }) ?? null
-  );
-}
-
-export function isBigClubTeam(teamName: string): boolean {
-  const normalized = normalize(teamName);
-  return BIG_CLUB_KEYWORDS.some((keyword) => normalized.includes(keyword));
+  return BEST_LEAGUE_RULES.some((rule) => {
+    if (!normalizedName.includes(rule.keyword)) return false;
+    if (rule.country && !normalizedCountry.includes(rule.country)) return false;
+    return true;
+  });
 }

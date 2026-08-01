@@ -11,7 +11,7 @@ import type {
   Standing,
   TeamDetails,
 } from "@/lib/sports/types";
-import { getLeagueRule, isBigClubTeam } from "@/lib/sports/bestLeagues";
+import { isBestLeague } from "@/lib/sports/bestLeagues";
 
 /** Raw shapes as returned by Flashscore4 on RapidAPI (confirmed via /admin/dados-esportivos). */
 interface RawTeam {
@@ -150,11 +150,8 @@ function extractStandingRows(payload: unknown): unknown[] {
  * Flattens the `matches/list` (and `matches/live`) response — grouped by
  * tournament — into a flat Match[], keeping only tournaments in the
  * "best leagues" allowlist (see bestLeagues.ts) since these endpoints
- * otherwise return every football competition worldwide, unfiltered. Cup
- * competitions are filtered further to matches involving a well-known
- * club — early/group rounds can have dozens of simultaneous fixtures
- * between minor clubs, unlike a domestic league table which is already a
- * narrow, relevant list.
+ * otherwise return every football competition worldwide, unfiltered. Every
+ * match from an allowlisted tournament is kept.
  */
 function flattenMatchesResponse(payload: unknown): Match[] {
   if (!Array.isArray(payload)) return [];
@@ -162,8 +159,7 @@ function flattenMatchesResponse(payload: unknown): Match[] {
   const matches: Match[] = [];
   for (const item of payload) {
     if (isTournamentGroup(item)) {
-      const rule = getLeagueRule(item.name, item.country_name);
-      if (!rule) continue;
+      if (!isBestLeague(item.name, item.country_name)) continue;
 
       const league: League = {
         id: item.tournament_id,
@@ -172,9 +168,6 @@ function flattenMatchesResponse(payload: unknown): Match[] {
         logoUrl: item.image_path ?? null,
       };
       for (const raw of item.matches) {
-        if (rule.type === "cup" && !isBigClubTeam(raw.home_team.name) && !isBigClubTeam(raw.away_team.name)) {
-          continue;
-        }
         matches.push(mapMatch(raw, league));
       }
     } else if (isRawMatch(item)) {
