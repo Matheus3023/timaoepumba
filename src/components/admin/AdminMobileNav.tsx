@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminProfile, AdminSection } from "@/lib/admin/access";
@@ -23,14 +23,32 @@ export function AdminMobileNav({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const links = ADMIN_NAV_LINKS.filter((link) => allowedSections.has(link.section));
   const current = links.find((link) => pathname.startsWith(link.href));
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   return (
     <div className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-950/95 backdrop-blur-xl pt-[env(safe-area-inset-top)] sm:hidden">
       <button
+        ref={toggleRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="admin-mobile-nav-menu"
         className="flex w-full items-center justify-between px-4 py-3 text-left touch-manipulation"
       >
         <span className="text-sm font-semibold text-white">{current?.label ?? "Admin"}</span>
@@ -38,7 +56,7 @@ export function AdminMobileNav({
       </button>
 
       {open && (
-        <nav className="flex flex-col gap-1 border-t border-neutral-800 px-3 pb-3">
+        <nav id="admin-mobile-nav-menu" className="flex flex-col gap-1 border-t border-neutral-800 px-3 pb-3">
           {links.map((link) => (
             <Link
               key={link.href}

@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { trackServerEvent } from "@/lib/tracking/events";
 import { CommunityRoomChat } from "@/components/community/CommunityRoomChat";
 import { ChatIcon } from "@/components/icons";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const LIVE_CHAT_SLUG = "resenha-geral";
 
@@ -27,8 +28,7 @@ export default async function CommunityRoomsPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <h1 className="text-xl font-bold text-white">Bate-papo</h1>
-      <p className="text-sm text-neutral-400">Converse, resenhe e acompanhe os jogos com quem tem o app instalado.</p>
+      <PageHeader title="Bate-papo" description="Converse, resenhe e acompanhe os jogos com quem tem o app instalado." />
 
       <div className="card-glow mt-4 flex items-center gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400">

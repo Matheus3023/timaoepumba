@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSportsDataProvider } from "@/lib/sports";
 import { CACHE_TTL_SECONDS, getOrSetCache } from "@/lib/sports/cache";
 import { MatchesFilterTabs } from "@/components/app/MatchesFilterTabs";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { Match } from "@/lib/sports/types";
 
 const DAYS = [
@@ -35,7 +36,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <h1 className="text-xl font-bold text-white">Jogos</h1>
+      <PageHeader title="Jogos" />
 
       <div className="mt-3 flex gap-1.5">
         {DAYS.map((d) => (

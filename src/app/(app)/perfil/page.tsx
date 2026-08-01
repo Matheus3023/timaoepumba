@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileActions } from "@/components/app/ProfileActions";
 import { InstallNotificationsCard } from "@/components/app/InstallNotificationsCard";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const ACCESS_LEVEL_LABEL: Record<string, string> = {
   VISITOR: "Visitante",
@@ -28,7 +29,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <h1 className="text-xl font-bold text-white">Perfil</h1>
+      <PageHeader title="Perfil" />
 
       <section className="card mt-4">
         <p className="font-semibold text-white">{appUser?.full_name}</p>

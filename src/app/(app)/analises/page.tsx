@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const RISK_LABEL: Record<string, string> = { baixo: "Risco baixo", medio: "Risco medio", alto: "Risco alto" };
 
@@ -24,8 +25,7 @@ export default async function AnalysesPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <h1 className="text-xl font-bold text-white">Analises</h1>
-      <p className="text-sm text-neutral-400">Conteudo publicado pela equipe de analistas.</p>
+      <PageHeader title="Analises" description="Conteudo publicado pela equipe de analistas." />
 
       <div className="mt-4 flex flex-col gap-3">
         {(!analyses || analyses.length === 0) && (
