@@ -70,7 +70,7 @@ async function CommunityChatEmbed({ roomId, roomName, userId }: { roomId: string
   await trackServerEvent({ eventName: "CommunityRoomEntered", userId, properties: { room_id: roomId } });
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] flex-col">
+    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
       <CommunityRoomChat
         roomId={roomId}
         roomName={roomName}

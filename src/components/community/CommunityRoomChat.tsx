@@ -221,16 +221,16 @@ export function CommunityRoomChat({
                       : "self-start bg-neutral-800 text-neutral-100"
                 }`}
               >
-                {!isOwn && (
-                  <p className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold opacity-90">
-                    <span className={isStaff ? "text-emerald-300" : "opacity-70"}>{message.author_name}</span>
-                    {isStaff && (
-                      <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
-                        {STAFF_ROLE_LABEL[message.author_role]}
-                      </span>
-                    )}
-                  </p>
-                )}
+                <p className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold opacity-90">
+                  <span className={isOwn ? "text-neutral-900/70" : isStaff ? "text-emerald-300" : "opacity-70"}>
+                    {isOwn ? "Voce" : message.author_name}
+                  </span>
+                  {isStaff && !isOwn && (
+                    <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
+                      {STAFF_ROLE_LABEL[message.author_role]}
+                    </span>
+                  )}
+                </p>
                 <p>{message.content}</p>
                 {!isOwn && (
                   <button
