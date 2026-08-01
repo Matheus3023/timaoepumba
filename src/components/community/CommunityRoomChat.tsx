@@ -96,6 +96,13 @@ export function CommunityRoomChat({
         { event: "INSERT", schema: "public", table: "community_messages", filter: `room_id=eq.${roomId}` },
         async (payload) => {
           const row = payload.new as { id: string; user_id: string; content: string; created_at: string; is_pinned: boolean };
+
+          // The sender's own message is appended optimistically in
+          // handleSubmit already (Realtime broadcasts inserts back to the
+          // author too, not just other members) — no need to re-fetch and
+          // re-add it here.
+          if (row.user_id === currentUserId) return;
+
           const [{ data: author }, { data: membership }] = await Promise.all([
             supabase.from("users").select("full_name").eq("id", row.user_id).maybeSingle(),
             supabase
@@ -105,18 +112,21 @@ export function CommunityRoomChat({
               .eq("user_id", row.user_id)
               .maybeSingle(),
           ]);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: row.id,
-              user_id: row.user_id,
-              content: row.content,
-              created_at: row.created_at,
-              is_pinned: row.is_pinned,
-              author_name: author?.full_name ?? "Torcedor",
-              author_role: membership?.role ?? "usuario",
-            },
-          ]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === row.id)) return prev;
+            return [
+              ...prev,
+              {
+                id: row.id,
+                user_id: row.user_id,
+                content: row.content,
+                created_at: row.created_at,
+                is_pinned: row.is_pinned,
+                author_name: author?.full_name ?? "Torcedor",
+                author_role: membership?.role ?? "usuario",
+              },
+            ];
+          });
         }
       )
       .subscribe();
@@ -124,7 +134,7 @@ export function CommunityRoomChat({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, supabase]);
+  }, [roomId, supabase, currentUserId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,19 +147,34 @@ export function CommunityRoomChat({
 
     setSending(true);
     setError(null);
-    const { error: insertError } = await supabase.from("community_messages").insert({
-      room_id: roomId,
-      user_id: currentUserId,
-      content,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("community_messages")
+      .insert({ room_id: roomId, user_id: currentUserId, content })
+      .select("id, content, created_at, is_pinned")
+      .single();
     setSending(false);
 
-    if (!insertError) {
-      setDraft("");
+    if (insertError || !inserted) {
+      setError(mapMessageError(insertError?.message ?? ""));
       return;
     }
 
-    setError(mapMessageError(insertError.message));
+    setDraft("");
+    // Appended locally instead of waiting for the Realtime echo — the
+    // moderation trigger can rewrite `content` (masking banned words), so
+    // this uses what actually got saved rather than the raw draft.
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: inserted.id,
+        user_id: currentUserId,
+        content: inserted.content,
+        created_at: inserted.created_at,
+        is_pinned: inserted.is_pinned,
+        author_name: currentUserName,
+        author_role: "usuario",
+      },
+    ]);
   }
 
   async function handleReport(messageId: string, reason: string) {
