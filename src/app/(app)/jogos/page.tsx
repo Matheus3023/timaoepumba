@@ -15,13 +15,18 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
   const { day: dayParam } = await searchParams;
   const day = DAYS.some((d) => String(d.offset) === dayParam) ? Number(dayParam) : 0;
 
+  // Cache keys embed the real calendar date (not just a static "today")
+  // so a request cached right before midnight can't keep serving
+  // yesterday's fixture list, mislabeled as "today", into the new day.
+  const todayKey = new Date().toISOString().slice(0, 10);
+
   const provider = getSportsDataProvider();
   const [{ data: matches }, { data: liveMatches }] = await Promise.all([
     day === 0
-      ? getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () => provider.getTodayMatches())
+      ? getOrSetCache(`today_matches_${todayKey}`, CACHE_TTL_SECONDS.todayMatches, () => provider.getTodayMatches())
       : getOrSetCache(`matches_day_${day}`, CACHE_TTL_SECONDS.otherDayMatches, () => provider.getMatchesForDay(day)),
     day === 0
-      ? getOrSetCache("live_matches", CACHE_TTL_SECONDS.liveMatches, () => provider.getLiveMatches())
+      ? getOrSetCache(`live_matches_${todayKey}`, CACHE_TTL_SECONDS.liveMatches, () => provider.getLiveMatches())
       : Promise.resolve({ data: [] as Match[] }),
   ]);
 

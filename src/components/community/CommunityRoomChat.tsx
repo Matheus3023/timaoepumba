@@ -204,7 +204,7 @@ export function CommunityRoomChat({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4">
+      <div className="scrollbar-none flex-1 overflow-y-auto px-4">
         <div className="flex min-h-full flex-col justify-end gap-2 pb-4">
           {messages.map((message) => {
             const isOwn = message.user_id === currentUserId;

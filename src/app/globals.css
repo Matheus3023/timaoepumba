@@ -127,6 +127,17 @@ a {
       linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 34px 34px;
   }
+
+  /* Referenced by MatchDetailTabs' tab strip since it was added, but never
+     actually defined until now — both that and the chat's message list use
+     this to avoid a visible scrollbar breaking the premium feel. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes pulse-live {

@@ -67,6 +67,16 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               Timao<span className="text-yellow-400">&</span>Pumba
             </span>
           </Link>
+
+          <Image
+            src="/icons/icon-512.png"
+            alt="Timao e Pumba Tips"
+            width={96}
+            height={96}
+            className="mx-auto mb-6 h-24 w-24 rounded-2xl shadow-xl shadow-yellow-500/10"
+            priority
+          />
+
           {children}
         </motion.div>
       </div>
