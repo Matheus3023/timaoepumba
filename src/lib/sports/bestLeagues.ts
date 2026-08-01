@@ -29,6 +29,18 @@ interface LeagueRule {
   type: "league" | "cup";
 }
 
+/**
+ * Checked before BEST_LEAGUE_RULES — celebrity/7-a-side leagues (Kings
+ * League, Baller League, etc.) have tournament names that false-positive
+ * match real keywords below (e.g. "Kings World Cup Clubs" contains
+ * "world cup"), and their matches don't have official crests in Flashscore,
+ * which is what actually surfaced this: a whole Home screen full of
+ * initials-only teams from "Kings World Cup Clubs" crowding out real
+ * matches, since it matched the "world cup" rule as a league (no big-club
+ * filter applied).
+ */
+const EXCLUDE_KEYWORDS = ["kings league", "kings world cup", "kings cup", "queens league", "baller league"];
+
 const BEST_LEAGUE_RULES: LeagueRule[] = [
   // Brasil
   { keyword: "brasileir", country: "brazil", type: "league" },
@@ -133,6 +145,9 @@ function normalize(text: string): string {
 /** Returns the matching rule (with its "league"/"cup" type), or null if this tournament isn't in the allowlist. */
 export function getLeagueRule(name: string, country?: string | null): LeagueRule | null {
   const normalizedName = normalize(name);
+
+  if (EXCLUDE_KEYWORDS.some((keyword) => normalizedName.includes(keyword))) return null;
+
   const normalizedCountry = country ? normalize(country) : "";
 
   return (
