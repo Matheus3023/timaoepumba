@@ -442,6 +442,24 @@ export type Database = {
         { user_id: string; dark_mode: boolean; language: string; updated_at: string },
         Partial<{ user_id: string; dark_mode: boolean; language: string; updated_at: string }>
       >;
+      user_presence: TableDef<
+        {
+          user_id: string;
+          status: "online" | "away" | "offline";
+          current_page: string | null;
+          last_activity_at: string;
+          session_started_at: string | null;
+          device: string | null;
+        },
+        Partial<{
+          user_id: string;
+          status: "online" | "away" | "offline";
+          current_page: string | null;
+          last_activity_at: string;
+          session_started_at: string | null;
+          device: string | null;
+        }>
+      >;
       acquisition_sessions: TableDef<AcquisitionSessionRow, Partial<AcquisitionSessionRow>>;
       attribution_data: TableDef<AttributionDataRow, Partial<AttributionDataRow>>;
       tracking_events: TableDef<TrackingEventRow, Partial<TrackingEventRow>>;

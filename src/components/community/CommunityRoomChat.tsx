@@ -6,6 +6,9 @@ import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useToast } from "@/components/ui/ToastProvider";
+import { Avatar } from "@/components/ui/Avatar";
+
+const PRESENCE_HEARTBEAT_MS = 25_000;
 
 const REPORT_REASONS = ["Spam", "Discurso de odio", "Assedio", "Conteudo inadequado", "Outro"];
 
@@ -73,6 +76,17 @@ export function CommunityRoomChat({
       config: { presence: { key: currentUserId } },
     });
 
+    // Marks this user "online" in user_presence (RLS lets a user write only
+    // their own row) so the server can tell who's actually online right now
+    // vs offline when deciding who to push-notify about a new message —
+    // this table previously existed but nothing ever wrote to it.
+    async function markOnline() {
+      await supabase.from("user_presence").upsert(
+        { user_id: currentUserId, status: "online", current_page: "comunidade", last_activity_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    }
+
     presenceChannel
       .on("presence", { event: "sync" }, () => {
         setOnlineCount(Object.keys(presenceChannel.presenceState()).length);
@@ -80,11 +94,18 @@ export function CommunityRoomChat({
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await presenceChannel.track({ name: currentUserName });
+          await markOnline();
         }
       });
 
+    const heartbeat = setInterval(markOnline, PRESENCE_HEARTBEAT_MS);
+
     return () => {
+      clearInterval(heartbeat);
       supabase.removeChannel(presenceChannel);
+      // Best-effort — tab close won't reliably run this, which is fine:
+      // the notify endpoint also treats a stale last_activity_at as offline.
+      void supabase.from("user_presence").update({ status: "offline" }).eq("user_id", currentUserId);
     };
   }, [roomId, currentUserId, currentUserName, supabase]);
 
@@ -175,6 +196,15 @@ export function CommunityRoomChat({
         author_role: "usuario",
       },
     ]);
+
+    // Fire-and-forget: nudges offline members via push. Best-effort — a
+    // failure here shouldn't surface as a "message failed to send" error,
+    // since it already sent successfully.
+    fetch("/api/community/notify-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId, messageId: inserted.id }),
+    }).catch(() => {});
   }
 
   async function handleReport(messageId: string, reason: string) {
@@ -211,37 +241,44 @@ export function CommunityRoomChat({
             const isStaff = isStaffRole(message.author_role);
 
             return (
-              <div
-                key={message.id}
-                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                  isOwn
-                    ? "self-end bg-yellow-400 text-neutral-900"
-                    : isStaff
-                      ? "self-start border border-emerald-500/30 bg-emerald-500/10 text-neutral-100"
-                      : "self-start bg-neutral-800 text-neutral-100"
-                }`}
-              >
-                <p className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold opacity-90">
-                  <span className={isOwn ? "text-neutral-900/70" : isStaff ? "text-emerald-300" : "opacity-70"}>
-                    {isOwn ? "Voce" : message.author_name}
-                  </span>
-                  {isStaff && !isOwn && (
-                    <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
-                      {STAFF_ROLE_LABEL[message.author_role]}
-                    </span>
+              <div key={message.id} className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse self-end" : "self-start"}`}>
+                <Avatar name={message.author_name} size={28} className="mb-4" />
+
+                <div className={`flex max-w-[78%] flex-col ${isOwn ? "items-end" : "items-start"}`}>
+                  {!isOwn && (
+                    <p className="mb-1 flex items-center gap-1.5 px-1 text-xs font-semibold">
+                      <span className={isStaff ? "text-emerald-300" : "text-neutral-400"}>{message.author_name}</span>
+                      {isStaff && (
+                        <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
+                          {STAFF_ROLE_LABEL[message.author_role]}
+                        </span>
+                      )}
+                    </p>
                   )}
-                </p>
-                <p>{message.content}</p>
-                {!isOwn && (
-                  <button
-                    type="button"
-                    onClick={() => setReportTarget(message.id)}
-                    disabled={reportedIds.has(message.id)}
-                    className="mt-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
+
+                  <div
+                    className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
+                      isOwn
+                        ? "rounded-br-md bg-yellow-400 text-neutral-900"
+                        : isStaff
+                          ? "rounded-bl-md border border-emerald-500/30 bg-emerald-500/10 text-neutral-100"
+                          : "rounded-bl-md bg-neutral-800 text-neutral-100"
+                    }`}
                   >
-                    {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
-                  </button>
-                )}
+                    {message.content}
+                  </div>
+
+                  {!isOwn && (
+                    <button
+                      type="button"
+                      onClick={() => setReportTarget(message.id)}
+                      disabled={reportedIds.has(message.id)}
+                      className="mt-1 px-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
+                    >
+                      {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
