@@ -425,6 +425,31 @@ export type UserScoreRow = {
   calculated_at: string;
 }
 
+export type AllowedCompetitionRow = {
+  id: string;
+  provider: string;
+  provider_competition_id: string;
+  canonical_name: string;
+  display_name: string | null;
+  provider_name: string;
+  country_name: string | null;
+  competition_type: "league" | "cup" | "national_team" | "unknown";
+  gender: "male" | "female" | "unknown";
+  priority: number;
+  logo_url: string | null;
+  is_active: boolean;
+  show_on_home: boolean;
+  show_live: boolean;
+  show_upcoming: boolean;
+  notifications_enabled: boolean;
+  requires_manual_review: boolean;
+  blocked_reason: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 /**
  * Every table uses `Partial<Row>` as both Insert and Update. This is
  * intentionally permissive (it won't catch a forgotten required column at
@@ -681,6 +706,7 @@ export type Database = {
       crm_segments: TableDef<CrmSegmentRow, Partial<CrmSegmentRow>>;
       score_rules: TableDef<ScoreRuleRow, Partial<ScoreRuleRow>>;
       user_scores: TableDef<UserScoreRow, Partial<UserScoreRow>>;
+      allowed_competitions: TableDef<AllowedCompetitionRow, Partial<AllowedCompetitionRow>>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

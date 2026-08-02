@@ -11,7 +11,12 @@ import type {
   Standing,
   TeamDetails,
 } from "@/lib/sports/types";
-import { isBestLeague } from "@/lib/sports/bestLeagues";
+import { isBlockedContent } from "@/lib/sports/contentPolicy";
+import {
+  loadCompetitionPolicy,
+  recordDiscoveredCompetitions,
+  type DiscoveredCompetition,
+} from "@/lib/sports/competitionRegistry";
 
 /** Raw shapes as returned by Flashscore4 on RapidAPI (confirmed via /admin/dados-esportivos). */
 interface RawTeam {
@@ -147,39 +152,70 @@ function extractStandingRows(payload: unknown): unknown[] {
 }
 
 /**
- * Flattens the `matches/list` (and `matches/live`) response — grouped by
- * tournament — into a flat Match[], keeping only tournaments in the
- * "best leagues" allowlist (see bestLeagues.ts) since these endpoints
- * otherwise return every football competition worldwide, unfiltered. Every
- * match from an allowlisted tournament is kept.
+ * Splits the `matches/list` (and `matches/live`) response — grouped by
+ * tournament — into a flat Match[] plus the set of competitions it
+ * mentioned. Nothing is filtered here: the caller records the discovered
+ * competitions and then applies the curated allowlist, so a competition
+ * still shows up in /admin/competicoes even while it's blocked.
  */
-function flattenMatchesResponse(payload: unknown): Match[] {
-  if (!Array.isArray(payload)) return [];
+function flattenMatchesResponse(payload: unknown): {
+  matches: Match[];
+  competitions: DiscoveredCompetition[];
+} {
+  if (!Array.isArray(payload)) return { matches: [], competitions: [] };
 
   const matches: Match[] = [];
+  const competitions: DiscoveredCompetition[] = [];
+
   for (const item of payload) {
     if (isTournamentGroup(item)) {
-      if (!isBestLeague(item.name, item.country_name)) continue;
-
       const league: League = {
         id: item.tournament_id,
         name: item.name,
         country: item.country_name ?? null,
         logoUrl: item.image_path ?? null,
       };
+      competitions.push({
+        providerCompetitionId: item.tournament_id,
+        name: item.name,
+        countryName: item.country_name ?? null,
+        logoUrl: item.image_path ?? null,
+      });
       for (const raw of item.matches) {
         matches.push(mapMatch(raw, league));
       }
     } else if (isRawMatch(item)) {
       // Defensive fallback in case an endpoint returns a flat match list
       // instead of grouped-by-tournament (unconfirmed for matches/live at
-      // write time — it returned [] with no live matches to inspect). No
-      // league name/country to check against the allowlist here, so these
-      // are dropped rather than risking non-best-league matches slipping
-      // through unfiltered.
+      // write time — it returned [] with no live matches to inspect). There
+      // is no competition to check against the allowlist, so these are
+      // dropped rather than shown unvetted.
     }
   }
-  return matches;
+  return { matches, competitions };
+}
+
+/**
+ * Records what the response contained, then keeps only matches whose
+ * competition an admin has activated and that pass the hard content block
+ * (which also inspects team names, catching youth/reserve fixtures listed
+ * under a senior competition).
+ */
+async function curateMatches(payload: unknown): Promise<Match[]> {
+  const { matches, competitions } = flattenMatchesResponse(payload);
+  if (matches.length === 0) return [];
+
+  await recordDiscoveredCompetitions(competitions);
+  const policy = await loadCompetitionPolicy();
+
+  return matches.filter((match) => {
+    if (!policy.get(match.league.id)?.is_active) return false;
+    return !isBlockedContent({
+      competitionName: match.league.name,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+    });
+  });
 }
 
 /**
@@ -237,7 +273,7 @@ export class FlashscoreProvider implements SportsDataProvider {
       day: String(dayOffset),
       timezone: "America/Sao_Paulo",
     });
-    return flattenMatchesResponse(payload);
+    return curateMatches(payload);
   }
 
   async getLiveMatches(): Promise<Match[]> {
@@ -245,15 +281,19 @@ export class FlashscoreProvider implements SportsDataProvider {
       sport_id: "1",
       timezone: "America/Sao_Paulo",
     });
-    return flattenMatchesResponse(payload);
+    return curateMatches(payload);
   }
 
   async getMatchDetails(matchId: string): Promise<MatchDetails> {
     const payload = await this.request<unknown>("matches/details", { match_id: matchId });
-    const matches = flattenMatchesResponse(payload);
-    const match = matches[0] ?? (isRawMatch(payload) ? mapMatch(payload, { id: "desconhecido", name: "Jogo" }) : null);
+    // No un-curated fallback here on purpose: this used to fall back to a
+    // synthetic { name: "Jogo" } league when curation returned nothing,
+    // which let a blocked competition's match render via a direct URL.
+    // Throwing surfaces as notFound() on the page.
+    const matches = await curateMatches(payload);
+    const match = matches[0];
     if (!match) {
-      throw new Error(`FlashscoreProvider.getMatchDetails: unexpected response shape for match ${matchId}`);
+      throw new Error(`FlashscoreProvider.getMatchDetails: match ${matchId} is unavailable or not allowed`);
     }
 
     const [events, statistics] = await Promise.all([

@@ -11,6 +11,7 @@ import type {
   Standing,
   TeamDetails,
 } from "@/lib/sports/types";
+import { isBlockedContent } from "@/lib/sports/contentPolicy";
 
 const BRASILEIRAO: League = { id: "league_brasileirao", name: "Brasileirao Serie A", country: "Brasil" };
 const LIBERTADORES: League = { id: "league_libertadores", name: "Libertadores", country: "America do Sul" };
@@ -86,22 +87,36 @@ const MOCK_STANDINGS: Record<string, Standing[]> = {
  * provider is unavailable (PRD sec. 12.5 "evitar que o aplicativo fique
  * completamente fora do ar").
  */
+/**
+ * Applied to the fixtures too, so this provider — which is the default, and
+ * the silent fallback when RAPIDAPI_KEY is missing — can't behave more
+ * permissively than the real one if a fixture is ever added for a blocked
+ * competition.
+ */
+function allowed(match: Match): boolean {
+  return !isBlockedContent({
+    competitionName: match.league.name,
+    homeTeamName: match.homeTeam.name,
+    awayTeamName: match.awayTeam.name,
+  });
+}
+
 export class MockSportsDataProvider implements SportsDataProvider {
   async getTodayMatches(): Promise<Match[]> {
-    return MOCK_MATCHES;
+    return MOCK_MATCHES.filter(allowed);
   }
 
   async getMatchesForDay(dayOffset: number): Promise<Match[]> {
-    return dayOffset === 0 ? MOCK_MATCHES : [];
+    return dayOffset === 0 ? MOCK_MATCHES.filter(allowed) : [];
   }
 
   async getLiveMatches(): Promise<Match[]> {
-    return MOCK_MATCHES.filter((m) => m.status === "live");
+    return MOCK_MATCHES.filter((m) => m.status === "live" && allowed(m));
   }
 
   async getMatchDetails(matchId: string): Promise<MatchDetails> {
     const match = MOCK_MATCHES.find((m) => m.id === matchId);
-    if (!match) throw new Error(`Match not found: ${matchId}`);
+    if (!match || !allowed(match)) throw new Error(`Match not found: ${matchId}`);
     return { ...match, events: MOCK_EVENTS[matchId] ?? [] };
   }
 

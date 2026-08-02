@@ -1,24 +1,25 @@
 /**
- * Allowlist used to keep only the leagues/cups that matter to this app's
- * audience out of `matches/list` and `matches/live` — those endpoints
- * return every football competition worldwide (including obscure lower
- * divisions and youth leagues) grouped by tournament, completely
- * unfiltered.
+ * INITIAL CLASSIFIER ONLY — this is no longer what decides whether a match
+ * is shown. That decision now lives in the `allowed_competitions` table,
+ * keyed by the provider's competition id and curated by an admin at
+ * /admin/competicoes (see competitionRegistry.ts).
  *
- * Every match from an allowlisted competition is shown — an earlier
- * version also required a "well-known club" for cup competitions, but
- * that caused more confusion than it solved (legitimate Copa do Brasil
- * matches with real clubs like Cruzeiro got second-guessed) and was
- * removed.
+ * This keyword list runs exactly once per competition: the first time one
+ * is seen in an API response, a match here means the competition is
+ * activated automatically, so the app didn't go blank when the DB-backed
+ * allowlist shipped empty. Anything not recognized lands as inactive and
+ * pending manual review.
+ *
+ * Consequence: adding a keyword here does NOT re-enable a competition that
+ * already has a row — to fix a missing or unwanted league, use the admin
+ * panel, not this file.
  *
  * Matching is keyword + optional country, both normalized (lowercase,
  * accents stripped), because the real tournament name strings returned by
  * the API are unconfirmed for most of these leagues — sponsor prefixes
  * ("Brasileirao Assai Serie A") and country-ambiguous names ("Serie A"
  * means Brazil or Italy depending on context) are common in football data
- * feeds. If a league that should appear is missing (or one that shouldn't
- * still shows up), the fix is almost always adding/adjusting a rule here
- * once the real name is seen in production.
+ * feeds.
  */
 interface LeagueRule {
   keyword: string;

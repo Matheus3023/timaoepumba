@@ -17,7 +17,7 @@ export const CACHE_TTL_SECONDS = {
  * this a filter change wouldn't reach users until every TTL expired — and
  * there's no other way to invalidate short of deleting rows by hand.
  */
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 
 /**
  * Calendar date (YYYY-MM-DD) `dayOffset` days from now, in the same
@@ -34,6 +34,18 @@ export function sportsDayKey(dayOffset = 0): string {
 /** Builds a version-prefixed cache key, so all call sites stay in sync. */
 export function sportsCacheKey(...parts: (string | number)[]): string {
   return [CACHE_VERSION, ...parts].join(":");
+}
+
+/**
+ * Drops every cached sports payload. Needed because payloads are stored
+ * *already filtered* by the competition allowlist — without this, toggling
+ * a competition in /admin/competicoes wouldn't reach users until each TTL
+ * expired (up to 30 min). The table refills on the next request.
+ */
+export async function purgeSportsCache(): Promise<void> {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("sports_api_cache").delete().neq("cache_key", "");
+  if (error) console.error("[sports-cache] failed to purge", error);
 }
 
 /**

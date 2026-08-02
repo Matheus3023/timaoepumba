@@ -7,6 +7,7 @@ export const ADMIN_NAV_LINKS: { href: string; label: string; section: AdminSecti
   { href: "/admin/analises", label: "Analises", section: "analises" },
   { href: "/admin/comunidade", label: "Moderacao", section: "comunidade" },
   { href: "/admin/dados-esportivos", label: "Dados esportivos", section: "dados_esportivos" },
+  { href: "/admin/competicoes", label: "Competicoes permitidas", section: "competicoes" },
   { href: "/admin/afiliados", label: "Casa parceira", section: "afiliados" },
   { href: "/admin/push", label: "Push", section: "push" },
   { href: "/admin/relatorios/retencao", label: "Retencao", section: "relatorios" },
