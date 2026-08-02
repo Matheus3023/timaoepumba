@@ -27,12 +27,23 @@ interface LeagueRule {
 }
 
 /**
- * Checked before BEST_LEAGUE_RULES — celebrity/7-a-side leagues (Kings
- * League, Baller League, etc.) have tournament names that false-positive
- * match real keywords below (e.g. "Kings World Cup Clubs" contains
- * "world cup").
+ * Checked before BEST_LEAGUE_RULES, for competitions whose names would
+ * otherwise false-positive against the keywords below:
+ *  - celebrity/7-a-side leagues ("Kings World Cup Clubs" contains "world cup")
+ *  - women's competitions ("Brasileiro Women" contains "brasileir"), which
+ *    this app doesn't cover
  */
-const EXCLUDE_KEYWORDS = ["kings league", "kings world cup", "kings cup", "queens league", "baller league"];
+const EXCLUDE_KEYWORDS = [
+  "kings league",
+  "kings world cup",
+  "kings cup",
+  "queens league",
+  "baller league",
+  "women",
+  "feminin",
+  "femenin",
+  "ladies",
+];
 
 const BEST_LEAGUE_RULES: LeagueRule[] = [
   // Brasil

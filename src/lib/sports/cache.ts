@@ -11,6 +11,32 @@ export const CACHE_TTL_SECONDS = {
 } as const;
 
 /**
+ * Bump whenever the shape or the filtering of cached payloads changes
+ * (e.g. a league is added to/removed from the bestLeagues allowlist).
+ * Cached rows store the provider's *already-filtered* output, so without
+ * this a filter change wouldn't reach users until every TTL expired — and
+ * there's no other way to invalidate short of deleting rows by hand.
+ */
+const CACHE_VERSION = "v2";
+
+/**
+ * Calendar date (YYYY-MM-DD) `dayOffset` days from now, in the same
+ * timezone the sports API is queried with — so a key can't roll over to
+ * the next day at a different moment than the data it points at.
+ * `en-CA` formats as YYYY-MM-DD.
+ */
+export function sportsDayKey(dayOffset = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + dayOffset);
+  return date.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
+/** Builds a version-prefixed cache key, so all call sites stay in sync. */
+export function sportsCacheKey(...parts: (string | number)[]): string {
+  return [CACHE_VERSION, ...parts].join(":");
+}
+
+/**
  * Read-through cache backed by sports_api_cache. On a cache miss it calls
  * `fetcher`; if `fetcher` throws (provider down — PRD sec. 12.5) and a
  * stale cached value exists, that stale value is returned instead of

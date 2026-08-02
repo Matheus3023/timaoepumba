@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getSportsDataProvider } from "@/lib/sports";
-import { CACHE_TTL_SECONDS, getOrSetCache } from "@/lib/sports/cache";
+import { CACHE_TTL_SECONDS, getOrSetCache, sportsCacheKey, sportsDayKey } from "@/lib/sports/cache";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { HomeView } from "@/components/app/HomeView";
 
@@ -21,8 +21,10 @@ export default async function HomePage() {
   ]);
 
   const provider = getSportsDataProvider();
-  const { data: todayMatches } = await getOrSetCache("today_matches", CACHE_TTL_SECONDS.todayMatches, () =>
-    provider.getTodayMatches()
+  const { data: todayMatches } = await getOrSetCache(
+    sportsCacheKey("matches", sportsDayKey()),
+    CACHE_TTL_SECONDS.todayMatches,
+    () => provider.getTodayMatches()
   );
 
   const accessLevel = appUser?.access_level ?? "APP_USER";

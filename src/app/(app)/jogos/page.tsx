@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSportsDataProvider } from "@/lib/sports";
-import { CACHE_TTL_SECONDS, getOrSetCache } from "@/lib/sports/cache";
+import { CACHE_TTL_SECONDS, getOrSetCache, sportsCacheKey, sportsDayKey } from "@/lib/sports/cache";
 import { MatchesFilterTabs } from "@/components/app/MatchesFilterTabs";
 import { PageHeader } from "@/components/ui/PageHeader";
 import type { Match } from "@/lib/sports/types";
@@ -15,18 +15,22 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
   const { day: dayParam } = await searchParams;
   const day = DAYS.some((d) => String(d.offset) === dayParam) ? Number(dayParam) : 0;
 
-  // Cache keys embed the real calendar date (not just a static "today")
-  // so a request cached right before midnight can't keep serving
-  // yesterday's fixture list, mislabeled as "today", into the new day.
-  const todayKey = new Date().toISOString().slice(0, 10);
-
+  // Keys embed the real calendar date rather than a "today"/offset label,
+  // so a list cached right before midnight can't keep being served under
+  // the wrong day after the date rolls over.
   const provider = getSportsDataProvider();
   const [{ data: matches }, { data: liveMatches }] = await Promise.all([
     day === 0
-      ? getOrSetCache(`today_matches_${todayKey}`, CACHE_TTL_SECONDS.todayMatches, () => provider.getTodayMatches())
-      : getOrSetCache(`matches_day_${day}`, CACHE_TTL_SECONDS.otherDayMatches, () => provider.getMatchesForDay(day)),
+      ? getOrSetCache(sportsCacheKey("matches", sportsDayKey()), CACHE_TTL_SECONDS.todayMatches, () =>
+          provider.getTodayMatches()
+        )
+      : getOrSetCache(sportsCacheKey("matches", sportsDayKey(day)), CACHE_TTL_SECONDS.otherDayMatches, () =>
+          provider.getMatchesForDay(day)
+        ),
     day === 0
-      ? getOrSetCache(`live_matches_${todayKey}`, CACHE_TTL_SECONDS.liveMatches, () => provider.getLiveMatches())
+      ? getOrSetCache(sportsCacheKey("live_matches", sportsDayKey()), CACHE_TTL_SECONDS.liveMatches, () =>
+          provider.getLiveMatches()
+        )
       : Promise.resolve({ data: [] as Match[] }),
   ]);
 
