@@ -450,6 +450,161 @@ export type AllowedCompetitionRow = {
   updated_at: string;
 }
 
+// --- MOTOR FUNIL T&P (migration 0010) ---------------------------------------
+
+export type StrategyConfigRow = {
+  id: string;
+  strategy_id: string;
+  version: string;
+  is_current: boolean;
+  enabled: boolean;
+  shadow_mode: boolean;
+  notification_enabled: boolean;
+  pre_signal_enabled: boolean;
+  cooldown_seconds: number;
+  /** Limiares e janelas — o formato vive em StrategyParams (src/lib/funil/types.ts). */
+  params: Record<string, unknown>;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type FunilFixtureRow = {
+  provider: string;
+  provider_match_id: string;
+  league_id: string | null;
+  league_name: string | null;
+  country_name: string | null;
+  home_team_id: string | null;
+  home_team_name: string | null;
+  home_team_logo: string | null;
+  away_team_id: string | null;
+  away_team_name: string | null;
+  away_team_logo: string | null;
+  kickoff_at: string | null;
+  pre_match_home_odd: number | null;
+  pre_match_draw_odd: number | null;
+  pre_match_away_odd: number | null;
+  status: string | null;
+  last_period: string | null;
+  last_minute: number | null;
+  last_minute_changed_at: string | null;
+  last_stats_fingerprint: string | null;
+  last_stats_changed_at: string | null;
+  ht_goals: number | null;
+  ht_corners: number | null;
+  final_goals: number | null;
+  final_corners: number | null;
+  settled: boolean;
+  unsupported_live_stats: boolean;
+  first_seen_at: string;
+  last_seen_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type FunilFixtureObservationRow = {
+  id: number;
+  provider_match_id: string;
+  minute: number | null;
+  period: string | null;
+  score_home: number | null;
+  score_away: number | null;
+  stats: Record<string, number | null>;
+  collected_at: string;
+}
+
+export type LiveStrategySignalRow = {
+  id: string;
+  provider_match_id: string;
+  strategy_id: string;
+  strategy_version: string;
+  period: string;
+  state: string;
+  shadow: boolean;
+  minute: number | null;
+  score_home: number | null;
+  score_away: number | null;
+  rule_results: unknown[];
+  metrics: Record<string, unknown>;
+  warnings: string[];
+  data_quality: string | null;
+  tp_score: number | null;
+  tp_class: string | null;
+  reason: string | null;
+  entry_market: string | null;
+  entry_line: number | null;
+  entry_line_label: string | null;
+  entry_odd: number | null;
+  goals_at_entry: number | null;
+  corners_at_entry: number | null;
+  entered_at: string | null;
+  last_notified_state: string | null;
+  last_notified_at: string | null;
+  state_changed_at: string;
+  last_evaluated_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SignalSnapshotRow = {
+  id: string;
+  signal_id: string;
+  provider_match_id: string;
+  state: string;
+  minute: number | null;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+export type SignalResultRow = {
+  signal_id: string;
+  result: "PENDING" | "GREEN" | "RED" | "PUSH" | "VOID";
+  result_minute: number | null;
+  resolving_event: string | null;
+  signal_created_at: string | null;
+  signal_minute: number | null;
+  entry_line: number | null;
+  entry_odd: number | null;
+  score_at_entry: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type FunilNotificationLogRow = {
+  id: string;
+  signal_id: string | null;
+  strategy_id: string;
+  kind: "pre_signal" | "validated" | "entry_available";
+  status: "sent" | "failed" | "suppressed";
+  suppressed_reason: string | null;
+  recipients: number;
+  sent: number;
+  failed: number;
+  created_at: string;
+}
+
+/** View strategy_performance — somente leitura. */
+export type StrategyPerformanceRow = {
+  strategy_id: string;
+  strategy_version: string;
+  league_name: string | null;
+  country_name: string | null;
+  minute_band: string;
+  appm_band: string;
+  cg_band: string;
+  tp_score_band: string;
+  shadow: boolean;
+  signals: number;
+  greens: number;
+  reds: number;
+  pushes: number;
+  voids: number;
+  pending: number;
+  observed_rate: number | null;
+}
+
 /**
  * Every table uses `Partial<Row>` as both Insert and Update. This is
  * intentionally permissive (it won't catch a forgotten required column at
@@ -707,8 +862,20 @@ export type Database = {
       score_rules: TableDef<ScoreRuleRow, Partial<ScoreRuleRow>>;
       user_scores: TableDef<UserScoreRow, Partial<UserScoreRow>>;
       allowed_competitions: TableDef<AllowedCompetitionRow, Partial<AllowedCompetitionRow>>;
+      strategy_configs: TableDef<StrategyConfigRow, Partial<StrategyConfigRow>>;
+      funil_fixtures: TableDef<FunilFixtureRow, Partial<FunilFixtureRow>>;
+      funil_fixture_observations: TableDef<FunilFixtureObservationRow, Partial<FunilFixtureObservationRow>>;
+      live_strategy_signals: TableDef<LiveStrategySignalRow, Partial<LiveStrategySignalRow>>;
+      signal_snapshots: TableDef<SignalSnapshotRow, Partial<SignalSnapshotRow>>;
+      signal_results: TableDef<SignalResultRow, Partial<SignalResultRow>>;
+      funil_notification_logs: TableDef<FunilNotificationLogRow, Partial<FunilNotificationLogRow>>;
     };
-    Views: Record<string, never>;
+    Views: {
+      strategy_performance: {
+        Row: StrategyPerformanceRow;
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
   };
 }

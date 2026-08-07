@@ -26,7 +26,14 @@ export interface Match {
   awayScore: number | null;
   status: "scheduled" | "live" | "finished" | "postponed" | "canceled";
   kickoffAt: string;
+  /** Minuto regulamentar já numérico ("45+3" → 45). */
   minute?: number | null;
+  /**
+   * Minuto exatamente como o provedor mandou ("45+3", "HT"), quando não é
+   * um número puro. O motor Funil precisa disto para distinguir acréscimo
+   * de segundo tempo e para reconhecer o intervalo (PRD sec. 45).
+   */
+  minuteLabel?: string | null;
   odds?: MatchOdds | null;
 }
 

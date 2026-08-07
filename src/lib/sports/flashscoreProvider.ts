@@ -86,8 +86,23 @@ function mapOdds(raw: RawMatch["odds"]): Match["odds"] {
   return { home, draw, away };
 }
 
+/**
+ * `live_minute` chega como número ou como string de acréscimo ("45+3").
+ * `Number("45+3")` seria NaN — o que antes vazava para a tela como "NaN'" —
+ * então extraímos o minuto regulamentar e preservamos o rótulo cru para
+ * quem precisa da distinção.
+ */
+function mapLiveMinute(raw: number | string | null | undefined): { minute: number | null; label: string | null } {
+  if (raw === null || raw === undefined) return { minute: null, label: null };
+  if (typeof raw === "number") return { minute: Number.isFinite(raw) ? raw : null, label: null };
+
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^(\d+)/);
+  return { minute: match ? Number(match[1]) : null, label: trimmed || null };
+}
+
 function mapMatch(raw: RawMatch, league: League): Match {
-  const minute = raw.match_status.live_minute;
+  const { minute, label } = mapLiveMinute(raw.match_status.live_minute);
   return {
     id: raw.match_id,
     league,
@@ -97,7 +112,8 @@ function mapMatch(raw: RawMatch, league: League): Match {
     awayScore: raw.scores?.away ?? null,
     status: mapStatus(raw.match_status),
     kickoffAt: new Date(raw.timestamp * 1000).toISOString(),
-    minute: minute === null || minute === undefined ? null : Number(minute),
+    minute,
+    minuteLabel: label,
     odds: mapOdds(raw.odds),
   };
 }
