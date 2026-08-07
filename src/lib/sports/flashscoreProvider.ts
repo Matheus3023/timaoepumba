@@ -26,6 +26,7 @@ interface RawTeam {
   name: string;
   short_name?: string | null;
   small_image_path?: string | null;
+  red_cards?: number | null;
 }
 
 interface RawMatchStatus {
@@ -37,6 +38,10 @@ interface RawMatchStatus {
   is_finished_after_extra_time: boolean;
   is_finished_after_penalties: boolean;
   live_minute: number | string | null;
+  /** Campo separado do minuto; e onde o acrescimo ("45+3") deve aparecer. */
+  live_time?: number | string | null;
+  /** "Finished" e, ao vivo, presumivelmente o periodo da partida. */
+  stage?: string | null;
 }
 
 interface RawMatch {
@@ -103,7 +108,9 @@ function mapLiveMinute(raw: number | string | null | undefined): { minute: numbe
 }
 
 function mapMatch(raw: RawMatch, league: League): Match {
-  const { minute, label } = mapLiveMinute(raw.match_status.live_minute);
+  // `live_time` primeiro: `live_minute` costuma vir so com o numero, e o
+  // acrescimo (que distingue 45+3 de segundo tempo) vive no outro campo.
+  const { minute, label } = mapLiveMinute(raw.match_status.live_time ?? raw.match_status.live_minute);
   return {
     id: raw.match_id,
     league,
@@ -115,6 +122,9 @@ function mapMatch(raw: RawMatch, league: League): Match {
     kickoffAt: new Date(raw.timestamp * 1000).toISOString(),
     minute,
     minuteLabel: label,
+    stage: raw.match_status.stage ?? null,
+    homeRedCards: raw.home_team.red_cards ?? null,
+    awayRedCards: raw.away_team.red_cards ?? null,
     odds: mapOdds(raw.odds),
   };
 }

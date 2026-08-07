@@ -216,8 +216,18 @@ export async function collectLiveSnapshots(configs: StrategyConfig[]): Promise<C
         return null;
       }
 
-      const { stats, unmappedLabels } = normalizeLiveStats(rawStats);
+      const { stats: normalized, unmappedLabels } = normalizeLiveStats(rawStats);
       const { row, history } = memory.get(match.id) ?? { row: null, history: [] };
+
+      // Cartões vermelhos vêm no próprio objeto do time em matches/list —
+      // fonte confirmada, presente em toda resposta. Preferimos ela ao
+      // endpoint de estatística, que ainda não foi validado. Só usamos o
+      // valor do endpoint quando o da lista vier ausente.
+      const stats: LiveStats = {
+        ...normalized,
+        red_cards_home: match.homeRedCards ?? normalized.red_cards_home,
+        red_cards_away: match.awayRedCards ?? normalized.red_cards_away,
+      };
 
       // Há quanto tempo o minuto está no mesmo valor — é assim que o
       // intervalo é reconhecido, já que o provedor não informa período.
@@ -229,6 +239,7 @@ export async function collectLiveSnapshots(configs: StrategyConfig[]): Promise<C
       const periodInfo = resolvePeriod({
         rawMinute: match.minuteLabel ?? match.minute,
         status: match.status,
+        stage: match.stage,
         minuteFrozenForSeconds,
       });
 

@@ -354,6 +354,18 @@ describe("periodo e acrescimos", () => {
     expect(info.confidence).toBe("low");
   });
 
+  it("o stage informado pelo provedor vence a deducao pelo minuto", () => {
+    // Minuto 44 sugeriria primeiro tempo; o provedor diz que e o intervalo.
+    const info = resolvePeriod({ rawMinute: 44, status: "live", stage: "Half Time" });
+    expect(info.period).toBe("HALFTIME");
+    expect(info.confidence).toBe("high");
+  });
+
+  it("stage desconhecido nao vira palpite — cai na deducao pelo minuto", () => {
+    const info = resolvePeriod({ rawMinute: 60, status: "live", stage: "Interrupted xyz" });
+    expect(info.period).toBe("SECOND_HALF");
+  });
+
   it("prorrogacao e penaltis ficam fora do motor", () => {
     expect(resolvePeriod({ rawMinute: "ET", status: "live" }).period).toBe("EXTRA_TIME");
     expect(resolvePeriod({ rawMinute: "PEN", status: "live" }).period).toBe("PENALTIES");

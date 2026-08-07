@@ -34,6 +34,18 @@ export interface Match {
    * de segundo tempo e para reconhecer o intervalo (PRD sec. 45).
    */
   minuteLabel?: string | null;
+  /**
+   * `match_status.stage` do provedor ("Finished", e presumivelmente o
+   * periodo quando ao vivo). Confirmado presente numa resposta real de
+   * matches/list — vale mais que inferir o periodo pelo minuto.
+   */
+  stage?: string | null;
+  /**
+   * Cartoes vermelhos por time, que o provedor entrega direto no objeto do
+   * time em matches/list. Nao dependem do endpoint de estatistica.
+   */
+  homeRedCards?: number | null;
+  awayRedCards?: number | null;
   odds?: MatchOdds | null;
 }
 

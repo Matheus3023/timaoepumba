@@ -64,9 +64,40 @@ export function parseMinuteLabel(raw: number | string | null | undefined): {
   return { minute: null, injuryTime: null, label: normalizeLabel(trimmed) };
 }
 
+/**
+ * `match_status.stage` do provedor. Confirmado presente numa resposta real
+ * (valor "Finished" numa partida encerrada); os demais valores são o que a
+ * Flashscore usa na interface. Quando bate, vale mais que qualquer
+ * inferência pelo minuto — e o que não bate é simplesmente ignorado, nunca
+ * chuta um período.
+ */
+const STAGE_TO_PERIOD: Record<string, MatchPeriod> = {
+  finished: "FINISHED",
+  "after extra time": "FINISHED",
+  "after penalties": "FINISHED",
+  "1st half": "FIRST_HALF",
+  "first half": "FIRST_HALF",
+  "2nd half": "SECOND_HALF",
+  "second half": "SECOND_HALF",
+  "half time": "HALFTIME",
+  halftime: "HALFTIME",
+  "extra time": "EXTRA_TIME",
+  "1st extra time": "EXTRA_TIME",
+  "2nd extra time": "EXTRA_TIME",
+  penalties: "PENALTIES",
+  "penalty shootout": "PENALTIES",
+};
+
+export function periodFromStage(stage: string | null | undefined): MatchPeriod | null {
+  if (!stage) return null;
+  return STAGE_TO_PERIOD[normalizeLabel(stage)] ?? null;
+}
+
 export interface ResolvePeriodInput {
   rawMinute: number | string | null | undefined;
   status: "scheduled" | "live" | "finished" | "postponed" | "canceled";
+  /** `match_status.stage`, quando o provedor mandar. */
+  stage?: string | null;
   /**
    * Há quantos segundos o minuto está travado no mesmo valor, medido pelo
    * histórico dos nossos snapshots. `null` quando não acompanhamos o jogo
@@ -77,6 +108,13 @@ export interface ResolvePeriodInput {
 
 export function resolvePeriod(input: ResolvePeriodInput): PeriodInfo {
   const { minute, injuryTime, label } = parseMinuteLabel(input.rawMinute);
+
+  // O período informado ganha de qualquer dedução nossa. Só entra quando
+  // reconhecemos o valor: um `stage` desconhecido não vira palpite.
+  const staged = periodFromStage(input.stage);
+  if (staged) {
+    return { period: staged, liveMinute: minute, injuryTime, confidence: "high" };
+  }
 
   if (input.status === "finished") {
     return { period: "FINISHED", liveMinute: minute, injuryTime, confidence: "high" };
