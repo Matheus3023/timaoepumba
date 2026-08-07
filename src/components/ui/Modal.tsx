@@ -53,7 +53,7 @@ export function Modal({
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-neutral-400 transition hover:bg-neutral-800 hover:text-white"
+          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-secondary transition hover:bg-surface-elevated hover:text-white"
         >
           <CloseIcon width={18} height={18} />
         </button>

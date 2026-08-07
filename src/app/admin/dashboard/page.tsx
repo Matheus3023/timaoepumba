@@ -37,7 +37,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <section className="card mt-6">
-        <h2 className="text-sm font-semibold text-neutral-200">Funil de conversao</h2>
+        <h2 className="text-sm font-semibold text-strong">Funil de conversao</h2>
         <div className="mt-3 flex flex-col gap-2 text-sm">
           <FunnelRow label="Visitantes -> Contas" value={pct(accountsCount, visitors.count ?? 0)} />
           <FunnelRow label="Contas -> Cliques na casa" value={pct(clicksCount, accountsCount)} />
@@ -54,15 +54,15 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="card">
       <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-neutral-400">{label}</p>
+      <p className="text-xs text-secondary">{label}</p>
     </div>
   );
 }
 
 function FunnelRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-      <span className="text-neutral-300">{label}</span>
+    <div className="flex items-center justify-between border-b border-surface-elevated pb-2">
+      <span className="text-body">{label}</span>
       <span className="font-semibold text-yellow-300">{value}</span>
     </div>
   );

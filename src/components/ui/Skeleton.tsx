@@ -5,5 +5,5 @@
  * and app/(app)/home loading.tsx for examples).
  */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-neutral-800/80 ${className}`} />;
+  return <div className={`animate-pulse rounded-xl bg-surface-elevated/80 ${className}`} />;
 }

@@ -148,13 +148,13 @@ export function OnboardingFlow({
     <div className="flex min-h-dvh flex-col bg-[#0b0f0c] px-6 py-10">
       {stepNumber && totalNumberedSteps > 0 && (
         <div className="mx-auto mb-8 w-full max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-wide text-yellow-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             Passo {stepNumber} de {totalNumberedSteps} —{" "}
             {step === "install" ? "Instale o aplicativo" : "Ative as notificacoes"}
           </p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated">
             <div
-              className="h-full rounded-full bg-yellow-400 transition-all"
+              className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${(stepNumber / totalNumberedSteps) * 100}%` }}
             />
           </div>
@@ -212,14 +212,14 @@ function InstallStep({
 
       <div>
         <h1 className="text-2xl font-bold text-white">{config.welcome_title}</h1>
-        <p className="mt-2 text-neutral-400">{config.welcome_text}</p>
+        <p className="mt-2 text-secondary">{config.welcome_text}</p>
       </div>
 
       {ios ? (
-        <ol className="flex flex-col gap-3 text-sm text-neutral-300">
+        <ol className="flex flex-col gap-3 text-sm text-body">
           {config.ios_instructions.map((instruction, index) => (
             <li key={instruction} className="card flex gap-3">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-yellow-400 text-xs font-bold text-neutral-900">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-surface">
                 {index + 1}
               </span>
               {instruction}
@@ -229,8 +229,8 @@ function InstallStep({
       ) : (
         <ul className="flex flex-col gap-2">
           {config.benefits.map((benefit) => (
-            <li key={benefit} className="flex items-center gap-2 text-sm text-neutral-300">
-              <span className="text-yellow-400">✓</span> {benefit}
+            <li key={benefit} className="flex items-center gap-2 text-sm text-body">
+              <span className="text-primary">✓</span> {benefit}
             </li>
           ))}
         </ul>
@@ -269,12 +269,12 @@ function NotificationsStep({
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-white">{config.notifications_title}</h1>
-        <p className="mt-2 text-neutral-400">{config.notifications_text}</p>
+        <p className="mt-2 text-secondary">{config.notifications_text}</p>
       </div>
 
       {iosNotInstalled ? (
         <>
-          <p className="card text-sm text-neutral-300">
+          <p className="card text-sm text-body">
             Para receber notificacoes no iPhone, adicione o aplicativo a Tela de Inicio e abra-o
             pelo novo icone.
           </p>
@@ -334,14 +334,14 @@ function PersonalizationStep({ onDone }: { onDone: () => void }) {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Personalize sua experiencia</h1>
-        <p className="mt-2 text-neutral-400">
+        <p className="mt-2 text-secondary">
           Escolha seu time, campeonatos favoritos e os alertas que deseja receber. Voce pode
           alterar isso depois no seu perfil.
         </p>
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-neutral-200">Time favorito</p>
+        <p className="mb-2 text-sm font-semibold text-strong">Time favorito</p>
         <div className="flex flex-wrap gap-2">
           {POPULAR_TEAMS.map((t) => (
             <button
@@ -349,8 +349,8 @@ function PersonalizationStep({ onDone }: { onDone: () => void }) {
               onClick={() => setTeam(t.id)}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                 team === t.id
-                  ? "border-yellow-400 bg-yellow-400/10 text-yellow-300"
-                  : "border-neutral-700 text-neutral-300"
+                  ? "border-primary bg-primary/10 text-yellow-300"
+                  : "border-surface-highlighted text-body"
               }`}
             >
               {t.name}
@@ -360,7 +360,7 @@ function PersonalizationStep({ onDone }: { onDone: () => void }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-neutral-200">Campeonatos favoritos</p>
+        <p className="mb-2 text-sm font-semibold text-strong">Campeonatos favoritos</p>
         <div className="flex flex-wrap gap-2">
           {POPULAR_LEAGUES.map((l) => (
             <button
@@ -368,8 +368,8 @@ function PersonalizationStep({ onDone }: { onDone: () => void }) {
               onClick={() => toggleLeague(l.id)}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                 leagues.includes(l.id)
-                  ? "border-yellow-400 bg-yellow-400/10 text-yellow-300"
-                  : "border-neutral-700 text-neutral-300"
+                  ? "border-primary bg-primary/10 text-yellow-300"
+                  : "border-surface-highlighted text-body"
               }`}
             >
               {l.name}
@@ -379,10 +379,10 @@ function PersonalizationStep({ onDone }: { onDone: () => void }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-neutral-200">Tipos de alerta</p>
+        <p className="mb-2 text-sm font-semibold text-strong">Tipos de alerta</p>
         <div className="flex flex-col gap-2">
           {ALERT_TYPES.map((a) => (
-            <label key={a.key} className="flex items-center justify-between text-sm text-neutral-300">
+            <label key={a.key} className="flex items-center justify-between text-sm text-body">
               {a.label}
               <input
                 type="checkbox"

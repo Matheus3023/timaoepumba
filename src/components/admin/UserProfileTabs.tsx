@@ -90,7 +90,7 @@ interface TaskEntry {
 const TABS = ["Resumo", "Timeline", "Aquisicao", "Conversao", "Comunidade", "Comunicacoes", "Privacidade", "Notas e tarefas", "Auditoria"] as const;
 
 const SCORE_CLASS = (v: number) =>
-  v >= 80 ? "text-emerald-300" : v >= 60 ? "text-yellow-300" : v >= 40 ? "text-orange-300" : "text-neutral-400";
+  v >= 80 ? "text-emerald-300" : v >= 60 ? "text-yellow-300" : v >= 40 ? "text-orange-300" : "text-secondary";
 
 export function UserProfileTabs({
   user,
@@ -135,13 +135,13 @@ export function UserProfileTabs({
 
   return (
     <div className="mt-4">
-      <div className="flex flex-wrap gap-1 border-b border-neutral-800">
+      <div className="flex flex-wrap gap-1 border-b border-surface-elevated">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`rounded-t-lg px-3 py-2 text-sm transition ${
-              tab === t ? "border-b-2 border-yellow-400 text-yellow-300" : "text-neutral-500 hover:text-neutral-300"
+              tab === t ? "border-b-2 border-primary text-yellow-300" : "text-muted hover:text-body"
             }`}
           >
             {t}
@@ -153,8 +153,8 @@ export function UserProfileTabs({
         {tab === "Resumo" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <section className="card">
-              <h2 className="text-sm font-semibold text-neutral-200">Conta</h2>
-              <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+              <h2 className="text-sm font-semibold text-strong">Conta</h2>
+              <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
                 <Row label="Lead ID" value={user.lead_id} />
                 <Row label="Nivel de acesso" value={user.access_level} />
                 <Row label="Status" value={user.status} />
@@ -168,11 +168,11 @@ export function UserProfileTabs({
             </section>
 
             <section className="card">
-              <h2 className="text-sm font-semibold text-neutral-200">Lead score</h2>
+              <h2 className="text-sm font-semibold text-strong">Lead score</h2>
               {score ? (
                 <>
                   <p className={`mt-1 text-3xl font-bold ${SCORE_CLASS(score.total_score)}`}>{score.total_score}</p>
-                  <dl className="mt-3 flex flex-col gap-1 text-sm text-neutral-400">
+                  <dl className="mt-3 flex flex-col gap-1 text-sm text-secondary">
                     <Row label="Intencao comercial" value={String(score.intent_score)} />
                     <Row label="Engajamento" value={String(score.engagement_score)} />
                     <Row label="Relacionamento" value={String(score.relationship_score)} />
@@ -184,7 +184,7 @@ export function UserProfileTabs({
                   )}
                 </>
               ) : (
-                <p className="mt-2 text-sm text-neutral-500">Ainda nao calculado.</p>
+                <p className="mt-2 text-sm text-muted">Ainda nao calculado.</p>
               )}
             </section>
           </div>
@@ -194,20 +194,20 @@ export function UserProfileTabs({
           <section className="card">
             <ul className="flex flex-col gap-2 text-sm">
               {timeline.map((t) => (
-                <li key={t.id} className="border-b border-neutral-800 pb-2">
-                  <p className="text-neutral-200">{t.description}</p>
-                  <p className="text-xs text-neutral-500">{new Date(t.occurred_at).toLocaleString("pt-BR")}</p>
+                <li key={t.id} className="border-b border-surface-elevated pb-2">
+                  <p className="text-strong">{t.description}</p>
+                  <p className="text-xs text-muted">{new Date(t.occurred_at).toLocaleString("pt-BR")}</p>
                 </li>
               ))}
-              {timeline.length === 0 && <p className="text-neutral-500">Sem eventos ainda.</p>}
+              {timeline.length === 0 && <p className="text-muted">Sem eventos ainda.</p>}
             </ul>
           </section>
         )}
 
         {tab === "Aquisicao" && (
           <section className="card">
-            <h2 className="text-sm font-semibold text-neutral-200">Atribuicao</h2>
-            <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+            <h2 className="text-sm font-semibold text-strong">Atribuicao</h2>
+            <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
               <Row label="Origem (1o toque)" value={firstTouch?.utm_source ?? "—"} />
               <Row label="Campanha (1o toque)" value={firstTouch?.utm_campaign ?? "—"} />
               <Row label="Origem (ultimo toque)" value={lastTouch?.utm_source ?? "—"} />
@@ -219,8 +219,8 @@ export function UserProfileTabs({
 
         {tab === "Conversao" && (
           <section className="card">
-            <h2 className="text-sm font-semibold text-neutral-200">Casa parceira</h2>
-            <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+            <h2 className="text-sm font-semibold text-strong">Casa parceira</h2>
+            <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
               <Row label="Cliques" value={String(conversion.clicks.length)} />
               <Row
                 label="Cadastro confirmado"
@@ -233,26 +233,26 @@ export function UserProfileTabs({
 
         {tab === "Comunidade" && (
           <section className="card">
-            <h2 className="text-sm font-semibold text-neutral-200">Salas</h2>
-            <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-300">
+            <h2 className="text-sm font-semibold text-strong">Salas</h2>
+            <ul className="mt-2 flex flex-col gap-1 text-sm text-body">
               {community.rooms.map((r, i) => (
-                <li key={i} className="flex justify-between border-b border-neutral-800 pb-1">
+                <li key={i} className="flex justify-between border-b border-surface-elevated pb-1">
                   <span>{r.room_name}</span>
-                  <span className="text-neutral-500">{r.role}</span>
+                  <span className="text-muted">{r.role}</span>
                 </li>
               ))}
-              {community.rooms.length === 0 && <p className="text-neutral-500">Nenhuma sala.</p>}
+              {community.rooms.length === 0 && <p className="text-muted">Nenhuma sala.</p>}
             </ul>
 
-            <h2 className="mt-4 text-sm font-semibold text-neutral-200">Ultimas mensagens</h2>
+            <h2 className="mt-4 text-sm font-semibold text-strong">Ultimas mensagens</h2>
             <ul className="mt-2 flex flex-col gap-2 text-sm">
               {community.messages.map((m) => (
-                <li key={m.id} className="border-b border-neutral-800 pb-2">
-                  <p className="text-neutral-200">{m.content}</p>
-                  <p className="text-xs text-neutral-500">{new Date(m.created_at).toLocaleString("pt-BR")}</p>
+                <li key={m.id} className="border-b border-surface-elevated pb-2">
+                  <p className="text-strong">{m.content}</p>
+                  <p className="text-xs text-muted">{new Date(m.created_at).toLocaleString("pt-BR")}</p>
                 </li>
               ))}
-              {community.messages.length === 0 && <p className="text-neutral-500">Sem mensagens.</p>}
+              {community.messages.length === 0 && <p className="text-muted">Sem mensagens.</p>}
             </ul>
           </section>
         )}
@@ -261,34 +261,34 @@ export function UserProfileTabs({
           <section className="card">
             <ul className="flex flex-col gap-2 text-sm">
               {pushDeliveries.map((d) => (
-                <li key={d.id} className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                  <span className="text-neutral-300">
+                <li key={d.id} className="flex items-center justify-between border-b border-surface-elevated pb-2">
+                  <span className="text-body">
                     {d.status}
                     {d.failure_reason ? ` — ${d.failure_reason}` : ""}
                   </span>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-muted">
                     {d.sent_at ? new Date(d.sent_at).toLocaleString("pt-BR") : "—"}
                   </span>
                 </li>
               ))}
-              {pushDeliveries.length === 0 && <p className="text-neutral-500">Nenhum envio registrado.</p>}
+              {pushDeliveries.length === 0 && <p className="text-muted">Nenhum envio registrado.</p>}
             </ul>
           </section>
         )}
 
         {tab === "Privacidade" && (
           <section className="card">
-            <h2 className="text-sm font-semibold text-neutral-200">Consentimentos</h2>
-            <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-300">
+            <h2 className="text-sm font-semibold text-strong">Consentimentos</h2>
+            <ul className="mt-2 flex flex-col gap-1 text-sm text-body">
               {privacy.consents.map((c, i) => (
-                <li key={i} className="flex justify-between border-b border-neutral-800 pb-1">
+                <li key={i} className="flex justify-between border-b border-surface-elevated pb-1">
                   <span>{c.consent_type}</span>
                   <span className={c.granted ? "text-emerald-300" : "text-red-400"}>{c.granted ? "concedido" : "negado"}</span>
                 </li>
               ))}
-              {privacy.consents.length === 0 && <p className="text-neutral-500">Sem registros.</p>}
+              {privacy.consents.length === 0 && <p className="text-muted">Sem registros.</p>}
             </ul>
-            <p className="mt-3 text-sm text-neutral-400">
+            <p className="mt-3 text-sm text-secondary">
               Opt-out de marketing:{" "}
               {privacy.optedOutAt ? (
                 <span className="text-red-400">{new Date(privacy.optedOutAt).toLocaleString("pt-BR")}</span>
@@ -302,7 +302,7 @@ export function UserProfileTabs({
         {tab === "Notas e tarefas" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <section className="card">
-              <h2 className="text-sm font-semibold text-neutral-200">Notas internas</h2>
+              <h2 className="text-sm font-semibold text-strong">Notas internas</h2>
               {writable && (
                 <form action={addNoteAction} className="mt-2 flex flex-col gap-2">
                   <textarea name="note" rows={3} className="input" placeholder="Adicionar nota..." />
@@ -313,17 +313,17 @@ export function UserProfileTabs({
               )}
               <ul className="mt-4 flex flex-col gap-2 text-sm">
                 {notes.map((n) => (
-                  <li key={n.id} className="border-b border-neutral-800 pb-2 text-neutral-300">
+                  <li key={n.id} className="border-b border-surface-elevated pb-2 text-body">
                     <p>{n.note}</p>
-                    <p className="text-xs text-neutral-500">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
+                    <p className="text-xs text-muted">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
                   </li>
                 ))}
-                {notes.length === 0 && <p className="text-neutral-500">Sem notas.</p>}
+                {notes.length === 0 && <p className="text-muted">Sem notas.</p>}
               </ul>
             </section>
 
             <section className="card">
-              <h2 className="text-sm font-semibold text-neutral-200">Tarefas</h2>
+              <h2 className="text-sm font-semibold text-strong">Tarefas</h2>
               {writable && (
                 <form action={addTaskAction} className="mt-2 flex flex-col gap-2">
                   <input name="title" className="input" placeholder="Titulo da tarefa" />
@@ -335,10 +335,10 @@ export function UserProfileTabs({
               )}
               <ul className="mt-4 flex flex-col gap-2 text-sm">
                 {tasks.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                  <li key={t.id} className="flex items-center justify-between border-b border-surface-elevated pb-2">
                     <div>
-                      <p className={t.status === "done" ? "text-neutral-500 line-through" : "text-neutral-200"}>{t.title}</p>
-                      {t.due_at && <p className="text-xs text-neutral-500">{new Date(t.due_at).toLocaleString("pt-BR")}</p>}
+                      <p className={t.status === "done" ? "text-muted line-through" : "text-strong"}>{t.title}</p>
+                      {t.due_at && <p className="text-xs text-muted">{new Date(t.due_at).toLocaleString("pt-BR")}</p>}
                     </div>
                     {writable && t.status !== "done" && (
                       <form action={completeTaskAction.bind(null, t.id)}>
@@ -349,7 +349,7 @@ export function UserProfileTabs({
                     )}
                   </li>
                 ))}
-                {tasks.length === 0 && <p className="text-neutral-500">Sem tarefas.</p>}
+                {tasks.length === 0 && <p className="text-muted">Sem tarefas.</p>}
               </ul>
             </section>
           </div>
@@ -359,12 +359,12 @@ export function UserProfileTabs({
           <section className="card">
             <ul className="flex flex-col gap-2 text-sm">
               {auditLogs.map((a) => (
-                <li key={a.id} className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <li key={a.id} className="flex items-center justify-between border-b border-surface-elevated pb-2">
                   <span className="font-mono text-xs text-yellow-300">{a.action}</span>
-                  <span className="text-xs text-neutral-500">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
+                  <span className="text-xs text-muted">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
                 </li>
               ))}
-              {auditLogs.length === 0 && <p className="text-neutral-500">Nenhuma acao registrada para este usuario.</p>}
+              {auditLogs.length === 0 && <p className="text-muted">Nenhuma acao registrada para este usuario.</p>}
             </ul>
           </section>
         )}
@@ -376,8 +376,8 @@ export function UserProfileTabs({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="text-right text-neutral-200">{value}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-right text-strong">{value}</dd>
     </div>
   );
 }

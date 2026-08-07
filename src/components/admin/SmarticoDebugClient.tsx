@@ -69,7 +69,7 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
   return (
     <div className="max-w-3xl">
       <h2 className="text-lg font-bold text-white">Smartico — teste de API</h2>
-      <p className="mt-1 text-sm text-neutral-400">
+      <p className="mt-1 text-sm text-secondary">
         Testa endpoints da API da Smartico (TAP BackOffice) direto do servidor, usando SMARTICO_API_KEY
         configurada na Vercel. A URL base e onde a chave entra (header ou query) ainda nao estao
         confirmadas pra essa conta — ajuste abaixo e teste.
@@ -80,7 +80,7 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
           <button
             key={suggestion}
             onClick={() => setPath(suggestion)}
-            className="badge border border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-yellow-400/50 hover:text-yellow-300"
+            className="badge border border-surface-highlighted bg-surface text-body hover:border-primary/50 hover:text-yellow-300"
           >
             {suggestion}
           </button>
@@ -89,11 +89,11 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
 
       <div className="card mt-4 flex flex-col gap-3">
         <div className="flex gap-2">
-          <label className="flex flex-1 flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex flex-1 flex-col gap-1.5 text-sm text-body">
             Path (depois da base URL)
             <input value={path} onChange={(e) => setPath(e.target.value)} className="input font-mono text-sm" />
           </label>
-          <label className="flex w-28 flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex w-28 flex-col gap-1.5 text-sm text-body">
             Metodo
             <select value={method} onChange={(e) => setMethod(e.target.value as "GET" | "POST")} className="input text-sm">
               <option value="GET">GET</option>
@@ -103,21 +103,21 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
         </div>
 
         <div className="flex gap-2">
-          <label className="flex flex-1 flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex flex-1 flex-col gap-1.5 text-sm text-body">
             Onde vai a chave
             <select value={authMode} onChange={(e) => setAuthMode(e.target.value as "header" | "query")} className="input text-sm">
               <option value="header">Header</option>
               <option value="query">Query param</option>
             </select>
           </label>
-          <label className="flex flex-1 flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex flex-1 flex-col gap-1.5 text-sm text-body">
             Nome do header/param
             <input value={authKeyName} onChange={(e) => setAuthKeyName(e.target.value)} className="input font-mono text-sm" />
           </label>
         </div>
 
         <div>
-          <p className="mb-1.5 text-sm text-neutral-300">Parametros (query string)</p>
+          <p className="mb-1.5 text-sm text-body">Parametros (query string)</p>
           <div className="flex flex-col gap-2">
             {params.map((p, i) => (
               <div key={i} className="flex gap-2">
@@ -163,7 +163,7 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
               <span className={`badge ${result.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>
                 {String(result.status)}
               </span>
-              <span className="text-neutral-500">{String(result.duration_ms)}ms</span>
+              <span className="text-muted">{String(result.duration_ms)}ms</span>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(JSON.stringify(result.body, null, 2))}
@@ -172,8 +172,8 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
               Copiar JSON
             </button>
           </div>
-          <p className="mt-2 break-all font-mono text-xs text-neutral-500">{String(result.requested_url)}</p>
-          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-neutral-950 p-3 text-xs text-neutral-300">
+          <p className="mt-2 break-all font-mono text-xs text-muted">{String(result.requested_url)}</p>
+          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-sunken p-3 text-xs text-body">
             {JSON.stringify(result.body, null, 2)}
           </pre>
         </div>

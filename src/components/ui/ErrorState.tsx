@@ -17,7 +17,7 @@ export function ErrorState({
   return (
     <div className={`card flex flex-col items-center gap-1.5 py-8 text-center ${className}`}>
       <p className="text-sm font-semibold text-red-300">{title}</p>
-      <p className="text-sm text-neutral-500">{description}</p>
+      <p className="text-sm text-muted">{description}</p>
       {onRetry && (
         <button type="button" onClick={onRetry} className="btn-secondary mt-2 px-4 py-2 text-sm">
           Tentar novamente

@@ -39,7 +39,7 @@ export function TeamAvatar({ name, logoUrl, size = 28 }: { name: string; logoUrl
         width={size}
         height={size}
         onError={() => setFailed(true)}
-        className="shrink-0 rounded-full bg-neutral-900 object-contain ring-1 ring-white/10"
+        className="shrink-0 rounded-full bg-surface object-contain ring-1 ring-white/10"
         style={{ width: size, height: size }}
       />
     );

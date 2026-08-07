@@ -46,7 +46,7 @@ export default async function AdminTeamPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-xl font-bold text-white">Equipe</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         Define o perfil administrativo de cada conta ADMIN (PRD sec. 36). Uma conta sem perfil atribuido tem acesso
         total, igual a um Administrador — atribua um perfil para restringir o que ela pode ver e alterar no painel.
       </p>
@@ -60,7 +60,7 @@ export default async function AdminTeamPage() {
               <input type="hidden" name="user_id" value={u.id} />
               <div>
                 <p className="text-sm font-medium text-white">{u.full_name ?? u.email}</p>
-                <p className="text-xs text-neutral-500">{u.email}</p>
+                <p className="text-xs text-muted">{u.email}</p>
               </div>
               <div className="flex items-center gap-2">
                 <select name="role_id" defaultValue={currentRoleId ?? ""} className="input text-sm">
@@ -76,13 +76,13 @@ export default async function AdminTeamPage() {
                 </button>
               </div>
               {currentRole && (
-                <span className="badge shrink-0 bg-neutral-800 text-neutral-300">{currentRole.name}</span>
+                <span className="badge shrink-0 bg-surface-elevated text-body">{currentRole.name}</span>
               )}
             </form>
           );
         })}
         {(!adminUsers || adminUsers.length === 0) && (
-          <p className="card text-sm text-neutral-500">Nenhuma conta com access_level ADMIN encontrada.</p>
+          <p className="card text-sm text-muted">Nenhuma conta com access_level ADMIN encontrada.</p>
         )}
       </div>
     </div>

@@ -65,7 +65,7 @@ export default async function AdminAffiliatePage() {
   return (
     <div className="max-w-xl">
       <h1 className="text-xl font-bold text-white">Casa parceira</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         O link de cadastro e gerado dinamicamente com o Lead ID do usuario como subid.
       </p>
 
@@ -86,15 +86,15 @@ export default async function AdminAffiliatePage() {
 
       <form action={saveConfig} className="card mt-4 flex flex-col gap-3">
         <fieldset disabled={!canWrite(access, "afiliados")} className="flex flex-col gap-3 disabled:opacity-60">
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Nome da casa
             <input name="name" defaultValue={config?.name} required className="input" />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Dominio
             <input name="domain" defaultValue={config?.domain} required className="input" placeholder="casa-parceira.bet.br" />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             URL de cadastro
             <input
               name="registration_url"
@@ -104,7 +104,7 @@ export default async function AdminAffiliatePage() {
               placeholder="https://casa-parceira.bet.br/cadastro"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Parametro do identificador
             <input name="subid_parameter" defaultValue={config?.subid_parameter ?? "subid"} required className="input" />
           </label>
@@ -119,22 +119,22 @@ export default async function AdminAffiliatePage() {
 
       {config && (
         <section className="card mt-4">
-          <h2 className="text-sm font-semibold text-neutral-200">Configuracao do webhook</h2>
-          <p className="mt-2 text-sm text-neutral-400">
+          <h2 className="text-sm font-semibold text-strong">Configuracao do webhook</h2>
+          <p className="mt-2 text-sm text-secondary">
             Configure a casa parceira para enviar postbacks para{" "}
             <code className="text-yellow-300">/api/webhooks/affiliate</code> com os headers:
           </p>
           <dl className="mt-2 flex flex-col gap-1 text-sm">
             <div className="flex justify-between gap-2">
-              <dt className="text-neutral-500">X-Webhook-Key</dt>
-              <dd className="font-mono text-neutral-200">{config.webhook_key}</dd>
+              <dt className="text-muted">X-Webhook-Key</dt>
+              <dd className="font-mono text-strong">{config.webhook_key}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-neutral-500">X-Webhook-Signature</dt>
-              <dd className="text-neutral-200">HMAC-SHA256(body, segredo)</dd>
+              <dt className="text-muted">X-Webhook-Signature</dt>
+              <dd className="text-strong">HMAC-SHA256(body, segredo)</dd>
             </div>
           </dl>
-          <p className="mt-2 text-xs text-neutral-600">
+          <p className="mt-2 text-xs text-faint">
             O segredo (webhook_secret) fica armazenado no banco e nunca e exibido aqui. Consulte a
             tabela affiliate_configurations diretamente no Supabase para configura-lo na casa
             parceira.
@@ -142,7 +142,7 @@ export default async function AdminAffiliatePage() {
         </section>
       )}
 
-      <div className="mt-8 border-t border-neutral-800 pt-6">
+      <div className="mt-8 border-t border-surface-elevated pt-6">
         <SmarticoDebugClient canWrite={canWrite(access, "afiliados")} />
       </div>
     </div>

@@ -42,7 +42,7 @@ export function AdminMobileNav({
   }, [open]);
 
   return (
-    <div className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-950/95 backdrop-blur-xl pt-[env(safe-area-inset-top)] sm:hidden">
+    <div className="sticky top-0 z-30 border-b border-surface-elevated bg-sunken/95 backdrop-blur-xl pt-[env(safe-area-inset-top)] sm:hidden">
       <button
         ref={toggleRef}
         type="button"
@@ -52,18 +52,18 @@ export function AdminMobileNav({
         className="flex w-full items-center justify-between px-4 py-3 text-left touch-manipulation"
       >
         <span className="text-sm font-semibold text-white">{current?.label ?? "Admin"}</span>
-        <span className="text-xs text-neutral-500">{open ? "Fechar ✕" : "Menu ☰"}</span>
+        <span className="text-xs text-muted">{open ? "Fechar ✕" : "Menu ☰"}</span>
       </button>
 
       {open && (
-        <nav id="admin-mobile-nav-menu" className="flex flex-col gap-1 border-t border-neutral-800 px-3 pb-3">
+        <nav id="admin-mobile-nav-menu" className="flex flex-col gap-1 border-t border-surface-elevated px-3 pb-3">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
               className={`rounded-lg px-3 py-2.5 text-sm ${
-                pathname.startsWith(link.href) ? "bg-yellow-400/10 text-yellow-300" : "text-neutral-300 active:bg-neutral-900"
+                pathname.startsWith(link.href) ? "bg-primary/10 text-yellow-300" : "text-body active:bg-surface"
               }`}
             >
               {link.label}
@@ -72,13 +72,13 @@ export function AdminMobileNav({
           <Link
             href="/home"
             onClick={() => setOpen(false)}
-            className="mt-1 rounded-lg border-t border-neutral-800 px-3 py-2.5 pt-3 text-sm text-neutral-500"
+            className="mt-1 rounded-lg border-t border-surface-elevated px-3 py-2.5 pt-3 text-sm text-muted"
           >
             ← Voltar ao aplicativo
           </Link>
           <div className="px-3 pt-1">
-            <p className="text-xs text-neutral-400">{adminName}</p>
-            <p className="text-[11px] text-neutral-600">{profile ? ADMIN_PROFILE_LABEL[profile] : "Administrador (padrao)"}</p>
+            <p className="text-xs text-secondary">{adminName}</p>
+            <p className="text-[11px] text-faint">{profile ? ADMIN_PROFILE_LABEL[profile] : "Administrador (padrao)"}</p>
           </div>
         </nav>
       )}

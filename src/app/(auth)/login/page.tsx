@@ -41,10 +41,10 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <h1 className="text-2xl font-bold text-white">Bem-vindo de volta</h1>
-      <p className="mt-1 text-sm text-neutral-400">Acesse sua conta para continuar.</p>
+      <p className="mt-1 text-sm text-secondary">Acesse sua conta para continuar.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1.5 text-sm text-body">
           E-mail
           <input
             required
@@ -56,10 +56,10 @@ export default function LoginPage() {
           />
         </label>
 
-        <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1.5 text-sm text-body">
           <span className="flex items-center justify-between">
             Senha
-            <Link href="/esqueci-senha" className="text-xs font-normal text-yellow-400 underline underline-offset-2">
+            <Link href="/esqueci-senha" className="text-xs font-normal text-primary underline underline-offset-2">
               Esqueci minha senha
             </Link>
           </span>
@@ -90,9 +90,9 @@ export default function LoginPage() {
           {submitting ? "Entrando..." : "Entrar"}
         </button>
 
-        <p className="text-center text-xs text-neutral-500">
+        <p className="text-center text-xs text-muted">
           Ainda nao tem conta?{" "}
-          <Link href="/signup" className="text-yellow-400 underline underline-offset-2">
+          <Link href="/signup" className="text-primary underline underline-offset-2">
             Criar conta
           </Link>
         </p>

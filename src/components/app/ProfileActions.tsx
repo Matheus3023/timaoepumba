@@ -67,9 +67,9 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
 
   return (
     <section className="card mt-4 flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-neutral-200">Privacidade e consentimento</h2>
+      <h2 className="text-sm font-semibold text-strong">Privacidade e consentimento</h2>
 
-      <label className="flex items-center justify-between text-sm text-neutral-300">
+      <label className="flex items-center justify-between text-sm text-body">
         Receber novidades e promocoes
         <input type="checkbox" checked={optedIn} disabled={busy} onChange={toggleMarketing} />
       </label>

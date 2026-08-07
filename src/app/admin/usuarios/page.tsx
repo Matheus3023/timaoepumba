@@ -19,8 +19,8 @@ function scoreBadgeClass(total: number): string {
   if (total >= 80) return "bg-emerald-500/15 text-emerald-300";
   if (total >= 60) return "bg-yellow-500/15 text-yellow-300";
   if (total >= 40) return "bg-orange-500/15 text-orange-300";
-  if (total >= 20) return "bg-neutral-700/40 text-neutral-300";
-  return "bg-neutral-800 text-neutral-500";
+  if (total >= 20) return "bg-surface-highlighted/40 text-body";
+  return "bg-surface-elevated text-muted";
 }
 
 async function recalculateScores() {
@@ -52,7 +52,7 @@ export default async function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Usuarios</h1>
-          <p className="text-sm text-neutral-400">Ultimos 100 cadastros.</p>
+          <p className="text-sm text-secondary">Ultimos 100 cadastros.</p>
         </div>
         {canWrite(access, "usuarios") && (
           <form action={recalculateScores}>
@@ -63,9 +63,9 @@ export default async function AdminUsersPage() {
         )}
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-800">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-surface-elevated">
         <table className="w-full text-left text-sm">
-          <thead className="bg-neutral-900 text-neutral-400">
+          <thead className="bg-surface text-secondary">
             <tr>
               <th className="px-4 py-2">Nome</th>
               <th className="px-4 py-2">E-mail</th>
@@ -78,22 +78,22 @@ export default async function AdminUsersPage() {
             {users?.map((u) => {
               const score = scoreById.get(u.id);
               return (
-                <tr key={u.id} className="border-t border-neutral-800 hover:bg-neutral-900/50">
+                <tr key={u.id} className="border-t border-surface-elevated hover:bg-surface/50">
                   <td className="px-4 py-2">
                     <Link href={`/admin/usuarios/${u.id}`} className="text-yellow-300">
                       {u.full_name ?? "—"}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-neutral-300">{u.email}</td>
-                  <td className="px-4 py-2 text-neutral-300">{ACCESS_LEVEL_LABEL[u.access_level]}</td>
+                  <td className="px-4 py-2 text-body">{u.email}</td>
+                  <td className="px-4 py-2 text-body">{ACCESS_LEVEL_LABEL[u.access_level]}</td>
                   <td className="px-4 py-2">
                     {score === undefined ? (
-                      <span className="text-neutral-600">—</span>
+                      <span className="text-faint">—</span>
                     ) : (
                       <span className={`badge ${scoreBadgeClass(score)}`}>{score}</span>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-neutral-500">{new Date(u.created_at).toLocaleString("pt-BR")}</td>
+                  <td className="px-4 py-2 text-muted">{new Date(u.created_at).toLocaleString("pt-BR")}</td>
                 </tr>
               );
             })}

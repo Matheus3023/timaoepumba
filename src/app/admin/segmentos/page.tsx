@@ -66,7 +66,7 @@ export default async function AdminSegmentsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-xl font-bold text-white">Segmentos</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         Grupos dinamicos de usuarios, recalculados a cada uso, para mirar campanhas de push em vez de mandar para
         toda a base.
       </p>
@@ -76,10 +76,10 @@ export default async function AdminSegmentsPage() {
           <div key={s.id} className="card flex items-center justify-between">
             <div>
               <p className="font-semibold text-white">{s.name}</p>
-              {s.description && <p className="text-xs text-neutral-500">{s.description}</p>}
+              {s.description && <p className="text-xs text-muted">{s.description}</p>}
             </div>
             <div className="flex items-center gap-2">
-              <span className="badge bg-neutral-800 text-neutral-300">{countById.get(s.id) ?? 0} usuarios</span>
+              <span className="badge bg-surface-elevated text-body">{countById.get(s.id) ?? 0} usuarios</span>
               {writable && (
                 <form action={deleteSegment.bind(null, s.id)}>
                   <button type="submit" className="btn-secondary px-3 py-1.5 text-xs text-red-400">
@@ -91,7 +91,7 @@ export default async function AdminSegmentsPage() {
           </div>
         ))}
         {(!segments || segments.length === 0) && (
-          <p className="card text-sm text-neutral-500">Nenhum segmento criado — campanhas usam todos os usuarios ativos.</p>
+          <p className="card text-sm text-muted">Nenhum segmento criado — campanhas usam todos os usuarios ativos.</p>
         )}
       </div>
 

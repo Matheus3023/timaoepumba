@@ -16,7 +16,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="relative flex min-h-dvh overflow-hidden bg-[#080b09]">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-30 [mask-image:radial-gradient(ellipse_70%_60%_at_30%_20%,black,transparent)]" />
       <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 animate-float-slow rounded-full bg-emerald-500/20 blur-[110px]" />
-      <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 animate-float-slower rounded-full bg-yellow-400/10 blur-[110px]" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 animate-float-slower rounded-full bg-primary/10 blur-[110px]" />
 
       {/* Decorative side panel — desktop only */}
       <div className="relative z-10 hidden w-[42%] flex-col justify-between border-r border-white/5 p-10 lg:flex">
@@ -30,7 +30,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             priority
           />
           <span className="text-lg font-extrabold tracking-tight text-white">
-            Timao<span className="text-yellow-400">&</span>Pumba
+            Timao<span className="text-primary">&</span>Pumba
           </span>
         </Link>
 
@@ -41,16 +41,16 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           <div className="mt-8 flex flex-col gap-4">
             {HIGHLIGHTS.map((item) => (
               <div key={item.text} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-yellow-400">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-primary">
                   <item.icon width={17} height={17} />
                 </div>
-                <p className="text-sm text-neutral-300">{item.text}</p>
+                <p className="text-sm text-body">{item.text}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-xs text-neutral-600">Uso exclusivo para maiores de 18 anos.</p>
+        <p className="text-xs text-faint">Uso exclusivo para maiores de 18 anos.</p>
       </div>
 
       {/* Form panel */}
@@ -64,7 +64,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
             <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={32} height={32} className="h-8 w-8 rounded-lg" />
             <span className="font-extrabold tracking-tight text-white">
-              Timao<span className="text-yellow-400">&</span>Pumba
+              Timao<span className="text-primary">&</span>Pumba
             </span>
           </Link>
 

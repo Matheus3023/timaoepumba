@@ -31,14 +31,14 @@ export default async function CommunityRoomsPage() {
       <PageHeader title="Bate-papo" description="Converse, resenhe e acompanhe os jogos com quem tem o app instalado." />
 
       <div className="card-glow mt-5 flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <ChatIcon width={22} height={22} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-white">Bate-papo ao vivo</p>
-          <p className="text-sm text-neutral-400">Libera assim que voce cria sua conta</p>
+          <p className="text-sm text-secondary">Libera assim que voce cria sua conta</p>
         </div>
-        <span className="badge shrink-0 bg-neutral-700/50 text-neutral-300">🔒</span>
+        <span className="badge shrink-0 bg-surface-highlighted/50 text-body">🔒</span>
       </div>
     </div>
   );

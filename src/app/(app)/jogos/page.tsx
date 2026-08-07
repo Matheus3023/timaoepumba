@@ -50,7 +50,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
       {/* Segmented control: one recessed track with a single raised segment,
           instead of three separate buttons where the active one was a stark
           white block. */}
-      <div className="mt-4 flex gap-1 rounded-2xl border border-white/[0.06] bg-neutral-900/60 p-1">
+      <div className="mt-4 flex gap-1 rounded-2xl border border-white/[0.06] bg-surface/60 p-1">
         {DAYS.map((d) => (
           <Link
             key={d.offset}
@@ -58,8 +58,8 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
             aria-current={day === d.offset ? "page" : undefined}
             className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold transition-colors ${
               day === d.offset
-                ? "bg-neutral-100 text-neutral-900 shadow-sm"
-                : "text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-200"
+                ? "bg-neutral-100 text-surface shadow-sm"
+                : "text-secondary hover:bg-white/[0.04] hover:text-strong"
             }`}
           >
             {d.label}

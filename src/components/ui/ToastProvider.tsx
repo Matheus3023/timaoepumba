@@ -21,7 +21,7 @@ const TOAST_DURATION_MS = 3500;
 const VARIANT_STYLE: Record<ToastVariant, string> = {
   success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
   error: "border-red-500/30 bg-red-500/10 text-red-200",
-  info: "border-neutral-700 bg-neutral-900/95 text-neutral-200",
+  info: "border-surface-highlighted bg-surface/95 text-strong",
 };
 
 /**

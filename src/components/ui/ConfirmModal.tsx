@@ -32,7 +32,7 @@ export function ConfirmModal({
   return (
     <Modal open={open} onClose={onClose}>
       <h2 className="pr-9 text-lg font-bold text-white">{title}</h2>
-      <p className="mt-1.5 text-sm text-neutral-400">{description}</p>
+      <p className="mt-1.5 text-sm text-secondary">{description}</p>
       <div className="mt-5 flex gap-2">
         <button type="button" onClick={onClose} className="btn-secondary flex-1">
           {cancelLabel}

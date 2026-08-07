@@ -82,22 +82,22 @@ export default function ResetPasswordPage() {
   return (
     <AuthLayout>
       <h1 className="text-2xl font-bold text-white">Nova senha</h1>
-      <p className="mt-1 text-sm text-neutral-400">Escolha uma nova senha para sua conta.</p>
+      <p className="mt-1 text-sm text-secondary">Escolha uma nova senha para sua conta.</p>
 
       {done ? (
         <div className="card-glow mt-8">
-          <p className="text-sm text-neutral-200">Senha redefinida! Redirecionando...</p>
+          <p className="text-sm text-strong">Senha redefinida! Redirecionando...</p>
         </div>
       ) : !ready ? (
         <div className="card mt-8">
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-secondary">
             {error ??
               "Validando o link de recuperacao... Se voce abriu esta pagina diretamente (sem clicar no link do e-mail), solicite uma nova recuperacao de senha."}
           </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1.5 text-sm text-body">
             Nova senha
             <input
               required
@@ -111,7 +111,7 @@ export default function ResetPasswordPage() {
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1.5 text-sm text-body">
             Confirmar nova senha
             <input
               required

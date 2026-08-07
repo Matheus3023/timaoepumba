@@ -52,7 +52,7 @@ export default function LandingPage() {
       {/* Decorative background */}
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]" />
       <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 animate-float-slow rounded-full bg-emerald-500/20 blur-[100px]" />
-      <div className="pointer-events-none absolute -right-16 top-40 h-80 w-80 animate-float-slower rounded-full bg-yellow-400/10 blur-[100px]" />
+      <div className="pointer-events-none absolute -right-16 top-40 h-80 w-80 animate-float-slower rounded-full bg-primary/10 blur-[100px]" />
 
       <header className="relative z-10 flex items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function LandingPage() {
             priority
           />
           <span className="text-lg font-extrabold tracking-tight text-white">
-            Timao<span className="text-yellow-400">&</span>Pumba
+            Timao<span className="text-primary">&</span>Pumba
           </span>
         </div>
         <span className="badge gap-1.5 border border-red-500/30 bg-red-500/10 text-red-300">
@@ -78,9 +78,9 @@ export default function LandingPage() {
           initial="hidden"
           animate="show"
           variants={fadeUp}
-          className="badge border border-yellow-400/20 bg-yellow-400/[0.07] text-yellow-300"
+          className="badge border border-primary/20 bg-primary/[0.07] text-yellow-300"
         >
-          <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-yellow-400" />
+          <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-primary" />
           Jogos, analises e comunidade em um so lugar
         </motion.span>
 
@@ -99,7 +99,7 @@ export default function LandingPage() {
           animate="show"
           custom={2}
           variants={fadeUp}
-          className="mt-4 max-w-md text-balance text-neutral-400"
+          className="mt-4 max-w-md text-balance text-secondary"
         >
           Acompanhe partidas ao vivo, leia analises de quem entende e participe da comunidade
           Timao e Pumba — tudo dentro do app, direto no seu celular.
@@ -130,16 +130,16 @@ export default function LandingPage() {
         >
           <div className="flex items-center gap-2 border-b border-white/5 px-4 py-2.5 text-left">
             <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-500" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Rolando agora</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-secondary">Rolando agora</p>
           </div>
           <div className="flex divide-x divide-white/5 overflow-x-auto">
             {TICKER_MATCHES.map((match) => (
               <div key={`${match.home}-${match.away}`} className="min-w-[190px] flex-1 px-4 py-3 text-left">
-                <p className="truncate text-[11px] text-neutral-500">{match.league}</p>
+                <p className="truncate text-[11px] text-muted">{match.league}</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-white">
-                  {match.home} <span className="text-neutral-600">vs</span> {match.away}
+                  {match.home} <span className="text-faint">vs</span> {match.away}
                 </p>
-                <p className={`mt-0.5 text-xs font-semibold ${match.score ? "text-yellow-400" : "text-neutral-500"}`}>
+                <p className={`mt-0.5 text-xs font-semibold ${match.score ? "text-primary" : "text-muted"}`}>
                   {match.score ? `${match.score} • ${match.status}` : match.status}
                 </p>
               </div>
@@ -159,11 +159,11 @@ export default function LandingPage() {
               variants={fadeUp}
               className="card group text-left transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-400 transition-colors group-hover:bg-yellow-400/15">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                 <feature.icon width={20} height={20} />
               </div>
               <h3 className="mt-3 font-semibold text-white">{feature.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-neutral-400">{feature.description}</p>
+              <p className="mt-1 text-sm leading-relaxed text-secondary">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function LandingPage() {
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="text-sm font-semibold uppercase tracking-wide text-neutral-500"
+            className="text-sm font-semibold uppercase tracking-wide text-muted"
           >
             Como funciona
           </motion.h2>
@@ -191,11 +191,11 @@ export default function LandingPage() {
                 variants={fadeUp}
                 className="relative flex flex-col items-center text-center sm:items-start sm:text-left"
               >
-                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-950 text-sm font-bold text-yellow-400 ring-2 ring-yellow-400/30">
+                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-sunken text-sm font-bold text-primary ring-2 ring-primary/30">
                   {i + 1}
                 </span>
                 <p className="mt-3 text-sm font-semibold text-white">{step.title}</p>
-                <p className="mt-1 text-xs text-neutral-500">{step.description}</p>
+                <p className="mt-1 text-xs text-muted">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="relative z-10 border-t border-white/5 px-6 py-8 text-center">
-        <p className="mx-auto max-w-md text-xs leading-relaxed text-neutral-500">
+        <p className="mx-auto max-w-md text-xs leading-relaxed text-muted">
           Plataforma destinada a maiores de 18 anos. Jogue com responsabilidade. Nao garantimos
           resultados ou lucro. Se precisar de ajuda, procure orientacao especializada.
         </p>

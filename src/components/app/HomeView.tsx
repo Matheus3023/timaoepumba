@@ -60,12 +60,12 @@ export function HomeView({
         <h1 className="text-2xl font-bold tracking-tight text-white">
           Ola, <span className="text-gradient-gold">{firstName}</span>!
         </h1>
-        <p className="mt-0.5 text-sm text-neutral-400">Confira os jogos e novidades de hoje.</p>
+        <p className="mt-0.5 text-sm text-secondary">Confira os jogos e novidades de hoje.</p>
       </motion.div>
 
       {!allStepsDone && (
         <motion.section initial="hidden" animate="show" custom={1} variants={fadeUp} className="card-glow mt-5">
-          <h2 className="text-sm font-semibold text-neutral-200">Status da conta</h2>
+          <h2 className="text-sm font-semibold text-strong">Status da conta</h2>
           <div className="relative mt-4 flex justify-between">
             <div className="absolute left-4 right-4 top-3.5 h-px bg-white/10" />
             {steps.map((step, i) => (
@@ -76,13 +76,13 @@ export function HomeView({
                   transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 300, damping: 18 }}
                   className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
                     step.done
-                      ? "border-yellow-400 bg-yellow-400/15 text-yellow-400"
-                      : "border-neutral-700 bg-neutral-900 text-neutral-600"
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-surface-highlighted bg-surface text-faint"
                   }`}
                 >
                   {step.done ? <CheckCircleIcon width={14} height={14} /> : <LockIcon width={12} height={12} />}
                 </motion.span>
-                <span className={`max-w-[70px] text-[10px] leading-tight ${step.done ? "text-neutral-300" : "text-neutral-600"}`}>
+                <span className={`max-w-[70px] text-[10px] leading-tight ${step.done ? "text-body" : "text-faint"}`}>
                   {step.label}
                 </span>
               </div>
@@ -110,12 +110,12 @@ export function HomeView({
             <div className="flex items-start justify-between gap-2">
               <p className="font-semibold leading-snug text-white">{analysis.title}</p>
               {analysis.risk_level && (
-                <span className={`badge shrink-0 ${RISK_STYLE[analysis.risk_level] ?? "bg-neutral-700/40 text-neutral-300"}`}>
+                <span className={`badge shrink-0 ${RISK_STYLE[analysis.risk_level] ?? "bg-surface-highlighted/40 text-body"}`}>
                   {analysis.risk_level}
                 </span>
               )}
             </div>
-            {analysis.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-neutral-400">{analysis.summary}</p>}
+            {analysis.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-secondary">{analysis.summary}</p>}
           </Link>
         ))}
       </Section>
@@ -126,17 +126,17 @@ export function HomeView({
           className="card-glow card-interactive group flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <ChatIcon width={19} height={19} />
             </div>
             <div>
               <p className="font-semibold text-white">Bate-papo</p>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-secondary">
                 {communityUnlocked ? "Salas, enquetes e resenha ao vivo" : "Confirme o cadastro para liberar"}
               </p>
             </div>
           </div>
-          <span className="text-neutral-500 transition-transform group-hover:translate-x-0.5">→</span>
+          <span className="text-muted transition-transform group-hover:translate-x-0.5">→</span>
         </Link>
       </motion.section>
     </div>
@@ -159,12 +159,12 @@ function Section({
   return (
     <motion.section initial="hidden" animate="show" custom={delay} variants={fadeUp} className="mt-6">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-200">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-strong">
           {live && <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-500" />}
           {title}
         </h2>
         {action && (
-          <Link href={action.href} className="text-xs text-yellow-400">
+          <Link href={action.href} className="text-xs text-primary">
             {action.label}
           </Link>
         )}

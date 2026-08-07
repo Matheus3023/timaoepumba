@@ -44,21 +44,25 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
       <BackButton fallbackHref="/jogos" />
 
       <div className="card-glow mt-3">
-        <p className="text-center text-xs text-neutral-500">{match.league.name}</p>
+        <p className="text-center text-xs text-muted">{match.league.name}</p>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="mt-4 flex items-center justify-between gap-2">
           <div className="flex flex-1 flex-col items-center gap-2 text-center">
-            <TeamAvatar name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} size={44} />
-            <p className="text-sm font-medium text-white">{match.homeTeam.name}</p>
+            <TeamAvatar name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} size={52} />
+            <p className="text-sm font-semibold leading-tight text-white">{match.homeTeam.name}</p>
           </div>
 
-          <div className="flex flex-col items-center gap-1 px-2">
-            <p className="text-2xl font-bold text-white">
-              {match.homeScore ?? 0} - {match.awayScore ?? 0}
+          <div className="flex shrink-0 flex-col items-center gap-1.5 px-2">
+            {/* Tabular numerals so a 1 vs 2-digit score doesn't shift the
+                score block sideways as it updates live. */}
+            <p className="text-3xl font-bold tabular-nums tracking-tight text-white">
+              {match.homeScore ?? 0}
+              <span className="mx-1 text-faint">-</span>
+              {match.awayScore ?? 0}
             </p>
             <span
               className={`badge ${
-                match.status === "live" ? "bg-red-500/15 text-red-300" : "bg-neutral-700/40 text-neutral-300"
+                match.status === "live" ? "bg-red-500/15 text-red-300" : "bg-surface-highlighted/40 text-body"
               }`}
             >
               {match.status === "live" && <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-400 align-middle" />}
@@ -67,8 +71,8 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           </div>
 
           <div className="flex flex-1 flex-col items-center gap-2 text-center">
-            <TeamAvatar name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} size={44} />
-            <p className="text-sm font-medium text-white">{match.awayTeam.name}</p>
+            <TeamAvatar name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} size={52} />
+            <p className="text-sm font-semibold leading-tight text-white">{match.awayTeam.name}</p>
           </div>
         </div>
 
@@ -103,9 +107,9 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
 function OddsBlock({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-xl bg-neutral-900/60 py-2">
-      <span className="text-[10px] uppercase tracking-wide text-neutral-500">{label}</span>
-      <span className="text-sm font-bold text-white">{value.toFixed(2)}</span>
+    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-xl border border-white/[0.04] bg-surface/60 py-2">
+      <span className="text-[10px] uppercase tracking-wide text-muted">{label}</span>
+      <span className="text-sm font-bold tabular-nums text-white">{value.toFixed(2)}</span>
     </div>
   );
 }

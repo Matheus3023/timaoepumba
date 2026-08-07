@@ -16,7 +16,7 @@ export default async function RetentionDashboardPage() {
   return (
     <div>
       <h1 className="text-xl font-bold text-white">Retencao</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         Baseado no ultimo acesso registrado (user_profiles.last_seen_at) — nao ha historico completo de sessoes por
         dia ainda, entao os numeros abaixo sao uma aproximacao, nao uma serie temporal exata.
       </p>
@@ -28,12 +28,12 @@ export default async function RetentionDashboardPage() {
       </div>
 
       <section className="card mt-6">
-        <h2 className="text-sm font-semibold text-neutral-200">Retencao (usuarios ainda ativos N dias depois do cadastro)</h2>
+        <h2 className="text-sm font-semibold text-strong">Retencao (usuarios ainda ativos N dias depois do cadastro)</h2>
         <div className="mt-3 flex flex-col gap-2 text-sm">
           {report.retention.map((r) => (
-            <div key={r.days} className="flex items-center justify-between border-b border-neutral-800 pb-2">
-              <span className="text-neutral-300">D{r.days}</span>
-              <span className="text-neutral-500">
+            <div key={r.days} className="flex items-center justify-between border-b border-surface-elevated pb-2">
+              <span className="text-body">D{r.days}</span>
+              <span className="text-muted">
                 {r.retained}/{r.eligible} elegiveis
               </span>
               <span className="font-semibold text-yellow-300">{r.pct}</span>
@@ -43,18 +43,18 @@ export default async function RetentionDashboardPage() {
       </section>
 
       <section className="card mt-6">
-        <h2 className="text-sm font-semibold text-neutral-200">Coortes por semana de cadastro</h2>
+        <h2 className="text-sm font-semibold text-strong">Coortes por semana de cadastro</h2>
         <div className="mt-3 flex flex-col gap-2 text-sm">
           {report.cohorts.map((c) => (
-            <div key={c.week} className="flex items-center justify-between border-b border-neutral-800 pb-2">
-              <span className="text-neutral-300">{c.week}</span>
-              <span className="text-neutral-500">{c.total} cadastros</span>
+            <div key={c.week} className="flex items-center justify-between border-b border-surface-elevated pb-2">
+              <span className="text-body">{c.week}</span>
+              <span className="text-muted">{c.total} cadastros</span>
               <span className="font-semibold text-yellow-300">
                 {c.total > 0 ? `${((c.activeLast7d / c.total) * 100).toFixed(0)}%` : "—"} ativos (7d)
               </span>
             </div>
           ))}
-          {report.cohorts.length === 0 && <p className="text-neutral-500">Sem dados ainda.</p>}
+          {report.cohorts.length === 0 && <p className="text-muted">Sem dados ainda.</p>}
         </div>
       </section>
     </div>
@@ -65,7 +65,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="card">
       <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-neutral-400">{label}</p>
+      <p className="text-xs text-secondary">{label}</p>
     </div>
   );
 }

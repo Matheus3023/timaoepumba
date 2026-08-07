@@ -144,15 +144,15 @@ export default async function AdminCommunityModerationPage() {
   return (
     <div>
       <h1 className="text-xl font-bold text-white">Moderacao da comunidade</h1>
-      {!writable && <p className="mt-1 text-xs text-neutral-500">Modo somente leitura para o seu perfil.</p>}
+      {!writable && <p className="mt-1 text-xs text-muted">Modo somente leitura para o seu perfil.</p>}
 
       <section className="card mt-4 border-yellow-500/20 bg-yellow-500/[0.03]">
-        <h2 className="text-sm font-semibold text-neutral-200">Diagnostico: Bate-papo ao vivo</h2>
+        <h2 className="text-sm font-semibold text-strong">Diagnostico: Bate-papo ao vivo</h2>
         {liveChatRoom ? (
-          <dl className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+          <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
             <div className="flex justify-between gap-2">
               <dt>Sala encontrada</dt>
-              <dd className="text-neutral-200">
+              <dd className="text-strong">
                 {liveChatRoom.name} ({liveChatRoom.slug})
               </dd>
             </div>
@@ -171,7 +171,7 @@ export default async function AdminCommunityModerationPage() {
             </div>
             <div className="flex justify-between gap-2">
               <dt>Membros com acesso liberado</dt>
-              <dd className="text-neutral-200">
+              <dd className="text-strong">
                 {liveChatMembers ?? 0} de {totalUsers ?? 0} usuarios
               </dd>
             </div>
@@ -193,20 +193,20 @@ export default async function AdminCommunityModerationPage() {
       </section>
 
       <section className="mt-4">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-200">Denuncias abertas</h2>
+        <h2 className="mb-2 text-sm font-semibold text-strong">Denuncias abertas</h2>
         <div className="flex flex-col gap-3">
           {reports?.map((report) => {
             const message = messageById.get(report.message_id);
             return (
               <div key={report.id} className="card">
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted">
                   Sala: {message ? roomById.get(message.room_id) : "—"} • Autor:{" "}
                   {message ? userById.get(message.user_id) : "—"} • Denunciado por: {userById.get(report.reported_by)}
                 </p>
-                <p className="mt-1 text-sm text-neutral-200">
-                  {message?.is_deleted ? <span className="italic text-neutral-500">Mensagem ja excluida</span> : message?.content}
+                <p className="mt-1 text-sm text-strong">
+                  {message?.is_deleted ? <span className="italic text-muted">Mensagem ja excluida</span> : message?.content}
                 </p>
-                {report.reason && <p className="mt-1 text-xs text-neutral-500">Motivo: {report.reason}</p>}
+                {report.reason && <p className="mt-1 text-xs text-muted">Motivo: {report.reason}</p>}
 
                 {writable && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -241,12 +241,12 @@ export default async function AdminCommunityModerationPage() {
               </div>
             );
           })}
-          {(!reports || reports.length === 0) && <p className="card text-sm text-neutral-500">Nenhuma denuncia pendente.</p>}
+          {(!reports || reports.length === 0) && <p className="card text-sm text-muted">Nenhuma denuncia pendente.</p>}
         </div>
       </section>
 
       <section className="mt-6 max-w-md">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-200">Palavras bloqueadas</h2>
+        <h2 className="mb-2 text-sm font-semibold text-strong">Palavras bloqueadas</h2>
         {writable && (
           <form action={addBannedWord} className="flex gap-2">
             <input name="word" placeholder="nova palavra" className="input flex-1" />
@@ -259,34 +259,34 @@ export default async function AdminCommunityModerationPage() {
           {bannedWords?.map((w) =>
             writable ? (
               <form key={w.id} action={removeBannedWord.bind(null, w.id)}>
-                <button type="submit" className="badge bg-neutral-800 text-neutral-300 hover:bg-red-500/20 hover:text-red-300">
+                <button type="submit" className="badge bg-surface-elevated text-body hover:bg-red-500/20 hover:text-red-300">
                   {w.word} ✕
                 </button>
               </form>
             ) : (
-              <span key={w.id} className="badge bg-neutral-800 text-neutral-300">
+              <span key={w.id} className="badge bg-surface-elevated text-body">
                 {w.word}
               </span>
             )
           )}
-          {(!bannedWords || bannedWords.length === 0) && <p className="text-sm text-neutral-500">Nenhuma palavra bloqueada.</p>}
+          {(!bannedWords || bannedWords.length === 0) && <p className="text-sm text-muted">Nenhuma palavra bloqueada.</p>}
         </div>
       </section>
 
       <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-200">Log de moderacao</h2>
+        <h2 className="mb-2 text-sm font-semibold text-strong">Log de moderacao</h2>
         <div className="flex flex-col gap-2">
           {recentActions?.map((a) => (
             <div key={a.id} className="card flex items-center justify-between text-sm">
-              <span className="text-neutral-300">
+              <span className="text-body">
                 {a.action_type} • {a.target_user_id ? userById.get(a.target_user_id) ?? a.target_user_id : "—"}
                 {a.reason ? ` — ${a.reason}` : ""}
               </span>
-              <span className="text-xs text-neutral-500">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
+              <span className="text-xs text-muted">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
             </div>
           ))}
           {(!recentActions || recentActions.length === 0) && (
-            <p className="card text-sm text-neutral-500">Nenhuma acao registrada.</p>
+            <p className="card text-sm text-muted">Nenhuma acao registrada.</p>
           )}
         </div>
       </section>

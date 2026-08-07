@@ -125,22 +125,22 @@ export default async function AdminCompetitionsPage({
   return (
     <div className="max-w-3xl">
       <h1 className="text-xl font-bold text-white">Competicoes permitidas</h1>
-      <p className="mt-1 text-sm text-neutral-400">
+      <p className="mt-1 text-sm text-secondary">
         Somente competicoes ativas aparecem no aplicativo. A lista se preenche sozinha conforme a API
         e consultada — competicoes novas entram bloqueadas, aguardando sua liberacao.
       </p>
-      {!writable && <p className="mt-1 text-xs text-neutral-500">Modo somente leitura para o seu perfil.</p>}
+      {!writable && <p className="mt-1 text-xs text-muted">Modo somente leitura para o seu perfil.</p>}
 
       {error && (
-        <div className="card mt-4 border-yellow-400/30 bg-yellow-400/5">
+        <div className="card mt-4 border-primary/30 bg-primary/5">
           <p className="text-sm font-semibold text-yellow-300">Modo de emergencia ativo</p>
-          <p className="mt-1 text-sm text-neutral-300">
+          <p className="mt-1 text-sm text-body">
             Nao consegui ler a tabela de competicoes, entao o aplicativo esta usando o filtro antigo (por
             nome) para continuar mostrando os jogos normalmente. A curadoria desta tela so funciona depois
             que a migration <span className="font-mono">0009_allowed_competitions.sql</span> for executada no
             SQL Editor do Supabase.
           </p>
-          <p className="mt-2 font-mono text-xs text-neutral-500">{error.message}</p>
+          <p className="mt-2 font-mono text-xs text-muted">{error.message}</p>
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default async function AdminCompetitionsPage({
       </div>
 
       {!error && (competitions ?? []).length === 0 && (
-        <p className="card mt-4 text-sm text-neutral-500">
+        <p className="card mt-4 text-sm text-muted">
           Nenhuma competicao catalogada ainda. Abra a tela de Jogos para o app consultar a API — as
           competicoes encontradas aparecem aqui.
         </p>
@@ -210,8 +210,8 @@ function Section({
 
   return (
     <section className="mt-6">
-      <h2 className="text-sm font-semibold text-neutral-200">{title}</h2>
-      <p className="mb-2 text-xs text-neutral-500">{description}</p>
+      <h2 className="text-sm font-semibold text-strong">{title}</h2>
+      <p className="mb-2 text-xs text-muted">{description}</p>
 
       <div className="flex flex-col gap-2">
         {competitions.map((competition) => (
@@ -221,18 +221,18 @@ function Section({
                 <p className="font-semibold text-white">
                   {competition.display_name || competition.canonical_name}
                 </p>
-                <p className="truncate text-xs text-neutral-500">
+                <p className="truncate text-xs text-muted">
                   {competition.provider_name}
                   {competition.country_name ? ` • ${competition.country_name}` : ""}
                 </p>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <span className="badge bg-neutral-800 font-mono text-[10px] text-neutral-400">
+                  <span className="badge bg-surface-elevated font-mono text-[10px] text-secondary">
                     ID {competition.provider_competition_id}
                   </span>
-                  <span className="badge bg-neutral-800 text-[10px] text-neutral-400">
+                  <span className="badge bg-surface-elevated text-[10px] text-secondary">
                     {GENDER_LABEL[competition.gender] ?? competition.gender}
                   </span>
-                  <span className="badge bg-neutral-800 text-[10px] text-neutral-400">
+                  <span className="badge bg-surface-elevated text-[10px] text-secondary">
                     Prioridade {competition.priority}
                   </span>
                   {competition.blocked_reason && (
@@ -273,7 +273,7 @@ function Section({
                   </select>
                 </div>
 
-                <div className="flex flex-wrap gap-4 text-xs text-neutral-300">
+                <div className="flex flex-wrap gap-4 text-xs text-body">
                   <label className="flex items-center gap-1.5">
                     <input type="checkbox" name="show_on_home" defaultChecked={competition.show_on_home} />
                     Tela inicial

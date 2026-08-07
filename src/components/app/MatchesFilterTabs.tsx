@@ -50,11 +50,11 @@ export function MatchesFilterTabs({
             onClick={() => setTab("ao_vivo")}
             className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors active:scale-[0.98] ${
               tab === "ao_vivo"
-                ? "border-transparent bg-yellow-400 text-neutral-900"
-                : "border-white/[0.06] bg-neutral-900/60 text-neutral-400 hover:text-neutral-200"
+                ? "border-transparent bg-primary text-surface"
+                : "border-white/[0.06] bg-surface/60 text-secondary hover:text-strong"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-neutral-900/60" : "animate-pulse-live bg-red-500"}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-surface/60" : "animate-pulse-live bg-red-500"}`} />
             Ao vivo {liveMatches.length > 0 && `(${liveMatches.length})`}
           </button>
           <button
@@ -63,8 +63,8 @@ export function MatchesFilterTabs({
             onClick={() => setTab("hoje")}
             className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors active:scale-[0.98] ${
               tab === "hoje"
-                ? "border-transparent bg-yellow-400 text-neutral-900"
-                : "border-white/[0.06] bg-neutral-900/60 text-neutral-400 hover:text-neutral-200"
+                ? "border-transparent bg-primary text-surface"
+                : "border-white/[0.06] bg-surface/60 text-secondary hover:text-strong"
             }`}
           >
             Todos os jogos
@@ -97,7 +97,7 @@ export function MatchesFilterTabs({
               custom={sectionIndex}
               variants={fadeUp}
             >
-              <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-200">
+              <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-strong">
                 <LeagueBadge name={league} logoUrl={matches[0]?.league.logoUrl} size={16} />
                 {league}
               </h2>

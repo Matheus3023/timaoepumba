@@ -13,13 +13,13 @@ export function MatchRow({ match }: { match: Match }) {
     <Link
       href={`/jogos/${match.id}`}
       className={`card-interactive relative flex flex-col gap-2.5 overflow-hidden rounded-2xl border px-3.5 py-3 ${
-        isLive ? "border-red-500/25 bg-red-500/[0.06]" : "border-white/5 bg-neutral-900/60"
+        isLive ? "border-red-500/25 bg-red-500/[0.06]" : "border-white/5 bg-surface/60"
       }`}
     >
       {isLive && <span className="absolute inset-y-0 left-0 w-1 bg-red-500" />}
 
       <div className="flex items-center justify-between gap-2 pl-1">
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-neutral-500">
+        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
           <LeagueBadge name={match.league.name} logoUrl={match.league.logoUrl} size={14} />
           <span className="truncate">{match.league.name}</span>
         </div>
@@ -30,9 +30,9 @@ export function MatchRow({ match }: { match: Match }) {
             {match.minute ? `${match.minute}'` : "AO VIVO"}
           </span>
         ) : isFinished ? (
-          <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-neutral-400">Encerrado</span>
+          <span className="shrink-0 rounded-full bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-secondary">Encerrado</span>
         ) : (
-          <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-neutral-300">
+          <span className="shrink-0 rounded-full bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-body">
             {new Date(match.kickoffAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
@@ -68,8 +68,8 @@ export function MatchRow({ match }: { match: Match }) {
 
 function OddsPill({ label, value }: { label: string; value: number }) {
   return (
-    <span className="flex flex-1 items-center justify-between rounded-lg bg-neutral-800/70 px-2 py-1 text-xs text-neutral-300">
-      <span className="text-neutral-500">{label}</span>
+    <span className="flex flex-1 items-center justify-between rounded-lg bg-surface-elevated/70 px-2 py-1 text-xs text-body">
+      <span className="text-muted">{label}</span>
       <span className="font-semibold text-white">{value.toFixed(2)}</span>
     </span>
   );
@@ -91,11 +91,11 @@ function TeamLine({
   return (
     <div className="flex items-center gap-2.5">
       <TeamAvatar name={name} logoUrl={logoUrl} size={26} />
-      <span className={`min-w-0 flex-1 truncate text-sm ${highlight ? "font-semibold text-white" : "text-neutral-200"}`}>
+      <span className={`min-w-0 flex-1 truncate text-sm ${highlight ? "font-semibold text-white" : "text-strong"}`}>
         {name}
       </span>
       {showScore && (
-        <span className={`text-sm ${highlight ? "font-bold text-white" : "font-semibold text-neutral-400"}`}>
+        <span className={`text-sm ${highlight ? "font-bold text-white" : "font-semibold text-secondary"}`}>
           {score ?? 0}
         </span>
       )}

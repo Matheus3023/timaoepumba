@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-neutral-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl [-webkit-tap-highlight-color:transparent]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-sunken/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl [-webkit-tap-highlight-color:transparent]">
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-1">
         {TABS.map((tab) => {
           const active = pathname.startsWith(tab.href);
@@ -26,13 +26,13 @@ export function BottomNav() {
               <Link
                 href={tab.href}
                 className={`relative flex touch-manipulation select-none flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
-                  active ? "text-yellow-400" : "text-neutral-500 hover:text-neutral-300"
+                  active ? "text-primary" : "text-muted hover:text-body"
                 }`}
               >
                 {active && (
                   <motion.span
                     layoutId="bottom-nav-active"
-                    className="absolute top-0 h-0.5 w-8 rounded-full bg-yellow-400"
+                    className="absolute top-0 h-0.5 w-8 rounded-full bg-primary"
                     transition={{ type: "spring", stiffness: 500, damping: 35 }}
                   />
                 )}

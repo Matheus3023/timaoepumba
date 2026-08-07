@@ -22,5 +22,5 @@ export function LeagueBadge({ name, logoUrl, size = 16 }: { name: string; logoUr
     );
   }
 
-  return <BallIcon width={size} height={size} className="shrink-0 text-neutral-600" strokeWidth={1.6} />;
+  return <BallIcon width={size} height={size} className="shrink-0 text-faint" strokeWidth={1.6} />;
 }

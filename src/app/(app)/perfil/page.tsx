@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileActions } from "@/components/app/ProfileActions";
 import { InstallNotificationsCard } from "@/components/app/InstallNotificationsCard";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Avatar } from "@/components/ui/Avatar";
 
 const ACCESS_LEVEL_LABEL: Record<string, string> = {
   VISITOR: "Visitante",
@@ -31,13 +32,16 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-md px-4 py-6">
       <PageHeader title="Perfil" />
 
-      <section className="card mt-4">
-        <p className="font-semibold text-white">{appUser?.full_name}</p>
-        <p className="text-sm text-neutral-400">{appUser?.email}</p>
-        <p className="text-sm text-neutral-400">{appUser?.phone}</p>
-        <span className="badge mt-2 inline-block bg-yellow-400/10 text-yellow-300">
-          {ACCESS_LEVEL_LABEL[appUser?.access_level ?? "APP_USER"]}
-        </span>
+      <section className="card mt-4 flex items-center gap-3.5">
+        <Avatar name={appUser?.full_name ?? "Torcedor"} size={52} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-white">{appUser?.full_name}</p>
+          <p className="truncate text-sm text-secondary">{appUser?.email}</p>
+          {appUser?.phone && <p className="truncate text-sm text-muted">{appUser.phone}</p>}
+          <span className="badge mt-1.5 inline-block bg-primary/10 text-yellow-300">
+            {ACCESS_LEVEL_LABEL[appUser?.access_level ?? "APP_USER"]}
+          </span>
+        </div>
       </section>
 
       {appUser?.access_level === "ADMIN" && (
@@ -47,9 +51,9 @@ export default async function ProfilePage() {
         >
           <div>
             <p className="font-semibold text-white">Painel administrativo</p>
-            <p className="text-xs text-neutral-400">Dashboard, CRM, moderacao, campanhas e mais</p>
+            <p className="text-xs text-secondary">Dashboard, CRM, moderacao, campanhas e mais</p>
           </div>
-          <span className="text-neutral-500">→</span>
+          <span className="text-muted">→</span>
         </Link>
       )}
 

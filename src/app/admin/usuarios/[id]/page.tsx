@@ -128,7 +128,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">{user.full_name}</h1>
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-secondary">
             {user.email} • {user.phone}
           </p>
         </div>

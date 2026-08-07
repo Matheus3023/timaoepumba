@@ -77,7 +77,7 @@ export default function SignupPage() {
   return (
     <AuthLayout>
       <h1 className="text-2xl font-bold text-white">Criar conta</h1>
-      <p className="mt-1 text-sm text-neutral-400">
+      <p className="mt-1 text-sm text-secondary">
         Jogos, analises e comunidade em um so lugar. Uso restrito a maiores de 18 anos.
       </p>
 
@@ -137,42 +137,42 @@ export default function SignupPage() {
         </Field>
 
         <div className="flex flex-col gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
-          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+          <label className="flex items-start gap-2.5 text-sm text-body">
             <input
               type="checkbox"
               checked={ageConfirmed}
               onChange={(e) => setAgeConfirmed(e.target.checked)}
-              className="mt-0.5 accent-yellow-400"
+              className="mt-0.5 accent-primary"
             />
             Confirmo que tenho 18 anos ou mais.
           </label>
 
-          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+          <label className="flex items-start gap-2.5 text-sm text-body">
             <input
               type="checkbox"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5 accent-yellow-400"
+              className="mt-0.5 accent-primary"
             />
             <span>
               Li e aceito os{" "}
-              <Link href="/termos" className="text-yellow-400 underline underline-offset-2">
+              <Link href="/termos" className="text-primary underline underline-offset-2">
                 Termos de Uso
               </Link>{" "}
               e a{" "}
-              <Link href="/privacidade" className="text-yellow-400 underline underline-offset-2">
+              <Link href="/privacidade" className="text-primary underline underline-offset-2">
                 Politica de Privacidade
               </Link>
               .
             </span>
           </label>
 
-          <label className="flex items-start gap-2.5 text-sm text-neutral-300">
+          <label className="flex items-start gap-2.5 text-sm text-body">
             <input
               type="checkbox"
               checked={marketingConsent}
               onChange={(e) => setMarketingConsent(e.target.checked)}
-              className="mt-0.5 accent-yellow-400"
+              className="mt-0.5 accent-primary"
             />
             Quero receber novidades, analises e promocoes por notificacao e e-mail (opcional).
           </label>
@@ -195,9 +195,9 @@ export default function SignupPage() {
           {submitting ? "Criando conta..." : "Criar conta"}
         </button>
 
-        <p className="text-center text-xs text-neutral-500">
+        <p className="text-center text-xs text-muted">
           Ja tem conta?{" "}
-          <Link href="/login" className="text-yellow-400 underline underline-offset-2">
+          <Link href="/login" className="text-primary underline underline-offset-2">
             Entrar
           </Link>
         </p>
@@ -208,7 +208,7 @@ export default function SignupPage() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+    <label className="flex flex-col gap-1.5 text-sm text-body">
       {label}
       {children}
     </label>

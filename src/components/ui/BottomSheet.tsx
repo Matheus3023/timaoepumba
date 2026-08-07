@@ -62,9 +62,9 @@ export function BottomSheet({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateY(${dragOffset}px)` }}
-        className="w-full max-w-md rounded-t-2xl border-t border-white/[0.06] bg-neutral-950/95 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-8px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-transform"
+        className="w-full max-w-md rounded-t-2xl border-t border-white/[0.06] bg-sunken/95 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-8px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-transform"
       >
-        <div className="mx-auto mb-3 h-1.5 w-10 shrink-0 rounded-full bg-neutral-700" />
+        <div className="mx-auto mb-3 h-1.5 w-10 shrink-0 rounded-full bg-surface-highlighted" />
 
         <div className="flex items-center justify-between gap-3">
           {title && <h2 className="text-lg font-bold text-white">{title}</h2>}
@@ -73,7 +73,7 @@ export function BottomSheet({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-neutral-400 transition hover:bg-neutral-800 hover:text-white"
+            className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-secondary transition hover:bg-surface-elevated hover:text-white"
           >
             <CloseIcon width={18} height={18} />
           </button>

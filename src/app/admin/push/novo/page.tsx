@@ -95,7 +95,7 @@ export default async function NewPushCampaignPage() {
   return (
     <div className="max-w-xl">
       <h1 className="text-xl font-bold text-white">Nova campanha de push</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         Cada destinatario passa pelo motor de elegibilidade (restricao, consentimento, horario permitido e limite de
         frequencia) antes do envio.
       </p>
@@ -110,7 +110,7 @@ export default async function NewPushCampaignPage() {
           <option value="promotional">Promocional</option>
         </select>
 
-        <label className="flex flex-col gap-1 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1 text-sm text-body">
           Segmento (deixe vazio para todos os usuarios ativos)
           <select name="segment_id" defaultValue="" className="input">
             <option value="">Todos os usuarios ativos</option>

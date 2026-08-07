@@ -51,13 +51,13 @@ export function MatchDetailTabs({
 
   return (
     <div className="mt-5">
-      <div className="scrollbar-none flex gap-1 overflow-x-auto border-b border-neutral-800">
+      <div className="scrollbar-none flex gap-1 overflow-x-auto border-b border-surface-elevated">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`shrink-0 rounded-t-lg px-3 py-2 text-sm transition ${
-              tab === t ? "border-b-2 border-yellow-400 text-yellow-300" : "text-neutral-500 hover:text-neutral-300"
+              tab === t ? "border-b-2 border-primary text-yellow-300" : "text-muted hover:text-body"
             }`}
           >
             {t}
@@ -78,10 +78,10 @@ export function MatchDetailTabs({
             <ul className="flex flex-col gap-2">
               {events.map((event) => (
                 <li key={event.id} className="card flex items-center justify-between text-sm">
-                  <span className="text-neutral-300">
+                  <span className="text-body">
                     {EVENT_LABEL[event.type]} {event.playerName && `— ${event.playerName}`}
                   </span>
-                  {event.minute !== null && <span className="text-neutral-500">{event.minute}&apos;</span>}
+                  {event.minute !== null && <span className="text-muted">{event.minute}&apos;</span>}
                 </li>
               ))}
             </ul>
@@ -96,9 +96,9 @@ export function MatchDetailTabs({
               {statEntries.map(([label, values]) => (
                 <div key={label}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-neutral-200">{values.home}</span>
-                    <span className="text-neutral-400">{label}</span>
-                    <span className="font-semibold text-neutral-200">{values.away}</span>
+                    <span className="font-semibold text-strong">{values.home}</span>
+                    <span className="text-secondary">{label}</span>
+                    <span className="font-semibold text-strong">{values.away}</span>
                   </div>
                   <StatBar home={values.home} away={values.away} />
                 </div>
@@ -113,11 +113,11 @@ export function MatchDetailTabs({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {lineups.map((lineup) => (
                 <div key={lineup.teamId} className="card">
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted">
                     {lineup.teamId === homeTeamId ? homeTeamName : lineup.teamId === awayTeamId ? awayTeamName : "Time"}
                     {lineup.formation && ` • ${lineup.formation}`}
                   </p>
-                  <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-200">
+                  <ul className="mt-2 flex flex-col gap-1 text-sm text-strong">
                     {lineup.players.map((player, i) => (
                       <li key={i}>{player}</li>
                     ))}
@@ -132,7 +132,7 @@ export function MatchDetailTabs({
         {tab === "Momentum" &&
           (momentum.length > 0 ? (
             <div className="card">
-              <p className="mb-3 text-xs text-neutral-400">Pressao ao longo da partida</p>
+              <p className="mb-3 text-xs text-secondary">Pressao ao longo da partida</p>
               <div className="flex h-32 items-end gap-0.5">
                 {momentum.map((point, i) => {
                   const height = Math.min(Math.abs(point.value), 100);
@@ -160,7 +160,7 @@ export function MatchDetailTabs({
           (standings.length > 0 ? (
             <div className="card overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-neutral-500">
+                <thead className="text-muted">
                   <tr>
                     <th className="py-1 pr-2">#</th>
                     <th className="py-1 pr-2">Time</th>
@@ -175,8 +175,8 @@ export function MatchDetailTabs({
                   {standings.map((row) => (
                     <tr
                       key={row.teamId}
-                      className={`border-t border-neutral-800 ${
-                        row.teamName === homeTeamName || row.teamName === awayTeamName ? "text-yellow-300" : "text-neutral-300"
+                      className={`border-t border-surface-elevated ${
+                        row.teamName === homeTeamName || row.teamName === awayTeamName ? "text-yellow-300" : "text-body"
                       }`}
                     >
                       <td className="py-1.5 pr-2">{row.position}</td>
@@ -201,12 +201,12 @@ export function MatchDetailTabs({
             <RecentForm title={`Ultimos jogos — ${awayTeamName}`} teamName={awayTeamName} matches={awayTeamRecent} />
 
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-neutral-200">Confronto direto</h3>
+              <h3 className="mb-2 text-sm font-semibold text-strong">Confronto direto</h3>
               {h2h.length > 0 ? (
                 <ul className="flex flex-col gap-2">
                   {h2h.map((m) => (
                     <li key={m.id} className="card text-sm">
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-muted">
                         {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
                       </p>
                       <p className="mt-1 font-medium text-white">
@@ -237,7 +237,7 @@ function resultForTeam(m: HeadToHeadMatch, teamName: string): "V" | "E" | "D" | 
 
 const RESULT_STYLE: Record<"V" | "E" | "D", string> = {
   V: "bg-emerald-500/15 text-emerald-300",
-  E: "bg-neutral-700/40 text-neutral-300",
+  E: "bg-surface-highlighted/40 text-body",
   D: "bg-red-500/15 text-red-300",
 };
 
@@ -245,7 +245,7 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-200">{title}</h3>
+        <h3 className="text-sm font-semibold text-strong">{title}</h3>
         {matches.length > 0 && (
           <div className="flex gap-1">
             {matches.map((m) => {
@@ -254,7 +254,7 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
                 <span
                   key={m.id}
                   className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                    result ? RESULT_STYLE[result] : "bg-neutral-800 text-neutral-500"
+                    result ? RESULT_STYLE[result] : "bg-surface-elevated text-muted"
                   }`}
                 >
                   {result ?? "—"}
@@ -269,7 +269,7 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
           {matches.map((m) => (
             <li key={m.id} className="card flex items-center justify-between text-sm">
               <div className="min-w-0">
-                <p className="truncate text-xs text-neutral-500">
+                <p className="truncate text-xs text-muted">
                   {m.competition ?? "—"} {m.date && `• ${new Date(m.date).toLocaleDateString("pt-BR")}`}
                 </p>
                 <p className="truncate font-medium text-white">
@@ -293,7 +293,7 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
  */
 function SeriesLegend({ homeTeamName, awayTeamName }: { homeTeamName: string; awayTeamName: string }) {
   return (
-    <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
+    <div className="flex items-center justify-center gap-4 text-[11px] text-secondary">
       <span className="flex min-w-0 items-center gap-1.5">
         <span className="h-2 w-2 shrink-0 rounded-full bg-chart-home" />
         <span className="truncate">{homeTeamName}</span>
@@ -327,8 +327,8 @@ function StatBar({ home, away }: { home: number | string; away: number | string 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2">
-      <span className="text-neutral-500">{label}</span>
-      <span className="text-right text-neutral-200">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="text-right text-strong">{value}</span>
     </div>
   );
 }

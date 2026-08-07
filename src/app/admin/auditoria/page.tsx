@@ -26,11 +26,11 @@ export default async function AdminAuditLogPage() {
   return (
     <div>
       <h1 className="text-xl font-bold text-white">Auditoria</h1>
-      <p className="text-sm text-neutral-400">Ultimas 200 acoes administrativas registradas (PRD sec. 37).</p>
+      <p className="text-sm text-secondary">Ultimas 200 acoes administrativas registradas (PRD sec. 37).</p>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-800">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-surface-elevated">
         <table className="w-full text-left text-sm">
-          <thead className="bg-neutral-900 text-neutral-400">
+          <thead className="bg-surface text-secondary">
             <tr>
               <th className="px-4 py-2">Quando</th>
               <th className="px-4 py-2">Quem</th>
@@ -40,22 +40,22 @@ export default async function AdminAuditLogPage() {
           </thead>
           <tbody>
             {logs?.map((log) => (
-              <tr key={log.id} className="border-t border-neutral-800 hover:bg-neutral-900/50">
-                <td className="whitespace-nowrap px-4 py-2 text-neutral-500">
+              <tr key={log.id} className="border-t border-surface-elevated hover:bg-surface/50">
+                <td className="whitespace-nowrap px-4 py-2 text-muted">
                   {new Date(log.created_at).toLocaleString("pt-BR")}
                 </td>
-                <td className="px-4 py-2 text-neutral-300">
+                <td className="px-4 py-2 text-body">
                   {log.actor_id ? actorById.get(log.actor_id) ?? log.actor_id : ACTOR_TYPE_LABEL[log.actor_type] ?? log.actor_type}
                 </td>
                 <td className="px-4 py-2 font-mono text-xs text-yellow-300">{log.action}</td>
-                <td className="px-4 py-2 text-neutral-500">
+                <td className="px-4 py-2 text-muted">
                   {log.entity_type ?? "—"} {log.entity_id ? `#${log.entity_id.slice(0, 8)}` : ""}
                 </td>
               </tr>
             ))}
             {(!logs || logs.length === 0) && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-muted">
                   Nenhuma acao registrada ainda.
                 </td>
               </tr>

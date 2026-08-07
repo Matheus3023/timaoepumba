@@ -99,7 +99,7 @@ export function SportsDataDebugClient({ canWrite }: { canWrite: boolean }) {
   return (
     <div className="max-w-3xl">
       <h1 className="text-xl font-bold text-white">Dados esportivos — teste de API</h1>
-      <p className="mt-1 text-sm text-neutral-400">
+      <p className="mt-1 text-sm text-secondary">
         Testa endpoints do Flashscore4/RapidAPI direto do servidor (usa RAPIDAPI_KEY/RAPIDAPI_HOST
         configurados na Vercel).
       </p>
@@ -109,7 +109,7 @@ export function SportsDataDebugClient({ canWrite }: { canWrite: boolean }) {
           <button
             key={preset.label}
             onClick={() => applyPreset(preset)}
-            className="badge border border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-yellow-400/50 hover:text-yellow-300"
+            className="badge border border-surface-highlighted bg-surface text-body hover:border-primary/50 hover:text-yellow-300"
           >
             {preset.label}
           </button>
@@ -117,13 +117,13 @@ export function SportsDataDebugClient({ canWrite }: { canWrite: boolean }) {
       </div>
 
       <div className="card mt-4 flex flex-col gap-3">
-        <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+        <label className="flex flex-col gap-1.5 text-sm text-body">
           Path (depois de /api/flashscore/v2/)
           <input value={path} onChange={(e) => setPath(e.target.value)} className="input font-mono text-sm" />
         </label>
 
         <div>
-          <p className="mb-1.5 text-sm text-neutral-300">Parametros (query string)</p>
+          <p className="mb-1.5 text-sm text-body">Parametros (query string)</p>
           <div className="flex flex-col gap-2">
             {params.map((p, i) => (
               <div key={i} className="flex gap-2">
@@ -169,7 +169,7 @@ export function SportsDataDebugClient({ canWrite }: { canWrite: boolean }) {
               <span className={`badge ${result.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>
                 {String(result.status)}
               </span>
-              <span className="text-neutral-500">{String(result.duration_ms)}ms</span>
+              <span className="text-muted">{String(result.duration_ms)}ms</span>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(JSON.stringify(result.body, null, 2))}
@@ -178,8 +178,8 @@ export function SportsDataDebugClient({ canWrite }: { canWrite: boolean }) {
               Copiar JSON
             </button>
           </div>
-          <p className="mt-2 break-all font-mono text-xs text-neutral-500">{String(result.requested_url)}</p>
-          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-neutral-950 p-3 text-xs text-neutral-300">
+          <p className="mt-2 break-all font-mono text-xs text-muted">{String(result.requested_url)}</p>
+          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-sunken p-3 text-xs text-body">
             {JSON.stringify(result.body, null, 2)}
           </pre>
         </div>

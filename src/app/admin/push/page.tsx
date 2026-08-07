@@ -26,13 +26,13 @@ export default async function AdminPushPage() {
           <div key={c.id} className="card flex items-center justify-between">
             <div>
               <p className="font-semibold text-white">{c.internal_name}</p>
-              <p className="text-xs text-neutral-500">{c.category}</p>
+              <p className="text-xs text-muted">{c.category}</p>
             </div>
-            <span className="badge bg-neutral-700/50 text-neutral-200">{c.status}</span>
+            <span className="badge bg-surface-highlighted/50 text-strong">{c.status}</span>
           </div>
         ))}
         {(!campaigns || campaigns.length === 0) && (
-          <p className="card text-sm text-neutral-500">Nenhuma campanha criada.</p>
+          <p className="card text-sm text-muted">Nenhuma campanha criada.</p>
         )}
       </div>
     </div>

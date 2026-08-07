@@ -57,8 +57,8 @@ export function InstallNotificationsCard({
 
   return (
     <section className="card mt-4">
-      <h2 className="text-sm font-semibold text-neutral-200">Instalacao e notificacoes</h2>
-      <ul className="mt-2 flex flex-col gap-1 text-sm text-neutral-400">
+      <h2 className="text-sm font-semibold text-strong">Instalacao e notificacoes</h2>
+      <ul className="mt-2 flex flex-col gap-1 text-sm text-secondary">
         <li>Aplicativo instalado: {installed ? "sim" : "nao"}</li>
         <li>Notificacoes: {notificationPermission}</li>
       </ul>
@@ -66,7 +66,7 @@ export function InstallNotificationsCard({
       <div className="mt-3 flex flex-col gap-2">
         {!installed &&
           (ios ? (
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted">
               No iPhone: toque em compartilhar (□↑) no Safari e depois em &quot;Adicionar a Tela de Inicio&quot;.
             </p>
           ) : (
@@ -81,7 +81,7 @@ export function InstallNotificationsCard({
           </button>
         )}
         {notificationPermission === "denied" && (
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted">
             Notificacoes bloqueadas no navegador — ative manualmente nas configuracoes do site para receber alertas.
           </p>
         )}

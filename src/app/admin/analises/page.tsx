@@ -35,12 +35,12 @@ export default async function AdminAnalysesPage() {
           <div key={a.id} className="card flex items-center justify-between">
             <div>
               <p className="font-semibold text-white">{a.title}</p>
-              <p className="text-xs text-neutral-500">Acesso minimo: {a.min_access_level}</p>
+              <p className="text-xs text-muted">Acesso minimo: {a.min_access_level}</p>
             </div>
-            <span className="badge bg-neutral-700/50 text-neutral-200">{STATUS_LABEL[a.status] ?? a.status}</span>
+            <span className="badge bg-surface-highlighted/50 text-strong">{STATUS_LABEL[a.status] ?? a.status}</span>
           </div>
         ))}
-        {(!analyses || analyses.length === 0) && <p className="card text-sm text-neutral-500">Nenhuma analise criada.</p>}
+        {(!analyses || analyses.length === 0) && <p className="card text-sm text-muted">Nenhuma analise criada.</p>}
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function PageHeader({
     <div className="flex items-start justify-between gap-3">
       <div>
         <h1 className="text-xl font-bold text-white">{title}</h1>
-        {description && <p className="text-sm text-neutral-400">{description}</p>}
+        {description && <p className="text-sm text-secondary">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

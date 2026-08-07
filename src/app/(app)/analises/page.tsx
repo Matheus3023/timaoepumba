@@ -42,10 +42,10 @@ export default async function AnalysesPage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold leading-snug text-white">{analysis.title}</p>
-                {!unlocked && <span className="badge shrink-0 bg-neutral-700/50 text-neutral-300">🔒</span>}
+                {!unlocked && <span className="badge shrink-0 bg-surface-highlighted/50 text-body">🔒</span>}
               </div>
-              {analysis.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-neutral-400">{analysis.summary}</p>}
-              <div className="mt-2 flex gap-2 text-xs text-neutral-500">
+              {analysis.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-secondary">{analysis.summary}</p>}
+              <div className="mt-2 flex gap-2 text-xs text-muted">
                 {analysis.market && <span>{analysis.market}</span>}
                 {analysis.risk_level && <span>{RISK_LABEL[analysis.risk_level]}</span>}
               </div>

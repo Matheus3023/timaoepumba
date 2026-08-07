@@ -34,7 +34,7 @@ export function BackButton({
       type="button"
       onClick={handleClick}
       aria-label={label}
-      className={`inline-flex min-h-11 items-center gap-1.5 text-sm text-neutral-400 transition hover:text-neutral-200 ${className}`}
+      className={`inline-flex min-h-11 items-center gap-1.5 text-sm text-secondary transition hover:text-strong ${className}`}
     >
       <ArrowLeftIcon width={16} height={16} />
       {label}

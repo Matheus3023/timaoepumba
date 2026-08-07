@@ -48,7 +48,7 @@ export default async function NewAnalysisPage() {
   return (
     <div className="max-w-xl">
       <h1 className="text-xl font-bold text-white">Nova analise</h1>
-      <p className="text-sm text-neutral-400">
+      <p className="text-sm text-secondary">
         A publicacao e sempre manual — a API de dados esportivos nunca publica analises automaticamente.
       </p>
 

@@ -66,34 +66,34 @@ export default async function AdminOnboardingPage() {
       </section>
 
       <form action={saveConfig} className="card mt-6 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-neutral-200">Textos e etapas</h2>
+        <h2 className="text-sm font-semibold text-strong">Textos e etapas</h2>
         <fieldset disabled={!canWrite(access, "onboarding")} className="flex flex-col gap-3 disabled:opacity-60">
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Titulo (boas-vindas)
             <input name="welcome_title" defaultValue={config.welcome_title} className="input" />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Texto (boas-vindas)
             <textarea name="welcome_text" defaultValue={config.welcome_text} rows={2} className="input" />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Titulo (notificacoes)
             <input name="notifications_title" defaultValue={config.notifications_title} className="input" />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-neutral-300">
+          <label className="flex flex-col gap-1 text-sm text-body">
             Texto (notificacoes)
             <textarea name="notifications_text" defaultValue={config.notifications_text} rows={2} className="input" />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex items-center gap-2 text-sm text-body">
             <input type="checkbox" name="install_step_enabled" defaultChecked={config.install_step_enabled} />
             Etapa de instalacao ativa
           </label>
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex items-center gap-2 text-sm text-body">
             <input type="checkbox" name="notifications_step_enabled" defaultChecked={config.notifications_step_enabled} />
             Etapa de notificacoes ativa
           </label>
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex items-center gap-2 text-sm text-body">
             <input type="checkbox" name="onboarding_required" defaultChecked={config.onboarding_required} />
             Onboarding obrigatorio
           </label>
@@ -113,7 +113,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="card">
       <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-neutral-400">{label}</p>
+      <p className="text-xs text-secondary">{label}</p>
     </div>
   );
 }

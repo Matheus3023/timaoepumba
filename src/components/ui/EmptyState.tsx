@@ -22,12 +22,12 @@ export function EmptyState({
   return (
     <div className={`card flex flex-col items-center gap-1.5 py-8 text-center ${className}`}>
       {icon && (
-        <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-neutral-800 text-neutral-400">
+        <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-surface-elevated text-secondary">
           {icon}
         </div>
       )}
-      <p className="text-sm font-semibold text-neutral-200">{title}</p>
-      {description && <p className="text-sm text-neutral-500">{description}</p>}
+      <p className="text-sm font-semibold text-strong">{title}</p>
+      {description && <p className="text-sm text-muted">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   );

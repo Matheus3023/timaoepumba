@@ -20,18 +20,18 @@ export function SegmentBuilderForm({ action }: { action: (formData: FormData) =>
 
   return (
     <form action={action} className="card mt-4 flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-neutral-200">Novo segmento</h2>
-      <label className="flex flex-col gap-1 text-sm text-neutral-300">
+      <h2 className="text-sm font-semibold text-strong">Novo segmento</h2>
+      <label className="flex flex-col gap-1 text-sm text-body">
         Nome
         <input name="name" required className="input" placeholder="Ex: Cadastro sem FTD ha 7 dias" />
       </label>
-      <label className="flex flex-col gap-1 text-sm text-neutral-300">
+      <label className="flex flex-col gap-1 text-sm text-body">
         Descricao
         <input name="description" className="input" />
       </label>
 
       <div>
-        <p className="mb-1.5 text-sm text-neutral-300">Condicoes (todas precisam ser verdadeiras)</p>
+        <p className="mb-1.5 text-sm text-body">Condicoes (todas precisam ser verdadeiras)</p>
         <div className="flex flex-col gap-2">
           {rows.map((row, i) => {
             const valueKind = CONDITION_VALUE_KIND[row.type];

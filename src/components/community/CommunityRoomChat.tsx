@@ -226,9 +226,9 @@ export function CommunityRoomChat({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-2 border-b border-neutral-800 px-4 py-1.5">
+      <div className="flex items-center justify-between gap-2 border-b border-surface-elevated px-4 py-1.5">
         <h1 className="truncate text-sm font-semibold text-white">{roomName}</h1>
-        <div className="flex shrink-0 items-center gap-1 text-[11px] text-neutral-400">
+        <div className="flex shrink-0 items-center gap-1 text-[11px] text-secondary">
           <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-emerald-400" />
           {onlineCount}
         </div>
@@ -247,7 +247,7 @@ export function CommunityRoomChat({
                 <div className={`flex max-w-[78%] flex-col ${isOwn ? "items-end" : "items-start"}`}>
                   {!isOwn && (
                     <p className="mb-1 flex items-center gap-1.5 px-1 text-xs font-semibold">
-                      <span className={isStaff ? "text-emerald-300" : "text-neutral-400"}>{message.author_name}</span>
+                      <span className={isStaff ? "text-emerald-300" : "text-secondary"}>{message.author_name}</span>
                       {isStaff && (
                         <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
                           {STAFF_ROLE_LABEL[message.author_role]}
@@ -259,10 +259,10 @@ export function CommunityRoomChat({
                   <div
                     className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                       isOwn
-                        ? "rounded-br-md bg-yellow-400 text-neutral-900"
+                        ? "rounded-br-md bg-primary text-surface"
                         : isStaff
                           ? "rounded-bl-md border border-emerald-500/30 bg-emerald-500/10 text-neutral-100"
-                          : "rounded-bl-md bg-neutral-800 text-neutral-100"
+                          : "rounded-bl-md bg-surface-elevated text-neutral-100"
                     }`}
                   >
                     {message.content}
@@ -273,7 +273,7 @@ export function CommunityRoomChat({
                       type="button"
                       onClick={() => setReportTarget(message.id)}
                       disabled={reportedIds.has(message.id)}
-                      className="mt-1 px-1 text-[10px] text-neutral-500 hover:text-red-400 disabled:text-neutral-600"
+                      className="mt-1 px-1 text-[10px] text-muted hover:text-red-400 disabled:text-faint"
                     >
                       {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
                     </button>
@@ -288,7 +288,7 @@ export function CommunityRoomChat({
 
       {error && <p className="px-4 pb-2 text-xs text-red-400">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="flex gap-2 border-t border-neutral-800 px-4 py-3">
+      <form onSubmit={handleSubmit} className="flex gap-2 border-t border-surface-elevated px-4 py-3">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -302,14 +302,14 @@ export function CommunityRoomChat({
       </form>
 
       <BottomSheet open={reportTarget !== null} onClose={() => setReportTarget(null)} title="Denunciar mensagem">
-        <p className="mb-3 text-sm text-neutral-400">Qual o motivo da denuncia?</p>
+        <p className="mb-3 text-sm text-secondary">Qual o motivo da denuncia?</p>
         <div className="flex flex-col gap-1.5 pb-2">
           {REPORT_REASONS.map((reason) => (
             <button
               key={reason}
               type="button"
               onClick={() => reportTarget && handleReport(reportTarget, reason)}
-              className="rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-left text-sm text-neutral-200 transition hover:border-red-400/40 hover:bg-red-500/5 hover:text-red-300"
+              className="rounded-xl border border-surface-elevated bg-surface/60 px-4 py-3 text-left text-sm text-strong transition hover:border-red-400/40 hover:bg-red-500/5 hover:text-red-300"
             >
               {reason}
             </button>
