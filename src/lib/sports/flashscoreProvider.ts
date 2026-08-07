@@ -11,6 +11,7 @@ import type {
   Standing,
   TeamDetails,
 } from "@/lib/sports/types";
+import { isBestLeague } from "@/lib/sports/bestLeagues";
 import { isBlockedContent } from "@/lib/sports/contentPolicy";
 import {
   loadCompetitionPolicy,
@@ -200,16 +201,37 @@ function flattenMatchesResponse(payload: unknown): {
  * competition an admin has activated and that pass the hard content block
  * (which also inspects team names, catching youth/reserve fixtures listed
  * under a senior competition).
+ *
+ * Degrades instead of blanking the app: when the allowlist can't be read
+ * (migration not run, DB error) or contains no rows at all, it falls back
+ * to the keyword classifier that predated the table. Only the allowlist
+ * layer is skipped — the hard content block always applies.
+ *
+ * The degraded result is still cached normally, which is safe precisely
+ * because the fallback yields a correct list rather than an empty one:
+ * caching an empty list was what made a pending migration blank the app
+ * for a full TTL even after the DB was fixed.
  */
 async function curateMatches(payload: unknown): Promise<Match[]> {
   const { matches, competitions } = flattenMatchesResponse(payload);
   if (matches.length === 0) return [];
 
   await recordDiscoveredCompetitions(competitions);
-  const policy = await loadCompetitionPolicy();
+  const { available, policy } = await loadCompetitionPolicy();
+
+  // An admin deactivating every competition is a deliberate state and must
+  // be respected — hence "no rows at all", not "no active rows".
+  const degraded = !available || policy.size === 0;
+  if (degraded) {
+    console.warn("[competitions] allowlist unavailable or empty — falling back to keyword classifier");
+  }
 
   return matches.filter((match) => {
-    if (!policy.get(match.league.id)?.is_active) return false;
+    const allowed = degraded
+      ? isBestLeague(match.league.name, match.league.country)
+      : Boolean(policy.get(match.league.id)?.is_active);
+    if (!allowed) return false;
+
     return !isBlockedContent({
       competitionName: match.league.name,
       homeTeamName: match.homeTeam.name,

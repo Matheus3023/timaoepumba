@@ -25,6 +25,21 @@ async function afterMutation() {
   revalidatePath("/home");
 }
 
+/**
+ * Available even when the allowlist query failed — it's what lets an admin
+ * force the app to re-fetch right after running the pending migration,
+ * instead of waiting out the cache TTL.
+ */
+async function refreshSportsData() {
+  "use server";
+  const access = await requireCompetitionWrite();
+  await purgeSportsCache();
+  await logAudit({ actorId: access.adminId, action: "sports_cache_purged" });
+  revalidatePath("/admin/competicoes");
+  revalidatePath("/jogos");
+  revalidatePath("/home");
+}
+
 async function setActive(id: string, active: boolean) {
   "use server";
   const access = await requireCompetitionWrite();
@@ -117,27 +132,39 @@ export default async function AdminCompetitionsPage({
       {!writable && <p className="mt-1 text-xs text-neutral-500">Modo somente leitura para o seu perfil.</p>}
 
       {error && (
-        <div className="card mt-4 border-red-500/30 bg-red-500/5">
-          <p className="text-sm font-semibold text-red-300">Nao foi possivel carregar as competicoes.</p>
-          <p className="mt-1 text-sm text-red-200">
-            Se a mensagem citar a tabela allowed_competitions, a migration 0009 ainda nao foi executada no
-            Supabase.
+        <div className="card mt-4 border-yellow-400/30 bg-yellow-400/5">
+          <p className="text-sm font-semibold text-yellow-300">Modo de emergencia ativo</p>
+          <p className="mt-1 text-sm text-neutral-300">
+            Nao consegui ler a tabela de competicoes, entao o aplicativo esta usando o filtro antigo (por
+            nome) para continuar mostrando os jogos normalmente. A curadoria desta tela so funciona depois
+            que a migration <span className="font-mono">0009_allowed_competitions.sql</span> for executada no
+            SQL Editor do Supabase.
           </p>
-          <p className="mt-2 font-mono text-xs text-neutral-400">{error.message}</p>
+          <p className="mt-2 font-mono text-xs text-neutral-500">{error.message}</p>
         </div>
       )}
 
-      <form className="mt-4 flex gap-2">
-        <input
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Buscar por nome ou ID da competicao"
-          className="input flex-1"
-        />
-        <button type="submit" className="btn-secondary px-4">
-          Buscar
-        </button>
-      </form>
+      <div className="mt-4 flex gap-2">
+        <form className="flex flex-1 gap-2">
+          <input
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Buscar por nome ou ID da competicao"
+            className="input flex-1"
+          />
+          <button type="submit" className="btn-secondary px-4">
+            Buscar
+          </button>
+        </form>
+
+        {writable && (
+          <form action={refreshSportsData}>
+            <button type="submit" className="btn-secondary whitespace-nowrap px-4" title="Limpa o cache de jogos">
+              Atualizar dados
+            </button>
+          </form>
+        )}
+      </div>
 
       {!error && (competitions ?? []).length === 0 && (
         <p className="card mt-4 text-sm text-neutral-500">

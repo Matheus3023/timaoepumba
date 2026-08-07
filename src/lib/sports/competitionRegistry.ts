@@ -16,23 +16,39 @@ export interface DiscoveredCompetition {
 
 export type CompetitionPolicy = Map<string, AllowedCompetitionRow>;
 
+export interface CompetitionPolicyResult {
+  /**
+   * False when the allowlist couldn't be read at all (table missing because
+   * the migration hasn't run, connection error…). Callers must not confuse
+   * this with a successfully-read but empty allowlist: the first means
+   * "we don't know", the second means "nothing is catalogued yet".
+   */
+  available: boolean;
+  policy: CompetitionPolicy;
+}
+
 /**
- * Loads the curated allowlist keyed by provider competition id. Callers
- * decide what to do with a missing entry — for match lists that means
- * "hide", since a competition is only shown once an admin activates it.
+ * Loads the curated allowlist keyed by provider competition id.
+ *
+ * Deliberately does NOT fail closed. An earlier version returned an empty
+ * map on error, which made every match disappear from the app the moment
+ * the table was unreachable — a pending manual migration shouldn't be able
+ * to blank the product. Callers degrade to the keyword classifier instead
+ * (see curateMatches in flashscoreProvider.ts).
  */
-export async function loadCompetitionPolicy(): Promise<CompetitionPolicy> {
+export async function loadCompetitionPolicy(): Promise<CompetitionPolicyResult> {
   const admin = createAdminSupabaseClient();
   const { data, error } = await admin.from("allowed_competitions").select("*").eq("provider", PROVIDER);
 
   if (error) {
-    // Fail closed on the allowlist but keep the app alive: an empty policy
-    // hides everything rather than leaking unvetted competitions.
     console.error("[competitions] failed to load allowlist", error);
-    return new Map();
+    return { available: false, policy: new Map() };
   }
 
-  return new Map((data ?? []).map((row) => [row.provider_competition_id, row]));
+  return {
+    available: true,
+    policy: new Map((data ?? []).map((row) => [row.provider_competition_id, row])),
+  };
 }
 
 /**
