@@ -13,6 +13,7 @@ import type {
 } from "@/lib/sports/types";
 import { isBestLeague } from "@/lib/sports/bestLeagues";
 import { isBlockedContent } from "@/lib/sports/contentPolicy";
+import { resolveAndFetch, type MatchOperation } from "@/lib/sports/endpointResolver";
 import {
   loadCompetitionPolicy,
   recordDiscoveredCompetitions,
@@ -279,7 +280,11 @@ export class FlashscoreProvider implements SportsDataProvider {
     this.apiHost = apiHost;
   }
 
-  private async request<T>(path: string, query: Record<string, string> = {}): Promise<T> {
+  /** Chamada crua: devolve status e corpo sem julgar se deu certo. */
+  private async rawRequest<T>(
+    path: string,
+    query: Record<string, string> = {}
+  ): Promise<{ status: number; body: T }> {
     const url = new URL(`https://${this.apiHost}/api/flashscore/v2/${path}`);
     for (const [key, value] of Object.entries(query)) {
       url.searchParams.set(key, value);
@@ -294,11 +299,34 @@ export class FlashscoreProvider implements SportsDataProvider {
       cache: "no-store",
     });
 
-    if (!response.ok) {
-      throw new Error(`Flashscore4 request failed: ${path} -> HTTP ${response.status}`);
-    }
+    const body = response.ok ? ((await response.json()) as T) : (null as T);
+    return { status: response.status, body };
+  }
 
-    return response.json() as Promise<T>;
+  private async request<T>(path: string, query: Record<string, string> = {}): Promise<T> {
+    const { status, body } = await this.rawRequest<T>(path, query);
+    if (status < 200 || status >= 300) {
+      // Registrado explicitamente porque quase todos os chamadores usam
+      // `.catch()` para não derrubar a página — sem este log, um endpoint
+      // errado falha em silêncio e o sintoma final ("sem estatística") é
+      // idêntico ao de uma competição que realmente não fornece dados.
+      console.warn(`[flashscore] ${path} -> HTTP ${status}`);
+      throw new Error(`Flashscore4 request failed: ${path} -> HTTP ${status}`);
+    }
+    return body;
+  }
+
+  /**
+   * Chamada para a família `matches/*`, cujos caminhos nunca foram
+   * confirmados na documentação. Tenta os candidatos e memoriza o que
+   * responder (ver endpointResolver.ts).
+   */
+  private async matchRequest<T>(
+    operation: MatchOperation,
+    query: Record<string, string> = {}
+  ): Promise<T> {
+    const { payload } = await resolveAndFetch<T>(operation, (path) => this.rawRequest<T>(path, query));
+    return payload;
   }
 
   async getTodayMatches(): Promise<Match[]> {
@@ -323,7 +351,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchDetails(matchId: string): Promise<MatchDetails> {
-    const payload = await this.request<unknown>("matches/details", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("details", { match_id: matchId });
     // No un-curated fallback here on purpose: this used to fall back to a
     // synthetic { name: "Jogo" } league when curation returned nothing,
     // which let a blocked competition's match render via a direct URL.
@@ -343,7 +371,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchEvents(matchId: string): Promise<MatchEvent[]> {
-    const payload = await this.request<unknown>("matches/match/summary", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("summary", { match_id: matchId });
     const rawEvents = pickArray(payload, ["events", "incidents", "summary", "timeline"]);
 
     const TYPE_MAP: Record<string, MatchEvent["type"]> = {
@@ -402,7 +430,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>> {
-    const payload = await this.request<unknown>("matches/match/stats", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("stats", { match_id: matchId });
     const rows = pickArray(payload, ["stats", "statistics", "groups"]);
 
     const stats: Record<string, { home: number | string; away: number | string }> = {};
@@ -445,7 +473,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getHeadToHead(matchId: string): Promise<HeadToHeadMatch[]> {
-    const payload = await this.request<unknown>("matches/h2h", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("h2h", { match_id: matchId });
     const rows = pickArray(payload, ["h2h", "matches", "meetings"]);
     return rows
       .map((item, index) => this.mapGenericMatchRow(item, index, `${matchId}_h2h`))
@@ -463,7 +491,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchLineups(matchId: string): Promise<MatchLineup[]> {
-    const payload = await this.request<unknown>("matches/match/lineups", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("lineups", { match_id: matchId });
     const rows = pickArray(payload, ["lineups", "teams"]);
 
     return rows
@@ -486,7 +514,7 @@ export class FlashscoreProvider implements SportsDataProvider {
   }
 
   async getMatchMomentum(matchId: string): Promise<MomentumPoint[]> {
-    const payload = await this.request<unknown>("matches/momentum", { match_id: matchId });
+    const payload = await this.matchRequest<unknown>("momentum", { match_id: matchId });
     const rows = pickArray(payload, ["momentum", "data", "points"]);
 
     return rows
@@ -502,7 +530,7 @@ export class FlashscoreProvider implements SportsDataProvider {
 
   /** matches/standings (match-scoped, distinct from tournaments/standings) — takes just a match_id. */
   async getStandingsForMatch(matchId: string): Promise<Standing[]> {
-    const payload = await this.request<unknown>("matches/standings", { match_id: matchId, type: "overall" });
+    const payload = await this.matchRequest<unknown>("standings", { match_id: matchId, type: "overall" });
     return extractStandingRows(payload).map((item, index) => this.mapStandingRow(item, index));
   }
 

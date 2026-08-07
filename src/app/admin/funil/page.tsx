@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/admin/audit";
 import { DEFAULT_SCORE_CONTEXTS, SCORE_CONTEXT_LABEL } from "@/lib/funil/scoreContext";
 import { STRATEGY_IDS, STRATEGY_LABEL } from "@/lib/funil/defaults";
 import { FUNIL_DIAGNOSTICS_KEY, type FunilDiagnostics } from "@/lib/funil/tick";
+import { getResolvedEndpoints, listEndpointCandidates } from "@/lib/sports/endpointResolver";
 import type { ScoreContext, StrategyParams } from "@/lib/funil/types";
 import type { StrategyConfigRow, StrategyPerformanceRow } from "@/types/database";
 
@@ -178,10 +179,11 @@ export default async function AdminFunilPage() {
   const writable = canWrite(access, "funil");
   const admin = createAdminSupabaseClient();
 
-  const [{ data: configs, error }, { data: diagnosticsRow }, { data: performance }] = await Promise.all([
+  const [{ data: configs, error }, { data: diagnosticsRow }, { data: performance }, endpoints] = await Promise.all([
     admin.from("strategy_configs").select("*").eq("is_current", true),
     admin.from("system_settings").select("value, updated_at").eq("key", FUNIL_DIAGNOSTICS_KEY).maybeSingle(),
     admin.from("strategy_performance").select("*").order("signals", { ascending: false }).limit(40),
+    getResolvedEndpoints().catch(() => ({}) as Record<string, string>),
   ]);
 
   const diagnostics = (diagnosticsRow?.value ?? null) as FunilDiagnostics | null;
@@ -208,6 +210,7 @@ export default async function AdminFunilPage() {
         </div>
       )}
 
+      <EndpointDiagnostics endpoints={endpoints} />
       <FieldDiagnostics diagnostics={diagnostics} updatedAt={diagnosticsRow?.updated_at ?? null} />
 
       <section className="mt-6">
@@ -235,6 +238,40 @@ export default async function AdminFunilPage() {
 
       <PerformanceTable rows={performance ?? []} />
     </div>
+  );
+}
+
+/**
+ * Quais caminhos da familia `matches/*` responderam de verdade.
+ *
+ * A documentacao que temos do provedor nao cobre essa familia, entao os
+ * caminhos sao descobertos em execucao (src/lib/sports/endpointResolver.ts).
+ * Enquanto uma operacao nao aparecer aqui, ela ainda nao foi exercitada —
+ * basta abrir um jogo ao vivo no app para o resolver rodar.
+ */
+function EndpointDiagnostics({ endpoints }: { endpoints: Record<string, string> }) {
+  const operations = Object.keys(listEndpointCandidates()) as (keyof ReturnType<typeof listEndpointCandidates>)[];
+
+  return (
+    <section className="mt-6">
+      <h2 className="text-sm font-semibold text-strong">Endpoints do provedor</h2>
+      <p className="mb-2 text-xs text-muted">
+        Caminhos da API que responderam. O de <span className="font-mono">stats</span> e o que o motor
+        precisa — sem ele, todo jogo fica sem estatistica.
+      </p>
+      <div className="card flex flex-col gap-1.5">
+        {operations.map((operation) => (
+          <div key={operation} className="flex items-baseline justify-between gap-2 text-xs">
+            <span className="font-mono text-secondary">{operation}</span>
+            {endpoints[operation] ? (
+              <span className="font-mono text-emerald-300">{endpoints[operation]}</span>
+            ) : (
+              <span className="text-muted">nao testado ainda</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
