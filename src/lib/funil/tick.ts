@@ -29,6 +29,19 @@ const FIXTURE_FINISHED_AFTER_MINUTES = 10;
 /** Teto de destinatários por notificação, para um tick não virar um envio massivo. */
 const MAX_PUSH_RECIPIENTS = 500;
 
+/** Chave em `system_settings` onde o último tick deixa seu diagnóstico. */
+export const FUNIL_DIAGNOSTICS_KEY = "funil_last_tick";
+
+export interface FunilDiagnostics {
+  at: string;
+  fixturesEvaluated: number;
+  /** Rótulos que o provedor mandou e o dicionário não reconheceu. */
+  unmappedLabels: string[];
+  /** Por competição: quais campos normalizados ficaram sem valor. */
+  competitions: { competition: string; fixture: string; missingFields: string[] }[];
+  errors: string[];
+}
+
 export interface TickSummary {
   fixturesRecorded: number;
   fixturesEvaluated: number;
@@ -232,7 +245,10 @@ async function persistEvaluation(
         score_home: snapshot.scoreHome,
         score_away: snapshot.scoreAway,
         rule_results: evaluation.rules,
-        metrics: evaluation.metrics as unknown as Record<string, unknown>,
+        // O momentum entra junto das métricas de propósito: o card precisa
+        // dele para o chip de pressão recente, e uma coluna separada só
+        // para isso obrigaria a tela a fazer um segundo join.
+        metrics: { ...evaluation.metrics, momentum: snapshot.momentum } as unknown as Record<string, unknown>,
         warnings: evaluation.warnings,
         data_quality: evaluation.dataQuality.quality,
         tp_score: evaluation.tpScore?.score ?? null,
@@ -519,6 +535,43 @@ export async function runFunilTick(): Promise<TickSummary> {
     return 0;
   });
 
-  await purgeOldObservations();
+  await Promise.all([purgeOldObservations(), saveDiagnostics(collected, summary)]);
   return summary;
+}
+
+/**
+ * Grava o que o último tick viu chegar do provedor.
+ *
+ * É a única forma de confirmar o formato real de `matches/match/stats`, que
+ * nunca foi validado contra um jogo ao vivo: o painel mostra os rótulos que
+ * não reconhecemos e os campos que ficaram vazios por competição, e a
+ * correção é acrescentar apelido no dicionário — não mexer no motor.
+ */
+async function saveDiagnostics(
+  collected: { snapshot: FixtureSnapshot; unmappedLabels: string[] }[],
+  summary: TickSummary
+): Promise<void> {
+  const admin = createAdminSupabaseClient();
+
+  const diagnostics: FunilDiagnostics = {
+    at: new Date().toISOString(),
+    fixturesEvaluated: summary.fixturesEvaluated,
+    unmappedLabels: summary.unmappedLabels,
+    competitions: collected.map(({ snapshot }) => ({
+      competition: snapshot.fixture.leagueName,
+      fixture: `${snapshot.fixture.homeTeamName} x ${snapshot.fixture.awayTeamName}`,
+      missingFields: Object.entries(snapshot.stats)
+        .filter(([, value]) => value === null)
+        .map(([field]) => field),
+    })),
+    errors: summary.errors,
+  };
+
+  const { error } = await admin
+    .from("system_settings")
+    .upsert(
+      { key: FUNIL_DIAGNOSTICS_KEY, value: diagnostics as unknown, updated_at: diagnostics.at },
+      { onConflict: "key" }
+    );
+  if (error) console.error("[funil] falha ao gravar diagnostico", error);
 }

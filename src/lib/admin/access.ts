@@ -13,6 +13,7 @@ export type AdminSection =
   | "comunidade"
   | "dados_esportivos"
   | "competicoes"
+  | "funil"
   | "afiliados"
   | "push"
   | "segmentos"
@@ -37,6 +38,7 @@ const MATRIX: Record<Exclude<AdminProfile, "administrador">, Record<AdminSection
     comunidade: "write",
     dados_esportivos: "write",
     competicoes: "write",
+    funil: "write",
     afiliados: "write",
     push: "write",
     segmentos: "write",
@@ -54,6 +56,7 @@ const MATRIX: Record<Exclude<AdminProfile, "administrador">, Record<AdminSection
     comunidade: "none",
     dados_esportivos: "write",
     competicoes: "write",
+    funil: "write",
     afiliados: "none",
     push: "write",
     segmentos: "read",
@@ -69,6 +72,7 @@ const MATRIX: Record<Exclude<AdminProfile, "administrador">, Record<AdminSection
     comunidade: "write",
     dados_esportivos: "none",
     competicoes: "none",
+    funil: "none",
     afiliados: "none",
     push: "none",
     segmentos: "none",
@@ -84,6 +88,7 @@ const MATRIX: Record<Exclude<AdminProfile, "administrador">, Record<AdminSection
     comunidade: "read",
     dados_esportivos: "none",
     competicoes: "none",
+    funil: "none",
     afiliados: "none",
     push: "none",
     segmentos: "none",
@@ -99,6 +104,7 @@ const MATRIX: Record<Exclude<AdminProfile, "administrador">, Record<AdminSection
     comunidade: "read",
     dados_esportivos: "read",
     competicoes: "read",
+    funil: "read",
     afiliados: "read",
     push: "read",
     segmentos: "read",
@@ -138,6 +144,7 @@ export function allowedSections(access: AdminAccess): Set<AdminSection> {
     "comunidade",
     "dados_esportivos",
     "competicoes",
+    "funil",
     "afiliados",
     "push",
     "segmentos",

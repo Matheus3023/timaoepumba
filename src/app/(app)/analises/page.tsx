@@ -27,6 +27,16 @@ export default async function AnalysesPage() {
     <div className="mx-auto max-w-md px-4 py-6">
       <PageHeader title="Analises" description="Conteudo publicado pela equipe de analistas." />
 
+      <Link href="/analises/funil" className="card-glow card-interactive mt-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-semibold text-white">🔥 Funil ao vivo</p>
+          <p className="text-xs text-secondary">
+            Analise automatica das partidas em andamento, criterio por criterio.
+          </p>
+        </div>
+        <span className="text-muted">→</span>
+      </Link>
+
       <div className="mt-4 flex flex-col gap-3">
         {(!analyses || analyses.length === 0) && (
           <EmptyState title="Nenhuma analise publicada ainda" description="Volte em breve para conferir novas analises." />
