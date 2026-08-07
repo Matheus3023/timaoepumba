@@ -91,13 +91,14 @@ export function MatchDetailTabs({
 
         {tab === "Estatisticas" &&
           (statEntries.length > 0 ? (
-            <div className="card flex flex-col gap-3">
+            <div className="card flex flex-col gap-3.5">
+              <SeriesLegend homeTeamName={homeTeamName} awayTeamName={awayTeamName} />
               {statEntries.map(([label, values]) => (
                 <div key={label}>
-                  <div className="flex items-center justify-between text-xs text-neutral-400">
-                    <span>{values.home}</span>
-                    <span>{label}</span>
-                    <span>{values.away}</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-neutral-200">{values.home}</span>
+                    <span className="text-neutral-400">{label}</span>
+                    <span className="font-semibold text-neutral-200">{values.away}</span>
                   </div>
                   <StatBar home={values.home} away={values.away} />
                 </div>
@@ -131,21 +132,25 @@ export function MatchDetailTabs({
         {tab === "Momentum" &&
           (momentum.length > 0 ? (
             <div className="card">
+              <p className="mb-3 text-xs text-neutral-400">Pressao ao longo da partida</p>
               <div className="flex h-32 items-end gap-0.5">
                 {momentum.map((point, i) => {
                   const height = Math.min(Math.abs(point.value), 100);
+                  const isHome = point.value >= 0;
                   return (
-                    <div key={i} className="flex flex-1 flex-col items-center justify-end" style={{ height: "100%" }}>
+                    <div key={i} className="flex h-full flex-1 flex-col items-center justify-end">
                       <div
-                        className={`w-full rounded-sm ${point.value >= 0 ? "bg-yellow-400" : "bg-neutral-600"}`}
+                        className={`w-full rounded-t-[4px] ${isHome ? "bg-chart-home" : "bg-chart-away"}`}
                         style={{ height: `${height}%` }}
-                        title={`${point.minute}': ${point.value}`}
+                        title={`${point.minute}' — ${isHome ? homeTeamName : awayTeamName}: ${Math.abs(point.value)}`}
                       />
                     </div>
                   );
                 })}
               </div>
-              <p className="mt-2 text-center text-xs text-neutral-500">Pressao ao longo da partida (amarelo = casa)</p>
+              <div className="mt-3">
+                <SeriesLegend homeTeamName={homeTeamName} awayTeamName={awayTeamName} />
+              </div>
             </div>
           ) : (
             <EmptyState title="Momentum indisponivel para esta partida." />
@@ -281,15 +286,40 @@ function RecentForm({ title, teamName, matches }: { title: string; teamName: str
   );
 }
 
+/**
+ * Identity legend for the two-series charts. The swatch carries the
+ * identity; the label stays in a normal text color rather than the series
+ * color, so it never has to pass contrast as coloured text.
+ */
+function SeriesLegend({ homeTeamName, awayTeamName }: { homeTeamName: string; awayTeamName: string }) {
+  return (
+    <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
+      <span className="flex min-w-0 items-center gap-1.5">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-chart-home" />
+        <span className="truncate">{homeTeamName}</span>
+      </span>
+      <span className="flex min-w-0 items-center gap-1.5">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-chart-away" />
+        <span className="truncate">{awayTeamName}</span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Proportional comparison bar. Both teams get a real hue — the away side
+ * used to be plain grey, which reads as "missing data" instead of as the
+ * second team. The 2px gap keeps the two fills legible where they meet.
+ */
 function StatBar({ home, away }: { home: number | string; away: number | string }) {
   const h = typeof home === "number" ? home : Number(home);
   const a = typeof away === "number" ? away : Number(away);
   if (!Number.isFinite(h) || !Number.isFinite(a) || h + a === 0) return null;
   const homePct = (h / (h + a)) * 100;
   return (
-    <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-neutral-800">
-      <div className="bg-yellow-400" style={{ width: `${homePct}%` }} />
-      <div className="bg-neutral-600" style={{ width: `${100 - homePct}%` }} />
+    <div className="mt-1.5 flex h-2 gap-0.5">
+      <div className="rounded-l-[4px] bg-chart-home" style={{ width: `${homePct}%` }} />
+      <div className="rounded-r-[4px] bg-chart-away" style={{ width: `${100 - homePct}%` }} />
     </div>
   );
 }

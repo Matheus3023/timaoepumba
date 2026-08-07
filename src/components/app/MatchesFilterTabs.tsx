@@ -43,20 +43,28 @@ export function MatchesFilterTabs({
   return (
     <div className="mt-4">
       {showLiveTab && (
-        <div className="flex gap-2">
+        <div className="flex gap-2" role="tablist">
           <button
+            role="tab"
+            aria-selected={tab === "ao_vivo"}
             onClick={() => setTab("ao_vivo")}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              tab === "ao_vivo" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
+            className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors active:scale-[0.98] ${
+              tab === "ao_vivo"
+                ? "border-transparent bg-yellow-400 text-neutral-900"
+                : "border-white/[0.06] bg-neutral-900/60 text-neutral-400 hover:text-neutral-200"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-red-600" : "animate-pulse-live bg-red-500"}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${tab === "ao_vivo" ? "bg-neutral-900/60" : "animate-pulse-live bg-red-500"}`} />
             Ao vivo {liveMatches.length > 0 && `(${liveMatches.length})`}
           </button>
           <button
+            role="tab"
+            aria-selected={tab === "hoje"}
             onClick={() => setTab("hoje")}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              tab === "hoje" ? "bg-yellow-400 text-neutral-900" : "bg-neutral-900 text-neutral-400"
+            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors active:scale-[0.98] ${
+              tab === "hoje"
+                ? "border-transparent bg-yellow-400 text-neutral-900"
+                : "border-white/[0.06] bg-neutral-900/60 text-neutral-400 hover:text-neutral-200"
             }`}
           >
             Todos os jogos

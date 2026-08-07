@@ -43,7 +43,7 @@ export default async function ProfilePage() {
       {appUser?.access_level === "ADMIN" && (
         <Link
           href="/admin/dashboard"
-          className="card-glow mt-4 flex items-center justify-between transition-transform hover:-translate-y-0.5"
+          className="card-glow card-interactive mt-4 flex items-center justify-between"
         >
           <div>
             <p className="font-semibold text-white">Painel administrativo</p>

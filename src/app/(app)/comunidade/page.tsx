@@ -30,7 +30,7 @@ export default async function CommunityRoomsPage() {
     <div className="mx-auto max-w-md px-4 py-6">
       <PageHeader title="Bate-papo" description="Converse, resenhe e acompanhe os jogos com quem tem o app instalado." />
 
-      <div className="card-glow mt-4 flex items-center gap-4">
+      <div className="card-glow mt-5 flex items-center gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400">
           <ChatIcon width={22} height={22} />
         </div>

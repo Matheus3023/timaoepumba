@@ -12,8 +12,8 @@ export function MatchRow({ match }: { match: Match }) {
   return (
     <Link
       href={`/jogos/${match.id}`}
-      className={`relative flex flex-col gap-2.5 overflow-hidden rounded-2xl border px-3.5 py-3 transition-transform hover:-translate-y-0.5 ${
-        isLive ? "border-red-500/20 bg-red-500/[0.05]" : "border-white/5 bg-neutral-900/60"
+      className={`card-interactive relative flex flex-col gap-2.5 overflow-hidden rounded-2xl border px-3.5 py-3 ${
+        isLive ? "border-red-500/25 bg-red-500/[0.06]" : "border-white/5 bg-neutral-900/60"
       }`}
     >
       {isLive && <span className="absolute inset-y-0 left-0 w-1 bg-red-500" />}

@@ -57,10 +57,10 @@ export function HomeView({
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <motion.div initial="hidden" animate="show" variants={fadeUp}>
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-2xl font-bold tracking-tight text-white">
           Ola, <span className="text-gradient-gold">{firstName}</span>!
         </h1>
-        <p className="text-sm text-neutral-400">Confira os jogos e novidades de hoje.</p>
+        <p className="mt-0.5 text-sm text-neutral-400">Confira os jogos e novidades de hoje.</p>
       </motion.div>
 
       {!allStepsDone && (
@@ -106,16 +106,16 @@ export function HomeView({
       <Section title="Analises recentes" delay={3} action={{ href: "/analises", label: "Ver todas" }}>
         {analyses.length === 0 && <EmptyState title="Nenhuma analise publicada ainda." />}
         {analyses.map((analysis) => (
-          <Link key={analysis.id} href={`/analises/${analysis.id}`} className="card block transition-transform hover:-translate-y-0.5">
+          <Link key={analysis.id} href={`/analises/${analysis.id}`} className="card card-interactive block">
             <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold text-white">{analysis.title}</p>
+              <p className="font-semibold leading-snug text-white">{analysis.title}</p>
               {analysis.risk_level && (
                 <span className={`badge shrink-0 ${RISK_STYLE[analysis.risk_level] ?? "bg-neutral-700/40 text-neutral-300"}`}>
                   {analysis.risk_level}
                 </span>
               )}
             </div>
-            {analysis.summary && <p className="mt-1 text-sm text-neutral-400">{analysis.summary}</p>}
+            {analysis.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-neutral-400">{analysis.summary}</p>}
           </Link>
         ))}
       </Section>
@@ -123,7 +123,7 @@ export function HomeView({
       <motion.section initial="hidden" animate="show" custom={4} variants={fadeUp} className="mt-6">
         <Link
           href="/comunidade"
-          className="card-glow group flex items-center justify-between transition-transform hover:-translate-y-0.5"
+          className="card-glow card-interactive group flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-400">
