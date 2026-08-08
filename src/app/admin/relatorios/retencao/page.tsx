@@ -15,7 +15,7 @@ export default async function RetentionDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-white">Retencao</h1>
+      <h1 className="text-xl font-bold text-white">Retenção</h1>
       <p className="text-sm text-secondary">
         Baseado no ultimo acesso registrado (user_profiles.last_seen_at) — nao ha historico completo de sessoes por
         dia ainda, entao os numeros abaixo sao uma aproximacao, nao uma serie temporal exata.
@@ -28,7 +28,7 @@ export default async function RetentionDashboardPage() {
       </div>
 
       <section className="card mt-6">
-        <h2 className="text-sm font-semibold text-strong">Retencao (usuarios ainda ativos N dias depois do cadastro)</h2>
+        <h2 className="text-sm font-semibold text-strong">Retenção (usuários ainda ativos N dias depois do cadastro)</h2>
         <div className="mt-3 flex flex-col gap-2 text-sm">
           {report.retention.map((r) => (
             <div key={r.days} className="flex items-center justify-between border-b border-surface-elevated pb-2">

@@ -105,7 +105,7 @@ export default async function NewPushCampaignPage() {
 
         <select name="category" defaultValue="content" className="input">
           <option value="transactional">Transacional</option>
-          <option value="content">Conteudo</option>
+          <option value="content">Conteúdo</option>
           <option value="community">Comunidade</option>
           <option value="promotional">Promocional</option>
         </select>
@@ -122,7 +122,7 @@ export default async function NewPushCampaignPage() {
           </select>
         </label>
 
-        <input name="title" placeholder="Titulo da notificacao" required className="input" />
+        <input name="title" placeholder="Título da notificação" required className="input" />
         <textarea name="message" placeholder="Mensagem" required rows={3} className="input" />
         <input name="internal_link" placeholder="Link interno (ex: /analises/123)" className="input" />
 

@@ -47,7 +47,7 @@ export default async function NewAnalysisPage() {
   if (!canWrite(access, "analises")) redirect("/admin/analises");
   return (
     <div className="max-w-xl">
-      <h1 className="text-xl font-bold text-white">Nova analise</h1>
+      <h1 className="text-xl font-bold text-white">Nova análise</h1>
       <p className="text-sm text-secondary">
         A publicacao e sempre manual — a API de dados esportivos nunca publica analises automaticamente.
       </p>
@@ -55,7 +55,7 @@ export default async function NewAnalysisPage() {
       <form action={createAnalysis} className="mt-4 flex flex-col gap-3">
         <input name="title" required placeholder="Titulo" className="input" />
         <input name="summary" placeholder="Resumo" className="input" />
-        <textarea name="description" rows={5} placeholder="Conteudo completo" className="input" />
+        <textarea name="description" rows={5} placeholder="Conteúdo completo" className="input" />
         <input name="market" placeholder="Mercado analisado" className="input" />
 
         <select name="risk_level" className="input" defaultValue="medio">

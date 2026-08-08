@@ -26,7 +26,7 @@ export default async function AdminAuditLogPage() {
   return (
     <div>
       <h1 className="text-xl font-bold text-white">Auditoria</h1>
-      <p className="text-sm text-secondary">Ultimas 200 acoes administrativas registradas (PRD sec. 37).</p>
+      <p className="text-sm text-secondary">Últimas 200 ações administrativas registradas (PRD sec. 37).</p>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-surface-elevated">
         <table className="w-full text-left text-sm">

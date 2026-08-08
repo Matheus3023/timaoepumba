@@ -51,7 +51,7 @@ export default async function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Usuarios</h1>
+          <h1 className="text-xl font-bold text-white">Usuários</h1>
           <p className="text-sm text-secondary">Ultimos 100 cadastros.</p>
         </div>
         {canWrite(access, "usuarios") && (

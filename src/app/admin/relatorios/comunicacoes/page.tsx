@@ -43,7 +43,7 @@ export default async function CommunicationsDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-white">Comunicacoes</h1>
+      <h1 className="text-xl font-bold text-white">Comunicações</h1>
       <p className="text-sm text-secondary">Envios de push, por status e por campanha (PRD sec. 28).</p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

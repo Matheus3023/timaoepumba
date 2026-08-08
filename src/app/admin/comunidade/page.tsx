@@ -143,7 +143,7 @@ export default async function AdminCommunityModerationPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-white">Moderacao da comunidade</h1>
+      <h1 className="text-xl font-bold text-white">Moderação da comunidade</h1>
       {!writable && <p className="mt-1 text-xs text-muted">Modo somente leitura para o seu perfil.</p>}
 
       <section className="card mt-4 border-yellow-500/20 bg-yellow-500/[0.03]">
@@ -163,7 +163,7 @@ export default async function AdminCommunityModerationPage() {
               </dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt>Nivel minimo de acesso</dt>
+              <dt>Nível mínimo de acesso</dt>
               <dd className={liveChatRoom.min_access_level === "APP_USER" ? "text-emerald-300" : "text-red-400"}>
                 {liveChatRoom.min_access_level}
                 {liveChatRoom.min_access_level !== "APP_USER" && " — deveria ser APP_USER"}
@@ -286,7 +286,7 @@ export default async function AdminCommunityModerationPage() {
             </div>
           ))}
           {(!recentActions || recentActions.length === 0) && (
-            <p className="card text-sm text-muted">Nenhuma acao registrada.</p>
+            <p className="card text-sm text-muted">Nenhuma ação registrada.</p>
           )}
         </div>
       </section>

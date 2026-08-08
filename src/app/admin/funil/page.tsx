@@ -227,7 +227,7 @@ export default async function AdminFunilPage() {
               return (
                 <div key={strategyId} className="card">
                   <p className="font-semibold text-white">{STRATEGY_LABEL[strategyId]}</p>
-                  <p className="mt-1 text-xs text-muted">Ainda nao configurada no banco.</p>
+                  <p className="mt-1 text-xs text-muted">Ainda não configurada no banco.</p>
                 </div>
               );
             }
@@ -266,7 +266,7 @@ function EndpointDiagnostics({ endpoints }: { endpoints: Record<string, string> 
             {endpoints[operation] ? (
               <span className="font-mono text-emerald-300">{endpoints[operation]}</span>
             ) : (
-              <span className="text-muted">nao testado ainda</span>
+              <span className="text-muted">não testado ainda</span>
             )}
           </div>
         ))}
@@ -305,7 +305,7 @@ function FieldDiagnostics({
 
           {diagnostics.unmappedLabels.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs font-semibold text-yellow-300">Rotulos nao reconhecidos</p>
+              <p className="text-xs font-semibold text-yellow-300">Rótulos não reconhecidos</p>
               <p className="mt-1 flex flex-wrap gap-1.5">
                 {diagnostics.unmappedLabels.map((label) => (
                   <span key={label} className="badge bg-surface-elevated font-mono text-[10px] text-secondary">
@@ -400,7 +400,7 @@ function StrategyCard({ config, writable }: { config: StrategyConfigRow; writabl
                 type="submit"
                 className={`btn-secondary px-3 py-1.5 text-xs ${config.shadow_mode ? "text-emerald-300" : "text-yellow-300"}`}
               >
-                {config.shadow_mode ? "Liberar aos usuarios" : "Voltar ao shadow"}
+                {config.shadow_mode ? "Liberar aos usuários" : "Voltar ao shadow"}
               </button>
             </form>
           </div>

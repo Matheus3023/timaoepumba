@@ -91,7 +91,7 @@ export default async function AdminSegmentsPage() {
           </div>
         ))}
         {(!segments || segments.length === 0) && (
-          <p className="card text-sm text-muted">Nenhum segmento criado — campanhas usam todos os usuarios ativos.</p>
+          <p className="card text-sm text-muted">Nenhum segmento criado — campanhas usam todos os usuários ativos.</p>
         )}
       </div>
 

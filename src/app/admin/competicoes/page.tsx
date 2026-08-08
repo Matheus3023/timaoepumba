@@ -90,7 +90,7 @@ async function updateCompetition(id: string, formData: FormData) {
 const GENDER_LABEL: Record<string, string> = {
   male: "Masculino",
   female: "Feminino",
-  unknown: "Nao identificado",
+  unknown: "Não identificado",
 };
 
 export default async function AdminCompetitionsPage({
@@ -124,7 +124,7 @@ export default async function AdminCompetitionsPage({
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-xl font-bold text-white">Competicoes permitidas</h1>
+      <h1 className="text-xl font-bold text-white">Competições permitidas</h1>
       <p className="mt-1 text-sm text-secondary">
         Somente competicoes ativas aparecem no aplicativo. A lista se preenche sozinha conforme a API
         e consultada — competicoes novas entram bloqueadas, aguardando sua liberacao.
@@ -175,7 +175,7 @@ export default async function AdminCompetitionsPage({
 
       <Section
         title={`Pendentes de revisao (${pending.length})`}
-        description="Competicoes novas que a API trouxe e o app ainda nao mostra. Ative as que fizerem sentido."
+        description="Competições novas que a API trouxe e o app ainda não mostra. Ative as que fizerem sentido."
         competitions={pending}
         writable={writable}
       />

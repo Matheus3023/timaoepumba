@@ -156,13 +156,13 @@ export function UserProfileTabs({
               <h2 className="text-sm font-semibold text-strong">Conta</h2>
               <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
                 <Row label="Lead ID" value={user.lead_id} />
-                <Row label="Nivel de acesso" value={user.access_level} />
+                <Row label="Nível de acesso" value={user.access_level} />
                 <Row label="Status" value={user.status} />
                 <Row label="Etapa (pipeline)" value={stageName ?? "—"} />
                 <Row label="Cadastrado em" value={new Date(user.created_at).toLocaleString("pt-BR")} />
                 <Row label="Instalou o app" value={profile?.pwa_install_status ?? "not_requested"} />
                 <Row label="Notificacoes" value={profile?.notification_permission ?? "not_requested"} />
-                <Row label="Ultimo acesso" value={profile?.last_seen_at ? new Date(profile.last_seen_at).toLocaleString("pt-BR") : "—"} />
+                <Row label="Último acesso" value={profile?.last_seen_at ? new Date(profile.last_seen_at).toLocaleString("pt-BR") : "—"} />
                 <Row label="Dispositivo" value={[profile?.last_device, profile?.last_os, profile?.last_browser].filter(Boolean).join(" • ") || "—"} />
               </dl>
             </section>
@@ -184,7 +184,7 @@ export function UserProfileTabs({
                   )}
                 </>
               ) : (
-                <p className="mt-2 text-sm text-muted">Ainda nao calculado.</p>
+                <p className="mt-2 text-sm text-muted">Ainda não calculado.</p>
               )}
             </section>
           </div>
@@ -210,9 +210,9 @@ export function UserProfileTabs({
             <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
               <Row label="Origem (1o toque)" value={firstTouch?.utm_source ?? "—"} />
               <Row label="Campanha (1o toque)" value={firstTouch?.utm_campaign ?? "—"} />
-              <Row label="Origem (ultimo toque)" value={lastTouch?.utm_source ?? "—"} />
-              <Row label="Campanha (ultimo toque)" value={lastTouch?.utm_campaign ?? "—"} />
-              <Row label="Meio (ultimo toque)" value={lastTouch?.utm_medium ?? "—"} />
+              <Row label="Origem (último toque)" value={lastTouch?.utm_source ?? "—"} />
+              <Row label="Campanha (último toque)" value={lastTouch?.utm_campaign ?? "—"} />
+              <Row label="Meio (último toque)" value={lastTouch?.utm_medium ?? "—"} />
             </dl>
           </section>
         )}
@@ -326,7 +326,7 @@ export function UserProfileTabs({
               <h2 className="text-sm font-semibold text-strong">Tarefas</h2>
               {writable && (
                 <form action={addTaskAction} className="mt-2 flex flex-col gap-2">
-                  <input name="title" className="input" placeholder="Titulo da tarefa" />
+                  <input name="title" className="input" placeholder="Título da tarefa" />
                   <input name="due_at" type="datetime-local" className="input" />
                   <button type="submit" className="btn-secondary self-start">
                     Criar tarefa
@@ -364,7 +364,7 @@ export function UserProfileTabs({
                   <span className="text-xs text-muted">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
                 </li>
               ))}
-              {auditLogs.length === 0 && <p className="text-muted">Nenhuma acao registrada para este usuario.</p>}
+              {auditLogs.length === 0 && <p className="text-muted">Nenhuma ação registrada para este usuário.</p>}
             </ul>
           </section>
         )}

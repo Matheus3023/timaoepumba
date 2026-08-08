@@ -22,10 +22,10 @@ export default async function AdminAnalysesPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Analises</h1>
+        <h1 className="text-xl font-bold text-white">Análises</h1>
         {canWrite(access, "analises") && (
           <Link href="/admin/analises/novo" className="btn-primary px-4 py-2 text-sm">
-            Nova analise
+            Nova análise
           </Link>
         )}
       </div>
@@ -40,7 +40,7 @@ export default async function AdminAnalysesPage() {
             <span className="badge bg-surface-highlighted/50 text-strong">{STATUS_LABEL[a.status] ?? a.status}</span>
           </div>
         ))}
-        {(!analyses || analyses.length === 0) && <p className="card text-sm text-muted">Nenhuma analise criada.</p>}
+        {(!analyses || analyses.length === 0) && <p className="card text-sm text-muted">Nenhuma análise criada.</p>}
       </div>
     </div>
   );
