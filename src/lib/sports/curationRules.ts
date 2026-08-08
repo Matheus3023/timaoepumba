@@ -38,20 +38,6 @@ function keywordPriority(name: string, country?: string | null): number {
   return DEFAULT_PRIORITY;
 }
 
-/**
- * Prioridade por id de competição. `available: false` avisa que a tabela
- * não pôde ser lida — quem chama então usa o nome da competição.
- */
-export async function loadCompetitionPriority(): Promise<{ available: boolean; priority: CompetitionPriority }> {
-  const { available, policy } = await loadCompetitionPolicy();
-  if (!available || policy.size === 0) return { available: false, priority: new Map() };
-
-  return {
-    available: true,
-    priority: new Map([...policy.values()].map((row) => [row.provider_competition_id, row.priority])),
-  };
-}
-
 /** Ao vivo primeiro, depois o que ainda vai começar, encerrado por último. */
 function statusRank(match: Match): number {
   if (match.status === "live") return 0;
