@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { HeadToHeadMatch, MatchEvent, MatchLineup, MomentumPoint, Standing } from "@/lib/sports/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const TABS = ["Resumo", "Eventos", "Estatisticas", "Escalacoes", "Momentum", "Classificacao", "H2H"] as const;
+const TABS = ["Resumo", "Eventos", "Estatísticas", "Escalações", "Momentum", "Classificação", "H2H"] as const;
 
 const EVENT_LABEL: Record<MatchEvent["type"], string> = {
   goal: "⚽ Gol",
@@ -89,7 +89,7 @@ export function MatchDetailTabs({
             <EmptyState title="Nenhum evento disponivel para esta partida ainda." />
           ))}
 
-        {tab === "Estatisticas" &&
+        {tab === "Estatísticas" &&
           (statEntries.length > 0 ? (
             <div className="card flex flex-col gap-3.5">
               <SeriesLegend homeTeamName={homeTeamName} awayTeamName={awayTeamName} />
@@ -108,7 +108,7 @@ export function MatchDetailTabs({
             <EmptyState title="Estatisticas indisponiveis para esta partida." />
           ))}
 
-        {tab === "Escalacoes" &&
+        {tab === "Escalações" &&
           (lineups.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {lineups.map((lineup) => (
@@ -153,10 +153,10 @@ export function MatchDetailTabs({
               </div>
             </div>
           ) : (
-            <EmptyState title="Momentum indisponivel para esta partida." />
+            <EmptyState title="Momentum indisponível para esta partida." />
           ))}
 
-        {tab === "Classificacao" &&
+        {tab === "Classificação" &&
           (standings.length > 0 ? (
             <div className="card overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -192,7 +192,7 @@ export function MatchDetailTabs({
               </table>
             </div>
           ) : (
-            <EmptyState title="Classificacao indisponivel para esta partida." />
+            <EmptyState title="Classificação indisponível para esta partida." />
           ))}
 
         {tab === "H2H" && (

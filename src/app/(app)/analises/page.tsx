@@ -4,7 +4,7 @@ import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-const RISK_LABEL: Record<string, string> = { baixo: "Risco baixo", medio: "Risco medio", alto: "Risco alto" };
+const RISK_LABEL: Record<string, string> = { baixo: "Risco baixo", medio: "Risco médio", alto: "Risco alto" };
 
 export default async function AnalysesPage() {
   const supabase = await createServerSupabaseClient();
@@ -25,13 +25,13 @@ export default async function AnalysesPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <PageHeader title="Analises" description="Conteudo publicado pela equipe de analistas." />
+      <PageHeader title="Análises" description="Conteúdo publicado pela equipe de analistas." />
 
       <Link href="/analises/funil" className="card-glow card-interactive mt-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold text-white">🔥 Funil ao vivo</p>
           <p className="text-xs text-secondary">
-            Analise automatica das partidas em andamento, criterio por criterio.
+            Análise automática das partidas em andamento, critério por critério.
           </p>
         </div>
         <span className="text-muted">→</span>
@@ -39,7 +39,7 @@ export default async function AnalysesPage() {
 
       <div className="mt-4 flex flex-col gap-3">
         {(!analyses || analyses.length === 0) && (
-          <EmptyState title="Nenhuma analise publicada ainda" description="Volte em breve para conferir novas analises." />
+          <EmptyState title="Nenhuma análise publicada ainda" description="Volte em breve para conferir novas análises." />
         )}
 
         {analyses?.map((analysis) => {

@@ -29,15 +29,15 @@ export default async function FunilLivePage() {
 
       <h1 className="text-xl font-bold text-white">🔥 Funil ao vivo</h1>
       <p className="mt-1 text-sm text-secondary">
-        Analise automatica das partidas ao vivo. Cada entrada mostra os criterios que passaram e pode ser
-        conferida numero por numero.
+        Análise automática das partidas ao vivo. Cada entrada mostra os critérios que passaram e pode ser
+        conferida número por número.
       </p>
 
       {!available ? (
         <ErrorState
           className="mt-4"
-          title="Motor indisponivel"
-          description="Nao consegui ler os sinais agora. Tente novamente em instantes."
+          title="Motor indisponível"
+          description="Não consegui ler os sinais agora. Tente novamente em instantes."
         />
       ) : (
         <FunilLiveList signals={signals} />

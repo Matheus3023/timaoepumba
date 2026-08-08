@@ -103,7 +103,7 @@ export function HomeView({
         ))}
       </Section>
 
-      <Section title="Analises recentes" delay={3} action={{ href: "/analises", label: "Ver todas" }}>
+      <Section title="Análises recentes" delay={3} action={{ href: "/analises", label: "Ver todas" }}>
         {analyses.length === 0 && <EmptyState title="Nenhuma analise publicada ainda." />}
         {analyses.map((analysis) => (
           <Link key={analysis.id} href={`/analises/${analysis.id}`} className="card card-interactive block">

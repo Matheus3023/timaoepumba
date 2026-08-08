@@ -25,17 +25,17 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
     setBusy(false);
 
     if (!response.ok) {
-      showToast("Nao foi possivel salvar sua preferencia.", "error");
+      showToast("Não foi possível salvar sua preferência.", "error");
       return;
     }
     setOptedIn(next);
-    showToast(next ? "Voce vai receber novidades e promocoes." : "Voce nao vai mais receber novidades e promocoes.", "success");
+    showToast(next ? "Você vai receber novidades e promoções." : "Você não vai mais receber novidades e promoções.", "success");
   }
 
   async function handleExport() {
     const response = await fetch("/api/account/export");
     if (!response.ok) {
-      showToast("Nao foi possivel exportar seus dados agora.", "error");
+      showToast("Não foi possível exportar seus dados agora.", "error");
       return;
     }
 
@@ -91,7 +91,7 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
         onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
         title="Excluir sua conta?"
-        description="Isso solicita a exclusao definitiva da sua conta e dos seus dados. Essa acao nao pode ser desfeita."
+        description="Isso solicita a exclusão definitiva da sua conta e dos seus dados. Essa ação não pode ser desfeita."
         confirmLabel="Excluir conta"
         destructive
       />
@@ -101,7 +101,7 @@ export function ProfileActions({ marketingConsent }: { marketingConsent: boolean
         onClose={() => setLogoutOpen(false)}
         onConfirm={confirmLogout}
         title="Sair da conta?"
-        description="Voce precisara fazer login novamente para acessar o aplicativo."
+        description="Você precisará fazer login novamente para acessar o aplicativo."
         confirmLabel="Sair"
       />
     </section>

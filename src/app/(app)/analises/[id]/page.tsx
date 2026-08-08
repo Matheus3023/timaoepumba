@@ -38,16 +38,16 @@ export default async function AnalysisDetailPage({ params }: { params: Promise<{
         // eslint-disable-next-line @next/next/no-img-element
         <img src={analysis.image_url} alt={analysis.title} className="mb-4 w-full rounded-xl object-cover" />
       )}
-      <p className="text-xs text-muted">{analysis.market ?? "Analise"}</p>
+      <p className="text-xs text-muted">{analysis.market ?? "Análise"}</p>
       <h1 className="mt-1 text-xl font-bold text-white">{analysis.title}</h1>
       {analysis.summary && <p className="mt-2 text-sm text-secondary">{analysis.summary}</p>}
 
       <div className="card mt-4 whitespace-pre-line text-sm text-body">
-        {analysis.description ?? "Sem conteudo adicional."}
+        {analysis.description ?? "Sem conteúdo adicional."}
       </div>
 
       <p className="mt-4 text-xs text-faint">
-        Conteudo informativo, sem garantia de resultado. Aposte com responsabilidade.
+        Conteúdo informativo, sem garantia de resultado. Aposte com responsabilidade.
       </p>
     </div>
   );

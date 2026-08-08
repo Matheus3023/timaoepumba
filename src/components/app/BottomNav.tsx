@@ -8,7 +8,7 @@ import { BallIcon, ChartIcon, ChatIcon, HomeIcon, UserIcon } from "@/components/
 const TABS = [
   { href: "/home", label: "Inicio", icon: HomeIcon },
   { href: "/jogos", label: "Jogos", icon: BallIcon },
-  { href: "/analises", label: "Analises", icon: ChartIcon },
+  { href: "/analises", label: "Análises", icon: ChartIcon },
   { href: "/comunidade", label: "Bate-papo", icon: ChatIcon },
   { href: "/perfil", label: "Perfil", icon: UserIcon },
 ];

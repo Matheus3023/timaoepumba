@@ -36,7 +36,7 @@ export default async function CommunityRoomsPage() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-white">Bate-papo ao vivo</p>
-          <p className="text-sm text-secondary">Libera assim que voce cria sua conta</p>
+          <p className="text-sm text-secondary">Libera assim que você cria sua conta</p>
         </div>
         <span className="badge shrink-0 bg-surface-highlighted/50 text-body">🔒</span>
       </div>
