@@ -22,7 +22,7 @@ export interface UserRowView {
   createdAtTitle: string;
 }
 
-export type UsersSortColumn = "nome" | "nivel" | "cadastro";
+export type UsersSortColumn = "nome" | "nivel" | "cadastro" | "score";
 
 /**
  * Lista do CRM. Em tela larga é tabela (o admin compara linhas), no celular
@@ -83,9 +83,7 @@ export function UsersTable({
                 )}
                 <SortableHead column="nome" label="Usuário" {...headerProps} />
                 <SortableHead column="nivel" label="Etapa" {...headerProps} />
-                <th scope="col" className="px-3 py-2.5 text-right">
-                  Score
-                </th>
+                <SortableHead column="score" label="Score" align="right" {...headerProps} />
                 <th scope="col" className="px-3 py-2.5">
                   Origem
                 </th>

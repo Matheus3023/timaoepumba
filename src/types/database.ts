@@ -585,6 +585,20 @@ export type FunilNotificationLogRow = {
   created_at: string;
 }
 
+/** View admin_users_list — `users` com o score já junto, somente leitura. */
+export type AdminUsersListRow = {
+  id: string;
+  lead_id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  access_level: AccessLevel;
+  status: string;
+  created_at: string;
+  /** `null` para quem ainda não teve score calculado — não é zero. */
+  total_score: number | null;
+}
+
 /** View strategy_performance — somente leitura. */
 export type StrategyPerformanceRow = {
   strategy_id: string;
@@ -873,6 +887,10 @@ export type Database = {
     Views: {
       strategy_performance: {
         Row: StrategyPerformanceRow;
+        Relationships: [];
+      };
+      admin_users_list: {
+        Row: AdminUsersListRow;
         Relationships: [];
       };
     };

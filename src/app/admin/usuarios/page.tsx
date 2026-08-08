@@ -32,14 +32,25 @@ const VALID_STATUS = new Set<string>(["active", "restricted", "suspended", "dele
 const SIGNUP_PERIOD_DAYS: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
 /**
- * Ordenações servidas pelo banco. Só entram colunas da própria tabela
- * `users`: ordenar por score exigiria juntar `user_scores` no SQL, e com
- * paginação real isso não pode ser feito em memória sem mentir na contagem
- * (ver relatório — a saída limpa é uma coluna/visão materializada).
+ * Ordenações servidas pelo banco.
+ *
+ * A lista vem da view `admin_users_list` (migration 0011), que já traz o
+ * `total_score` junto. Antes a consulta era em `users` e ordenar por score
+ * era impossível sem trazer a base inteira para a memória — o que quebraria
+ * a paginação, porque a contagem passaria a ser a da página em vez da do
+ * filtro.
+ *
+ * `nullsFirst: false` no score: quem ainda não teve score calculado tem
+ * `null`, não zero, e precisa cair no fim da lista em vez de disputar
+ * posição com quem realmente pontuou baixo.
  */
 const SORTS: Record<
   string,
-  { column: "created_at" | "full_name" | "access_level"; ascending: boolean; group: UsersSortColumn }
+  {
+    column: "created_at" | "full_name" | "access_level" | "total_score";
+    ascending: boolean;
+    group: UsersSortColumn;
+  }
 > = {
   recentes: { column: "created_at", ascending: false, group: "cadastro" },
   antigos: { column: "created_at", ascending: true, group: "cadastro" },
@@ -47,6 +58,8 @@ const SORTS: Record<
   nome_desc: { column: "full_name", ascending: false, group: "nome" },
   nivel: { column: "access_level", ascending: true, group: "nivel" },
   nivel_desc: { column: "access_level", ascending: false, group: "nivel" },
+  score: { column: "total_score", ascending: false, group: "score" },
+  score_asc: { column: "total_score", ascending: true, group: "score" },
 };
 
 interface UsersSearchParams {
@@ -112,8 +125,10 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const offset = (page - 1) * PAGE_SIZE;
 
   let query = admin
-    .from("users")
-    .select("id, lead_id, full_name, email, access_level, status, created_at", { count: "exact" });
+    .from("admin_users_list")
+    .select("id, lead_id, full_name, email, access_level, status, created_at, total_score", {
+      count: "exact",
+    });
 
   if (searchTerm) {
     query = query.or(
@@ -134,7 +149,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     // Desempate por id: sem uma segunda chave estável, dois cadastros no
     // mesmo instante podem trocar de lugar entre uma página e outra e o
     // admin vê a mesma pessoa duas vezes (ou nenhuma).
-    .order(sort.column, { ascending: sort.ascending })
+    .order(sort.column, { ascending: sort.ascending, nullsFirst: false })
     .order("id", { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);
 
@@ -145,8 +160,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
 
   // Complementos buscados só para a página visível (no máximo 25 IDs), o
   // que mantém a consulta barata e a URL do PostgREST dentro do limite.
-  const [scoreRows, profileRows, attributionRows] = await Promise.all([
-    userIds.length ? admin.from("user_scores").select("user_id, total_score").in("user_id", userIds) : null,
+  const [profileRows, attributionRows] = await Promise.all([
     userIds.length ? admin.from("user_profiles").select("user_id, last_seen_at").in("user_id", userIds) : null,
     leadIds.length
       ? admin
@@ -157,7 +171,6 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       : null,
   ]);
 
-  const scoreById = new Map((scoreRows?.data ?? []).map((row) => [row.user_id, row.total_score]));
   const lastSeenById = new Map((profileRows?.data ?? []).map((row) => [row.user_id, row.last_seen_at]));
   const attributionByLead = new Map((attributionRows?.data ?? []).map((row) => [row.lead_id, row]));
 
@@ -175,7 +188,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       leadId: user.lead_id,
       accessLevel: user.access_level,
       status: user.status,
-      score: scoreById.get(user.id) ?? null,
+      score: user.total_score,
       origin,
       originTitle: attribution?.utm_campaign ? `Campanha: ${attribution.utm_campaign}` : "Primeiro toque",
       lastSeen: lastSeen ? formatRelative(lastSeen) : "nunca",
@@ -212,6 +225,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     cadastro: hrefWith({ ordem: sortKey === "recentes" ? "antigos" : "recentes", pagina: undefined }),
     nome: hrefWith({ ordem: sortKey === "nome" ? "nome_desc" : "nome", pagina: undefined }),
     nivel: hrefWith({ ordem: sortKey === "nivel" ? "nivel_desc" : "nivel", pagina: undefined }),
+    score: hrefWith({ ordem: sortKey === "score" ? "score_asc" : "score", pagina: undefined }),
   };
 
   return (
