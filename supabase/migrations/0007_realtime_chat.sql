@@ -9,4 +9,18 @@
 -- full page reload (which re-fetches initialMessages from the server).
 -- ============================================================================
 
-alter publication supabase_realtime add table community_messages;
+-- Guardado contra reexecucao: `alter publication ... add table` de uma tabela
+-- que ja esta na publicacao levanta erro. Sem esta protecao, rodar a migration
+-- duas vezes falha — e, se ela estiver dentro de uma transacao junto das
+-- outras, derruba todas.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'community_messages'
+  ) then
+    alter publication supabase_realtime add table community_messages;
+  end if;
+end $$;
