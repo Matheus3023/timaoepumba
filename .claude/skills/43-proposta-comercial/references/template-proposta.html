@@ -1,0 +1,265 @@
+<title>Proposta comercial, Camboriú Consórcios</title>
+<style>
+  :root{
+    --ground:#faf7f1; --panel:#ffffff; --ink:#15242b; --ink-soft:#4a5b62;
+    --line:#e5ded1; --navy:#0e2a38; --navy-soft:#1d3e4d;
+    --gold:#b8893a; --gold-soft:#d9b45f; --sand:#efe7d6;
+    --good:#2f7d5b; --shadow:0 1px 2px rgba(20,36,43,.06),0 8px 24px rgba(20,36,43,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0b1c24; --panel:#122a34; --ink:#eef4f3; --ink-soft:#a9bcc0;
+      --line:#22414e; --navy:#0a1920; --navy-soft:#16333f;
+      --gold:#d9b45f; --gold-soft:#e9cd83; --sand:#1a3540;
+      --good:#4cc08a; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0b1c24; --panel:#122a34; --ink:#eef4f3; --ink-soft:#a9bcc0;
+    --line:#22414e; --navy:#0a1920; --navy-soft:#16333f;
+    --gold:#d9b45f; --gold-soft:#e9cd83; --sand:#1a3540;
+    --good:#4cc08a; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"]{
+    --ground:#faf7f1; --panel:#ffffff; --ink:#15242b; --ink-soft:#4a5b62;
+    --line:#e5ded1; --navy:#0e2a38; --navy-soft:#1d3e4d;
+    --gold:#b8893a; --gold-soft:#d9b45f; --sand:#efe7d6;
+    --good:#2f7d5b; --shadow:0 1px 2px rgba(20,36,43,.06),0 8px 24px rgba(20,36,43,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:840px;margin:0 auto;padding:clamp(20px,5vw,64px) clamp(18px,5vw,40px)}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .eyebrow{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+  h1{font-size:clamp(30px,5.5vw,46px);line-height:1.05;letter-spacing:-.02em;
+    font-weight:800;margin:0 0 12px;text-wrap:balance}
+  h2{font-size:clamp(19px,3vw,24px);letter-spacing:-.01em;font-weight:750;margin:0 0 4px}
+  h3{font-size:15px;font-weight:700;margin:0 0 6px}
+  p{margin:0 0 12px;color:var(--ink-soft)}
+  .lead{font-size:clamp(16px,2.4vw,19px);color:var(--ink)}
+  header.doc{border-bottom:2px solid var(--navy);padding-bottom:28px;margin-bottom:8px}
+  .brandrow{display:flex;justify-content:space-between;align-items:center;gap:16px;
+    flex-wrap:wrap;margin-bottom:30px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em}
+  .brand .dot{width:26px;height:26px;border-radius:7px;background:var(--navy);
+    display:grid;place-items:center;color:var(--gold-soft);font-size:14px}
+  .valid{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--panel)}
+  section{padding:34px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  .snum{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold);
+    letter-spacing:.1em}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px;box-shadow:var(--shadow)}
+  .painlist{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .painlist li{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:10px;padding:13px 15px}
+  .painlist b{color:var(--ink)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;background:var(--panel)}
+  @media(max-width:620px){.split{grid-template-columns:1fr}}
+  .split>div{padding:18px}
+  .split .in{background:var(--panel)}
+  .split .out{background:var(--sand)}
+  .split h3{display:flex;align-items:center;gap:8px}
+  .split ul{margin:0;padding-left:18px;color:var(--ink-soft);font-size:14px}
+  .split ul li{margin-bottom:6px}
+  .timeline{display:grid;gap:0;margin-top:6px}
+  .tl{display:grid;grid-template-columns:92px 1fr;gap:14px;padding:12px 0;border-top:1px dashed var(--line)}
+  .tl:first-child{border-top:0}
+  .tl .when{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--navy);font-size:13px}
+  :root[data-theme="dark"] .tl .when,@media(prefers-color-scheme:dark){}
+  .tl .when b{color:var(--gold)}
+  .price{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+  @media(max-width:720px){.price{grid-template-columns:1fr}}
+  .tier{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;
+    display:flex;flex-direction:column;gap:10px;position:relative}
+  .tier.reco{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),var(--shadow)}
+  .tier .tag{position:absolute;top:-11px;left:20px;background:var(--gold);color:#1b1205;
+    font-size:11px;font-weight:800;letter-spacing:.04em;padding:3px 10px;border-radius:999px;
+    text-transform:uppercase}
+  .tier .name{font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .tier .fee{font-family:ui-monospace,Menlo,monospace;font-size:22px;font-weight:700;color:var(--navy)}
+  :root[data-theme="dark"] .tier .fee{color:var(--gold-soft)}
+  @media(prefers-color-scheme:dark){.tier .fee{color:var(--gold-soft)}}
+  .tier ul{margin:4px 0 0;padding-left:16px;font-size:13px;color:var(--ink-soft)}
+  .tier ul li{margin-bottom:5px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  th,td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line)}
+  th{font-size:12px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  tbody td{font-variant-numeric:tabular-nums}
+  tbody tr:last-child td{border-bottom:0}
+  td.num{font-family:ui-monospace,Menlo,monospace;text-align:right}
+  .reco-col{color:var(--navy);font-weight:700}
+  .callout{background:var(--navy);color:#eaf3f1;border-radius:16px;padding:22px 24px;
+    display:flex;gap:16px;align-items:flex-start}
+  .callout .ic{font-size:22px;flex-shrink:0}
+  .callout h2{color:#fff;margin-bottom:6px}
+  .callout p{color:#b9d0d1;margin:0}
+  .cta{margin-top:8px;background:var(--panel);border:1px solid var(--gold);border-radius:16px;
+    padding:22px 24px}
+  .cta .btn{display:inline-block;background:var(--gold);color:#1b1205;font-weight:800;
+    text-decoration:none;padding:12px 22px;border-radius:10px;margin-top:6px}
+  .note{font-size:12.5px;color:var(--ink-soft);background:var(--sand);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;margin-top:18px}
+  .note b{color:var(--ink)}
+  footer{padding-top:26px;color:var(--ink-soft);font-size:12.5px;text-align:center}
+  a{color:var(--gold)}
+</style>
+
+<div class="wrap">
+  <div class="brandrow">
+    <div class="brand"><span class="dot">◆</span> Agência de Agents</div>
+    <span class="valid">Válida por 7 dias</span>
+  </div>
+
+  <header class="doc">
+    <p class="eyebrow">Proposta comercial</p>
+    <h1>Transformar o Instagram de vocês em uma máquina de lead qualificado</h1>
+    <p class="lead">Para Camboriú Consórcios, representante autorizado HS Consórcios, Camboriú e Balneário Camboriú (SC). Vocês vendem a carta. Nós entregamos a conversa certa, com quem já quer comprar.</p>
+  </header>
+
+  <section>
+    <p class="snum">01 / Diagnóstico</p>
+    <h2>O que vimos, e onde o dinheiro está vazando</h2>
+    <p>Vocês já pagam por atenção no Instagram. O problema não é o topo, é o meio e o fundo do funil.</p>
+    <ul class="painlist">
+      <li><b>Topo pago sem fundo.</b> O link na bio leva a um site que não captura lead e não abre nem para ferramenta de análise. A atenção comprada evapora.</li>
+      <li><b>Faturamento imprevisível.</b> Dependência de indicação e do humor do algoritmo. Sem funil, não dá para prever quantas cartas fecham no mês.</li>
+      <li><b>Concorrência de commodity.</b> Em BC, muita gente vende a mesma carta. Quem captura e responde mais rápido leva o cliente.</li>
+      <li><b>Decisão no escuro.</b> Sem pixel, CAPI e UTM, não existe custo por lead nem retorno por real investido.</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="snum">02 / Solução</p>
+    <h2>A metodologia, traduzida em resultado</h2>
+    <p>Uma página de captura que fala com as dores de quem compra consórcio (medo de não ser contemplado, juro do financiamento, falta de entrada), tráfego pago otimizado para lead qualificado, rastreamento limpo e um ritual de resposta rápida no WhatsApp. Do clique no anúncio à conversa qualificada na mão do seu time.</p>
+    <div class="grid2" style="margin-top:8px">
+      <div class="card"><h3>O que vocês ganham</h3><p style="margin:0;font-size:14px">Lead qualificado previsível, custo por lead medido, e um funil que é ativo de vocês, não do algoritmo.</p></div>
+      <div class="card"><h3>O que continua sendo de vocês</h3><p style="margin:0;font-size:14px">A venda da carta e o relacionamento. Somos o motor de aquisição, não o vendedor.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="snum">03 / Escopo</p>
+    <h2>Dentro e fora, sem letra miúda</h2>
+    <div class="split">
+      <div class="in">
+        <h3>✓ Dentro</h3>
+        <ul>
+          <li>Landing page de captura com rastreamento (pixel, CAPI, GA4, UTM)</li>
+          <li>Gestão de tráfego Meta visando lead qualificado</li>
+          <li>Criativos e copy atacando as 6 dores do público</li>
+          <li>Relatório quinzenal com custo por lead e por MQL</li>
+        </ul>
+      </div>
+      <div class="out">
+        <h3>✕ Fora</h3>
+        <ul>
+          <li>Atendimento e venda do lead (é do time de vocês)</li>
+          <li>Produção de vídeo com atores</li>
+          <li>Gestão de outras redes sociais</li>
+          <li>Garantia de contemplação (não existe, e não prometemos)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="snum">04 / Cronograma</p>
+    <h2>Primeiros 90 dias</h2>
+    <div class="timeline">
+      <div class="tl"><div class="when"><b>D+0</b></div><div>Kickoff, acessos e alinhamento da oferta.</div></div>
+      <div class="tl"><div class="when"><b>D+7</b></div><div>Landing de captura e rastreamento no ar, medindo.</div></div>
+      <div class="tl"><div class="when"><b>D+14</b></div><div>Primeiras campanhas subindo, sempre em pausa até o seu ok.</div></div>
+      <div class="tl"><div class="when"><b>D+15</b> a <b>D+90</b></div><div>Otimização por dado, novos criativos, corte do que não performa.</div></div>
+      <div class="tl"><div class="when"><b>D+90</b></div><div>Revisão de resultado e plano do próximo ciclo.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="snum">05 / Investimento</p>
+    <h2>Três formas de começar</h2>
+    <div class="price">
+      <div class="tier">
+        <div class="name">Essencial</div>
+        <div class="fee">R$ ___</div>
+        <ul>
+          <li>Landing + rastreamento</li>
+          <li>Tráfego básico</li>
+          <li>Relatório mensal</li>
+        </ul>
+      </div>
+      <div class="tier reco">
+        <span class="tag">Recomendada</span>
+        <div class="name">Crescimento</div>
+        <div class="fee">R$ ___</div>
+        <ul>
+          <li>Tudo da Essencial</li>
+          <li>Criativos recorrentes</li>
+          <li>Relatório quinzenal</li>
+        </ul>
+      </div>
+      <div class="tier">
+        <div class="name">Aceleração total</div>
+        <div class="fee">R$ ___</div>
+        <ul>
+          <li>Tudo da Crescimento</li>
+          <li>Rastreamento server-side</li>
+          <li>Reunião semanal</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note"><b>Fee a definir</b> com base em custo real mais BDI e margem alvo (nunca no chute). Verba de mídia é separada do fee: vocês pagam a Meta direto. Valide a carga tributária com o contador antes de fechar tabela.</div>
+  </section>
+
+  <section>
+    <p class="snum">06 / Retorno</p>
+    <h2>ROI em três cenários</h2>
+    <p>A variável que só vocês têm é a comissão média líquida por carta. Modelo mensal ilustrativo, para preencher com o número real:</p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Premissa mensal</th><th>Pessimista</th><th>Realista</th><th>Otimista</th></tr></thead>
+        <tbody>
+          <tr><td>Verba de mídia</td><td class="num">R$ 3.000</td><td class="num">R$ 3.000</td><td class="num">R$ 3.000</td></tr>
+          <tr><td>Custo por lead qualificado</td><td class="num">R$ 120</td><td class="num">R$ 80</td><td class="num">R$ 50</td></tr>
+          <tr><td>Leads qualificados</td><td class="num">25</td><td class="num">37</td><td class="num">60</td></tr>
+          <tr><td>Cartas fechadas (taxa a validar)</td><td class="num">1</td><td class="num">2</td><td class="num">4</td></tr>
+          <tr><td>Comissão média por carta</td><td class="num">R$ X</td><td class="num reco-col">R$ X</td><td class="num">R$ X</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Leitura honesta: se a comissão de uma única carta de imóvel em BC paga o fee mais a mídia do mês, o ponto de equilíbrio é baixo. Todos os valores são premissas na mesa, para validar juntos, não promessa de resultado.</div>
+  </section>
+
+  <section>
+    <p class="snum">07 / Garantia</p>
+    <div class="callout">
+      <span class="ic">◆</span>
+      <div>
+        <h2>Risco fora da mesa nos primeiros 30 dias</h2>
+        <p>Se a landing e o rastreamento não estiverem no ar e medindo em 30 dias, vocês não pagam o segundo mês. Não garantimos volume de vendas nem contemplação, e deixamos isso explícito de propósito. Sério, não é promessa vazia.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="snum">08 / Próximo passo</p>
+    <div class="cta">
+      <h2>Uma reunião de 30 minutos</h2>
+      <p>Um discovery curto para entender o funil de vocês e a pergunta que importa: quanto custa deixar esse lead vazar por mais seis meses. Fechamos a opção e começamos.</p>
+      <a class="btn" href="#">Responder com o melhor horário</a>
+    </div>
+  </section>
+
+  <footer>
+    Rascunho para revisão do gestor antes do envio. Agência de Agents, proposta gerada pelos agents prospeccao e closer.
+  </footer>
+</div>
