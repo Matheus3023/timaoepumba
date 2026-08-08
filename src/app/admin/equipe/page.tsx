@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { requireAdminSection } from "@/lib/admin/access";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { logAudit } from "@/lib/admin/audit";
 
 async function assignRole(formData: FormData) {
@@ -45,11 +46,11 @@ export default async function AdminTeamPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-xl font-bold text-white">Equipe</h1>
-      <p className="text-sm text-secondary">
-        Define o perfil administrativo de cada conta ADMIN (PRD sec. 36). Uma conta sem perfil atribuido tem acesso
-        total, igual a um Administrador — atribua um perfil para restringir o que ela pode ver e alterar no painel.
-      </p>
+      <AdminPageHeader
+        eyebrow="Sistema"
+        title="Equipe"
+        description="Define o perfil administrativo de cada conta ADMIN. Uma conta sem perfil atribuído tem acesso total, igual a um Administrador — atribua um perfil para restringir o que ela pode ver e alterar no painel."
+      />
 
       <div className="mt-4 flex flex-col gap-2">
         {adminUsers?.map((u) => {

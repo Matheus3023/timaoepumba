@@ -4,6 +4,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { deleteMessage, muteUserInRoom, reviewReport } from "@/lib/moderation/actions";
 import { restrictUser, accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { logAudit } from "@/lib/admin/audit";
 
 const LIVE_CHAT_SLUG = "resenha-geral";
@@ -143,11 +144,14 @@ export default async function AdminCommunityModerationPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-white">Moderação da comunidade</h1>
-      {!writable && <p className="mt-1 text-xs text-muted">Modo somente leitura para o seu perfil.</p>}
+      <AdminPageHeader
+        eyebrow="Conteúdo"
+        title="Moderação da comunidade"
+        description={writable ? undefined : "Modo somente leitura para o seu perfil."}
+      />
 
       <section className="card mt-4 border-yellow-500/20 bg-yellow-500/[0.03]">
-        <h2 className="text-sm font-semibold text-strong">Diagnostico: Bate-papo ao vivo</h2>
+        <h2 className="text-sm font-semibold text-strong">Diagnóstico: Bate-papo ao vivo</h2>
         {liveChatRoom ? (
           <dl className="mt-2 flex flex-col gap-1 text-sm text-secondary">
             <div className="flex justify-between gap-2">

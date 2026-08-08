@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default async function AdminPushPage() {
   const access = await requireAdminSection("push");
@@ -12,14 +13,18 @@ export default async function AdminPushPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Campanhas de push</h1>
-        {canWrite(access, "push") && (
-          <Link href="/admin/push/novo" className="btn-primary px-4 py-2 text-sm">
-            Nova campanha
-          </Link>
-        )}
-      </div>
+      <AdminPageHeader
+        eyebrow="Operação"
+        title="Campanhas de push"
+        description="Notificações enviadas para a base ou para um segmento."
+        actions={
+          canWrite(access, "push") && (
+            <Link href="/admin/push/novo" className="btn-primary px-4 py-2 text-sm">
+              Nova campanha
+            </Link>
+          )
+        }
+      />
 
       <div className="mt-4 flex flex-col gap-2">
         {campaigns?.map((c) => (

@@ -113,7 +113,7 @@ export default async function NewPushCampaignPage() {
         <label className="flex flex-col gap-1 text-sm text-body">
           Segmento (deixe vazio para todos os usuarios ativos)
           <select name="segment_id" defaultValue="" className="input">
-            <option value="">Todos os usuarios ativos</option>
+            <option value="">Todos os usuários ativos</option>
             {segments?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

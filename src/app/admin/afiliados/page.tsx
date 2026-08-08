@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { logAudit } from "@/lib/admin/audit";
 import { SmarticoDebugClient } from "@/components/admin/SmarticoDebugClient";
 
@@ -64,10 +65,11 @@ export default async function AdminAffiliatePage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-xl font-bold text-white">Casa parceira</h1>
-      <p className="text-sm text-secondary">
-        O link de cadastro e gerado dinamicamente com o Lead ID do usuario como subid.
-      </p>
+      <AdminPageHeader
+        eyebrow="Operação"
+        title="Casa parceira"
+        description="O link de cadastro é gerado dinamicamente com o Lead ID do usuário como subid."
+      />
 
       {duplicates > 0 && (
         <div className="card mt-4 border-red-500/30 bg-red-500/5">

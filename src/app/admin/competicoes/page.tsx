@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { logAudit } from "@/lib/admin/audit";
 import { purgeSportsCache } from "@/lib/sports/cache";
 import type { AllowedCompetitionRow } from "@/types/database";
@@ -124,11 +125,11 @@ export default async function AdminCompetitionsPage({
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-xl font-bold text-white">Competições permitidas</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Somente competicoes ativas aparecem no aplicativo. A lista se preenche sozinha conforme a API
-        e consultada — competicoes novas entram bloqueadas, aguardando sua liberacao.
-      </p>
+      <AdminPageHeader
+        eyebrow="Operação"
+        title="Competições permitidas"
+        description="Somente competições ativas aparecem no aplicativo. A lista se preenche sozinha conforme a API é consultada — competições novas entram bloqueadas, aguardando sua liberação."
+      />
       {!writable && <p className="mt-1 text-xs text-muted">Modo somente leitura para o seu perfil.</p>}
 
       {error && (
@@ -149,7 +150,7 @@ export default async function AdminCompetitionsPage({
           <input
             name="q"
             defaultValue={q ?? ""}
-            placeholder="Buscar por nome ou ID da competicao"
+            placeholder="Buscar por nome ou ID da competição"
             className="input flex-1"
           />
           <button type="submit" className="btn-secondary px-4">
