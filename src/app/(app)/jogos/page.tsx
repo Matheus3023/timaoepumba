@@ -3,6 +3,8 @@ import { getSportsDataProvider } from "@/lib/sports";
 import { CACHE_TTL_SECONDS, getOrSetCache, sportsCacheKey, sportsDayKey } from "@/lib/sports/cache";
 import { MatchesFilterTabs } from "@/components/app/MatchesFilterTabs";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StaleDataNotice } from "@/components/app/StaleDataNotice";
+import { formatStaleAge } from "@/lib/sports/staleness";
 import type { Match } from "@/lib/sports/types";
 
 const DAYS = [
@@ -19,7 +21,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
   // so a list cached right before midnight can't keep being served under
   // the wrong day after the date rolls over.
   const provider = getSportsDataProvider();
-  const [{ data: matches }, { data: liveMatches }] = await Promise.all([
+  const [{ data: matches, staleSince }, { data: liveMatches }] = await Promise.all([
     day === 0
       ? getOrSetCache(sportsCacheKey("matches", sportsDayKey()), CACHE_TTL_SECONDS.todayMatches, () =>
           provider.getTodayMatches()
@@ -46,6 +48,8 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <PageHeader title="Jogos" />
+
+      <StaleDataNotice age={formatStaleAge(staleSince)} />
 
       {/* Segmented control: one recessed track with a single raised segment,
           instead of three separate buttons where the active one was a stark

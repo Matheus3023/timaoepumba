@@ -5,7 +5,7 @@
  */
 export function ErrorState({
   title = "Algo deu errado",
-  description = "Nao foi possivel carregar essas informacoes.",
+  description = "Não foi possível carregar essas informações.",
   onRetry,
   className = "",
 }: {

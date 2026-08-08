@@ -49,15 +49,42 @@ export async function purgeSportsCache(): Promise<void> {
 }
 
 /**
- * Read-through cache backed by sports_api_cache. On a cache miss it calls
- * `fetcher`; if `fetcher` throws (provider down — PRD sec. 12.5) and a
- * stale cached value exists, that stale value is returned instead of
- * failing the request, along with how old it is.
+ * Quantas vezes o TTL um payload pode ficar vencido e ainda ser servido
+ * quando o provedor está fora. Oito ciclos é bastante folga para uma queda
+ * passageira e ainda assim curto o suficiente para não virar arqueologia.
+ */
+const STALE_TTL_MULTIPLIER = 8;
+
+/**
+ * Teto absoluto, independente do TTL. Sem ele, a classificação (TTL de 6h)
+ * poderia ser servida com dois dias de idade — e o usuário não teria como
+ * saber.
+ */
+export const ABSOLUTE_MAX_STALE_SECONDS = 6 * 60 * 60;
+
+function maxStaleFor(ttlSeconds: number, override?: number): number {
+  return Math.min(override ?? ttlSeconds * STALE_TTL_MULTIPLIER, ABSOLUTE_MAX_STALE_SECONDS);
+}
+
+/**
+ * Read-through cache sobre sports_api_cache.
+ *
+ * Se o `fetcher` falhar (provedor fora) e existir um payload vencido, ele é
+ * servido em vez de derrubar a página — mas só até um limite de idade.
+ *
+ * Esse limite é o ponto importante: antes, o cache vencido era servido
+ * **sem nenhum teto**. Uma queda longa da API fazia o app exibir os jogos
+ * de ontem como se fossem os de hoje, indefinidamente e sem avisar
+ * ninguém. Dado velho demais é pior que erro: o erro a pessoa percebe.
+ *
+ * `staleSince` volta preenchido sempre que o dado é vencido, para a tela
+ * poder dizer ao usuário que aquilo não está fresco.
  */
 export async function getOrSetCache<T>(
   key: string,
   ttlSeconds: number,
-  fetcher: () => Promise<T>
+  fetcher: () => Promise<T>,
+  options?: { maxStaleSeconds?: number }
 ): Promise<{ data: T; staleSince: string | null }> {
   const supabase = createAdminSupabaseClient();
 
@@ -88,8 +115,16 @@ export async function getOrSetCache<T>(
     });
 
     if (cached) {
-      // Serve the last known good payload rather than taking the app down.
-      return { data: cached.payload as T, staleSince: cached.expires_at };
+      const staleForSeconds = (Date.now() - new Date(cached.expires_at).getTime()) / 1000;
+      const limit = maxStaleFor(ttlSeconds, options?.maxStaleSeconds);
+
+      if (staleForSeconds <= limit) {
+        return { data: cached.payload as T, staleSince: cached.expires_at };
+      }
+
+      console.warn(
+        `[sports-cache] ${key} vencido ha ${Math.round(staleForSeconds)}s (limite ${limit}s) — recusando servir`
+      );
     }
     throw error;
   }

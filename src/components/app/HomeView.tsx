@@ -6,6 +6,7 @@ import type { Match } from "@/lib/sports/types";
 import { MatchRow } from "@/components/app/MatchRow";
 import { CheckCircleIcon, ChatIcon, LockIcon } from "@/components/icons";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StaleDataNotice } from "@/components/app/StaleDataNotice";
 
 const RISK_STYLE: Record<string, string> = {
   baixo: "bg-emerald-500/15 text-emerald-300",
@@ -37,6 +38,7 @@ export function HomeView({
   communityUnlocked,
   ftdDone,
   todayMatches,
+  matchesStaleAge,
   analyses,
 }: {
   firstName: string;
@@ -44,6 +46,8 @@ export function HomeView({
   communityUnlocked: boolean;
   ftdDone: boolean;
   todayMatches: Match[];
+  /** Idade dos dados quando vieram de cache vencido (provedor fora). */
+  matchesStaleAge: string | null;
   analyses: AnalysisPreview[];
 }) {
   const steps = [
@@ -97,6 +101,7 @@ export function HomeView({
       )}
 
       <Section title="Jogos de hoje" delay={2} action={{ href: "/jogos", label: "Ver todos" }}>
+        <StaleDataNotice age={matchesStaleAge} className="mt-0 mb-2" />
         {todayMatches.length === 0 && <EmptyState title="Nenhum jogo cadastrado para hoje." />}
         {todayMatches.slice(0, HOME_MATCHES_PREVIEW_LIMIT).map((match) => (
           <MatchRow key={match.id} match={match} />

@@ -3,6 +3,7 @@ import { getSportsDataProvider } from "@/lib/sports";
 import { CACHE_TTL_SECONDS, getOrSetCache, sportsCacheKey, sportsDayKey } from "@/lib/sports/cache";
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { HomeView } from "@/components/app/HomeView";
+import { formatStaleAge } from "@/lib/sports/staleness";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
@@ -21,7 +22,7 @@ export default async function HomePage() {
   ]);
 
   const provider = getSportsDataProvider();
-  const { data: todayMatches } = await getOrSetCache(
+  const { data: todayMatches, staleSince } = await getOrSetCache(
     sportsCacheKey("matches", sportsDayKey()),
     CACHE_TTL_SECONDS.todayMatches,
     () => provider.getTodayMatches()
@@ -39,6 +40,7 @@ export default async function HomePage() {
       communityUnlocked={communityUnlocked}
       ftdDone={ftdDone}
       todayMatches={todayMatches}
+      matchesStaleAge={formatStaleAge(staleSince)}
       analyses={analyses ?? []}
     />
   );
