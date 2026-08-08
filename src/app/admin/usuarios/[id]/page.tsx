@@ -5,6 +5,10 @@ import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
 import { computeAndSaveUserScore } from "@/lib/scoring/compute";
 import { UserProfileTabs } from "@/components/admin/UserProfileTabs";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Stat, StatStrip } from "@/components/admin/StatStrip";
+import { ACCESS_LEVEL_LABEL } from "@/components/admin/Badges";
+import { formatRelative } from "@/components/admin/format";
 import { BackButton } from "@/components/ui/BackButton";
 
 async function addNote(userId: string, formData: FormData) {
@@ -122,24 +126,40 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const roomNameById = new Map((rooms ?? []).map((r) => [r.id, r.name]));
 
   return (
-    <div>
-      <BackButton fallbackHref="/admin/usuarios" className="mb-3" />
+    <div className="flex flex-col gap-4">
+      <BackButton fallbackHref="/admin/usuarios" className="-mb-1" />
 
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-white">{user.full_name}</h1>
-          <p className="text-sm text-secondary">
-            {user.email} • {user.phone}
-          </p>
-        </div>
-        {writable && (
-          <form action={recalculateScore.bind(null, id)}>
-            <button type="submit" className="btn-secondary px-3 py-1.5 text-xs">
-              Recalcular score
-            </button>
-          </form>
-        )}
-      </div>
+      <AdminPageHeader
+        eyebrow="Pessoas · Ficha do usuário"
+        title={user.full_name?.trim() || user.email}
+        description={[user.email, user.phone].filter(Boolean).join(" · ")}
+        actions={
+          writable ? (
+            <form action={recalculateScore.bind(null, id)}>
+              <button type="submit" className="btn-secondary px-3 py-2 text-xs">
+                Recalcular score
+              </button>
+            </form>
+          ) : (
+            <span className="badge bg-surface-elevated text-muted">Somente leitura</span>
+          )
+        }
+      />
+
+      {/* O que o suporte precisa saber antes de abrir qualquer aba: quanto
+          vale, em que etapa está, se pode ser contatado e quando apareceu
+          por último. */}
+      <StatStrip>
+        <Stat label="Lead score" value={score ? score.total_score : "—"} hint="de 100" tone="accent" />
+        <Stat label="Etapa" value={ACCESS_LEVEL_LABEL[user.access_level] ?? user.access_level} />
+        <Stat label="Situação" value={user.status === "active" ? "Ativo" : user.status} />
+        <Stat
+          label="Último acesso"
+          value={profile?.last_seen_at ? formatRelative(profile.last_seen_at) : "nunca"}
+        />
+        <Stat label="Cliques na casa" value={clicks?.length ?? 0} />
+        <Stat label="FTD" value={ftd?.confirmed_at ? "Confirmado" : "Não"} />
+      </StatStrip>
 
       <UserProfileTabs
         user={{
@@ -173,6 +193,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 total_score: score.total_score,
                 risk_blocked: score.risk_blocked,
                 risk_reason: score.risk_reason,
+                calculated_at: score.calculated_at,
               }
             : null
         }

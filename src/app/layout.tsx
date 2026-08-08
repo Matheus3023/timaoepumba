@@ -5,6 +5,7 @@ import { RootAttributionTracker } from "@/components/RootAttributionTracker";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPromptProvider } from "@/lib/onboarding/InstallPromptProvider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { SHARE_DESCRIPTION, SHARE_TITLE, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,13 +18,49 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Timao e Pumba Tips",
-  description: "Jogos, analises esportivas e comunidade. Uso exclusivo para maiores de 18 anos.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Timão e Pumba Tips | Jogos ao vivo, análises e comunidade",
+    template: `%s | ${SITE_NAME}`,
+  },
+  description:
+    "Acompanhe jogos ao vivo, leia as análises da equipe e participe da comunidade Timão e Pumba. Conteúdo informativo, sem promessa de resultado, para maiores de 18 anos.",
+  applicationName: SITE_NAME,
+  category: "sports",
+  keywords: [
+    "jogos ao vivo",
+    "placar ao vivo",
+    "análises esportivas",
+    "estatísticas de futebol",
+    "comunidade de torcedores",
+    "Timão e Pumba",
+  ],
   manifest: "/manifest.json",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  /* O card que aparece quando alguem cola o link no WhatsApp. A imagem vem
+     do arquivo src/app/opengraph-image.tsx (1200x630), que o Next injeta
+     sozinho em og:image e twitter:image, com width/height/type corretos. */
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "/",
+    siteName: SITE_NAME,
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Timao e Pumba",
+    title: "Timão e Pumba",
   },
   icons: {
     icon: [
@@ -32,10 +69,14 @@ export const metadata: Metadata = {
     ],
     apple: "/icons/apple-touch-icon.png",
   },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a5c36",
+  /* Era o verde da marca, que destoava da barra de status em cima de uma
+     interface quase preta. Agora acompanha o fundo do app, entao a barra
+     do navegador some dentro da tela (mesmo valor do manifest). */
+  themeColor: "#080b09",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

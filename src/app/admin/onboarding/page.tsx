@@ -4,6 +4,11 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { canWrite, requireAdminSection } from "@/lib/admin/access";
 import { logAudit } from "@/lib/admin/audit";
 import { DEFAULT_ONBOARDING_CONFIG, type OnboardingConfig } from "@/lib/onboarding/config";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Panel } from "@/components/admin/Panel";
+import { Stat, StatStrip } from "@/components/admin/StatStrip";
+import { FunnelChart } from "@/components/admin/FunnelChart";
+import { formatPercent } from "@/components/admin/format";
 
 async function saveConfig(formData: FormData) {
   "use server";
@@ -26,12 +31,18 @@ async function saveConfig(formData: FormData) {
   };
 
   await admin.from("system_settings").upsert({ key: "onboarding_config", value: updated });
-  await logAudit({ actorId: access.adminId, action: "onboarding_config_updated", entityType: "system_settings", entityId: "onboarding_config" });
+  await logAudit({
+    actorId: access.adminId,
+    action: "onboarding_config_updated",
+    entityType: "system_settings",
+    entityId: "onboarding_config",
+  });
   revalidatePath("/admin/onboarding");
 }
 
 export default async function AdminOnboardingPage() {
   const access = await requireAdminSection("onboarding");
+  const writable = canWrite(access, "onboarding");
   const admin = createAdminSupabaseClient();
 
   const [{ data: row }, { data: profiles }] = await Promise.all([
@@ -46,74 +57,127 @@ export default async function AdminOnboardingPage() {
   const config: OnboardingConfig = { ...DEFAULT_ONBOARDING_CONFIG, ...((row?.value as Partial<OnboardingConfig>) ?? {}) };
 
   const total = profiles?.length ?? 0;
-  const installClicked = profiles?.filter((p) => p.pwa_install_clicked_at).length ?? 0;
-  const installed = profiles?.filter((p) => p.pwa_install_status === "installed").length ?? 0;
-  const notifRequested = profiles?.filter((p) => p.notification_permission_requested_at).length ?? 0;
-  const notifGranted = profiles?.filter((p) => p.notification_permission === "granted").length ?? 0;
-  const completed = profiles?.filter((p) => p.onboarding_completed).length ?? 0;
+  const installClicked = profiles?.filter((profile) => profile.pwa_install_clicked_at).length ?? 0;
+  const installed = profiles?.filter((profile) => profile.pwa_install_status === "installed").length ?? 0;
+  const notifRequested = profiles?.filter((profile) => profile.notification_permission_requested_at).length ?? 0;
+  const notifGranted = profiles?.filter((profile) => profile.notification_permission === "granted").length ?? 0;
+  const completed = profiles?.filter((profile) => profile.onboarding_completed).length ?? 0;
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-xl font-bold text-white">Onboarding e instalacao</h1>
+    <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        eyebrow="Operação"
+        title="Onboarding e instalação"
+        description="Onde as pessoas param antes de virar usuário instalado e notificável."
+        actions={!writable ? <span className="badge bg-surface-elevated text-muted">Somente leitura</span> : undefined}
+      />
 
-      <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Metric label="Contas criadas" value={total} />
-        <Metric label="Instalacao solicitada" value={installClicked} />
-        <Metric label="Instalado" value={installed} />
-        <Metric label="Notificacao solicitada" value={notifRequested} />
-        <Metric label="Notificacao autorizada" value={notifGranted} />
-        <Metric label="Onboarding concluido" value={completed} />
-      </section>
+      <StatStrip columns={3}>
+        <Stat label="Contas com perfil" value={total} />
+        <Stat label="App instalado" value={installed} hint={formatPercent(installed, total, 1)} />
+        <Stat label="Notificações autorizadas" value={notifGranted} hint={formatPercent(notifGranted, total, 1)} />
+      </StatStrip>
 
-      <form action={saveConfig} className="card mt-6 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-strong">Textos e etapas</h2>
-        <fieldset disabled={!canWrite(access, "onboarding")} className="flex flex-col gap-3 disabled:opacity-60">
-          <label className="flex flex-col gap-1 text-sm text-body">
-            Titulo (boas-vindas)
-            <input name="welcome_title" defaultValue={config.welcome_title} className="input" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-body">
-            Texto (boas-vindas)
-            <textarea name="welcome_text" defaultValue={config.welcome_text} rows={2} className="input" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-body">
-            Titulo (notificacoes)
-            <input name="notifications_title" defaultValue={config.notifications_title} className="input" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-body">
-            Texto (notificacoes)
-            <textarea name="notifications_text" defaultValue={config.notifications_text} rows={2} className="input" />
-          </label>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Instalação do aplicativo" description="Quantos chegaram até o app na tela de início.">
+          <FunnelChart
+            steps={[
+              { label: "Contas criadas", value: total },
+              { label: "Clicaram em instalar", value: installClicked },
+              { label: "Instalação concluída", value: installed },
+            ]}
+          />
+        </Panel>
 
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input type="checkbox" name="install_step_enabled" defaultChecked={config.install_step_enabled} />
-            Etapa de instalacao ativa
-          </label>
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input type="checkbox" name="notifications_step_enabled" defaultChecked={config.notifications_step_enabled} />
-            Etapa de notificacoes ativa
-          </label>
-          <label className="flex items-center gap-2 text-sm text-body">
-            <input type="checkbox" name="onboarding_required" defaultChecked={config.onboarding_required} />
-            Onboarding obrigatorio
-          </label>
+        <Panel title="Permissão de notificação" description="Sem permissão não há push, e sem push não há retorno.">
+          <FunnelChart
+            accent="away"
+            steps={[
+              { label: "Contas criadas", value: total },
+              { label: "Permissão solicitada", value: notifRequested },
+              { label: "Permissão autorizada", value: notifGranted },
+            ]}
+          />
+        </Panel>
+      </div>
 
-          {canWrite(access, "onboarding") && (
-            <button type="submit" className="btn-primary mt-2 self-start px-6">
-              Salvar
-            </button>
-          )}
-        </fieldset>
-      </form>
-    </div>
-  );
-}
+      <Panel
+        title="Onboarding concluído"
+        description={`${completed} de ${total} perfis concluíram o fluxo (${formatPercent(completed, total, 1)}).`}
+      >
+        <div className="h-2 overflow-hidden rounded-full bg-white/[0.04]">
+          <div
+            className="h-full rounded-full bg-chart-home"
+            style={{ width: `${total > 0 ? Math.max((completed / total) * 100, 1.5) : 0}%` }}
+          />
+        </div>
+      </Panel>
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="card">
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-secondary">{label}</p>
+      <Panel title="Textos e etapas" description="O que a pessoa lê nas duas primeiras telas do aplicativo.">
+        <form action={saveConfig} className="flex flex-col gap-3">
+          <fieldset disabled={!writable} className="flex flex-col gap-3 disabled:opacity-60">
+            <div className="grid gap-3 lg:grid-cols-2">
+              <label className="flex flex-col gap-1 text-sm text-body">
+                Título (boas-vindas)
+                <input name="welcome_title" defaultValue={config.welcome_title} className="input text-sm" />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-body">
+                Título (notificações)
+                <input name="notifications_title" defaultValue={config.notifications_title} className="input text-sm" />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-body">
+                Texto (boas-vindas)
+                <textarea name="welcome_text" defaultValue={config.welcome_text} rows={3} className="input text-sm" />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-body">
+                Texto (notificações)
+                <textarea
+                  name="notifications_text"
+                  defaultValue={config.notifications_text}
+                  rows={3}
+                  className="input text-sm"
+                />
+              </label>
+            </div>
+
+            <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-white/[0.06] pt-3 text-sm text-body">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="install_step_enabled"
+                  defaultChecked={config.install_step_enabled}
+                  className="h-4 w-4 accent-primary"
+                />
+                Etapa de instalação ativa
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="notifications_step_enabled"
+                  defaultChecked={config.notifications_step_enabled}
+                  className="h-4 w-4 accent-primary"
+                />
+                Etapa de notificações ativa
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="onboarding_required"
+                  defaultChecked={config.onboarding_required}
+                  className="h-4 w-4 accent-primary"
+                />
+                Onboarding obrigatório
+              </label>
+            </div>
+
+            {writable && (
+              <button type="submit" className="btn-primary mt-1 self-start px-6 py-2.5 text-sm">
+                Salvar
+              </button>
+            )}
+          </fieldset>
+        </form>
+      </Panel>
     </div>
   );
 }

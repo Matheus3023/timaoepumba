@@ -1,101 +1,27 @@
-"use client";
-
-import { useState, type FormEvent } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
+import type { Metadata } from "next";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { describeClientError } from "@/lib/describeClientError";
+import { ForgotPasswordForm } from "./ForgotPasswordForm";
+
+export const metadata: Metadata = {
+  title: "Recuperar senha",
+  description: "Receba um link por e-mail para redefinir a senha da sua conta Timão e Pumba Tips.",
+  // Pagina de servico: util para quem esta logado no fluxo, inutil no
+  // resultado de busca da marca.
+  robots: { index: false, follow: true },
+};
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setError(null);
-    setSubmitting(true);
-
-    try {
-      const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/redefinir-senha`,
-      });
-
-      if (resetError) {
-        setError("Nao foi possivel enviar o e-mail. Tente novamente em instantes.");
-        return;
-      }
-
-      setSent(true);
-    } catch (err) {
-      setError(describeClientError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-bold text-white">Recuperar senha</h1>
-      <p className="mt-1 text-sm text-secondary">
+      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary">Acesso</p>
+      <h1 className="mt-2.5 text-[1.65rem] font-extrabold leading-tight tracking-[-0.02em] text-white">
+        Recuperar senha
+      </h1>
+      <p className="mt-2 text-sm leading-relaxed text-secondary">
         Informe o e-mail da sua conta e enviaremos um link para redefinir sua senha.
       </p>
 
-      {sent ? (
-        <div className="mt-8 flex flex-col gap-4">
-          <div className="card-glow">
-            <p className="text-sm text-strong">
-              Se existir uma conta com o e-mail <span className="font-semibold text-white">{email}</span>,
-              voce vai receber um link para redefinir a senha em instantes.
-            </p>
-          </div>
-          <Link href="/login" className="btn-secondary text-center">
-            Voltar para o login
-          </Link>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm text-body">
-            E-mail
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              autoComplete="email"
-              autoFocus
-            />
-          </label>
-
-          <AnimatePresence>
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="text-sm text-red-400"
-              >
-                {error}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          <button type="submit" disabled={submitting} className="btn-primary mt-2">
-            {submitting ? "Enviando..." : "Enviar link de recuperacao"}
-          </button>
-
-          <p className="text-center text-xs text-muted">
-            Lembrou a senha?{" "}
-            <Link href="/login" className="text-primary underline underline-offset-2">
-              Entrar
-            </Link>
-          </p>
-        </form>
-      )}
+      <ForgotPasswordForm />
     </AuthLayout>
   );
 }

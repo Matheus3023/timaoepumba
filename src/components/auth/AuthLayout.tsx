@@ -1,84 +1,108 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { BallIcon, ChartIcon, ChatIcon } from "@/components/icons";
 
+/**
+ * Moldura das telas de entrada (login, cadastro, recuperacao de senha).
+ *
+ * Server Component: era client so para animar a entrada do formulario com
+ * framer-motion, o que colocava o campo de e-mail em opacity 0 ate o JS
+ * hidratar. Na porta de entrada do produto isso e caro duas vezes, atrasa o
+ * maior elemento da tela e atrasa o primeiro toque de quem ja chegou
+ * decidido a entrar. Os formularios continuam client, cada um no seu
+ * arquivo.
+ *
+ * Mesma linguagem da landing: faixas de gramado no lugar das bolas de luz
+ * borradas, rotulos em mono, fio de 1px em vez de vidro fosco.
+ */
+
 const HIGHLIGHTS = [
-  { icon: BallIcon, text: "Jogos ao vivo com estatisticas em tempo real" },
-  { icon: ChartIcon, text: "Analises publicadas por especialistas de verdade" },
+  { icon: BallIcon, text: "Jogos ao vivo com estatísticas em tempo real" },
+  { icon: ChartIcon, text: "Análises publicadas por especialistas de verdade" },
   { icon: ChatIcon, text: "Comunidade com salas por campeonato" },
 ];
 
+const PITCH_STRIPES =
+  "repeating-linear-gradient(97deg, rgba(255,255,255,0.022) 0 46px, transparent 46px 92px)";
+
+function Wordmark({ className = "" }: { className?: string }) {
+  return (
+    <Link href="/" className={`flex items-center gap-2 ${className}`} aria-label="Timão e Pumba Tips, início">
+      <Image
+        src="/icons/icon-512.png"
+        alt=""
+        width={34}
+        height={34}
+        className="h-[34px] w-[34px] rounded-lg"
+        priority
+      />
+      <span className="text-[17px] font-extrabold tracking-tight text-white">
+        Timão<span className="text-primary">&</span>Pumba
+      </span>
+    </Link>
+  );
+}
+
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh overflow-hidden bg-[#080b09]">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-30 [mask-image:radial-gradient(ellipse_70%_60%_at_30%_20%,black,transparent)]" />
-      <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 animate-float-slow rounded-full bg-emerald-500/20 blur-[110px]" />
-      <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 animate-float-slower rounded-full bg-primary/10 blur-[110px]" />
+    <div className="flex min-h-dvh bg-[#080b09]">
+      {/* Painel de apoio, so no desktop. No celular ele nao existe, nem no
+          HTML: quem entra pelo telefone recebe direto o formulario. */}
+      <aside className="relative hidden w-[42%] max-w-lg flex-col justify-between border-r border-white/[0.06] p-10 lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]"
+          style={{ backgroundImage: PITCH_STRIPES }}
+        />
 
-      {/* Decorative side panel — desktop only */}
-      <div className="relative z-10 hidden w-[42%] flex-col justify-between border-r border-white/5 p-10 lg:flex">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/icons/icon-512.png"
-            alt="Timao e Pumba Tips"
-            width={36}
-            height={36}
-            className="h-9 w-9 rounded-xl shadow-lg shadow-yellow-500/20"
-            priority
-          />
-          <span className="text-lg font-extrabold tracking-tight text-white">
-            Timao<span className="text-primary">&</span>Pumba
-          </span>
-        </Link>
+        <Wordmark className="relative" />
 
-        <div>
-          <h2 className="max-w-sm text-3xl font-extrabold leading-tight text-white">
-            Viva o jogo com a <span className="text-gradient-gold">torcida</span>
+        <div className="relative">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary">
+            Timão e Pumba Tips
+          </p>
+          <h2 className="mt-4 max-w-sm text-[2rem] font-extrabold leading-[1.1] tracking-[-0.02em] text-white">
+            Viva o jogo com a <span className="text-primary">torcida</span>
           </h2>
-          <div className="mt-8 flex flex-col gap-4">
+
+          <ul className="mt-8 divide-y divide-white/[0.06] border-y border-white/[0.06]">
             {HIGHLIGHTS.map((item) => (
-              <div key={item.text} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-primary">
-                  <item.icon width={17} height={17} />
-                </div>
-                <p className="text-sm text-body">{item.text}</p>
-              </div>
+              <li key={item.text} className="flex items-center gap-3 py-3.5">
+                <item.icon width={17} height={17} className="shrink-0 text-primary" aria-hidden />
+                <p className="text-sm leading-relaxed text-body">{item.text}</p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
-        <p className="text-xs text-faint">Uso exclusivo para maiores de 18 anos.</p>
-      </div>
+        <p className="relative font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+          18+ · Jogue com responsabilidade
+        </p>
+      </aside>
 
-      {/* Form panel */}
-      <div className="relative z-10 flex flex-1 flex-col justify-center px-6 py-12 sm:px-10">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto w-full max-w-md"
-        >
-          <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
-            <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={32} height={32} className="h-8 w-8 rounded-lg" />
-            <span className="font-extrabold tracking-tight text-white">
-              Timao<span className="text-primary">&</span>Pumba
-            </span>
-          </Link>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="border-b border-white/[0.05] px-5 py-3.5 sm:px-8 lg:hidden">
+          <Wordmark />
+        </header>
 
-          <Image
-            src="/icons/icon-512.png"
-            alt="Timao e Pumba Tips"
-            width={96}
-            height={96}
-            className="mx-auto mb-6 h-24 w-24 rounded-2xl shadow-xl shadow-yellow-500/10"
-            priority
-          />
+        <main className="flex flex-1 flex-col justify-center px-5 py-10 sm:px-8 sm:py-14">
+          <div className="mx-auto w-full max-w-md">{children}</div>
+        </main>
 
-          {children}
-        </motion.div>
+        <footer className="px-5 pb-8 sm:px-8">
+          <div className="mx-auto flex w-full max-w-md flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/[0.05] pt-5 text-[11px] text-faint">
+            <span className="font-mono uppercase tracking-[0.14em]">18+</span>
+            <Link href="/termos" className="hover:text-secondary">
+              Termos de Uso
+            </Link>
+            <Link href="/privacidade" className="hover:text-secondary">
+              Política de Privacidade
+            </Link>
+            <p className="w-full leading-relaxed">
+              Conteúdo informativo, sem garantia de resultado. Jogue com responsabilidade.
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   );
