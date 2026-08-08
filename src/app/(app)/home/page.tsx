@@ -4,6 +4,7 @@ import { CACHE_TTL_SECONDS, getOrSetCache, sportsCacheKey, sportsDayKey } from "
 import { accessLevelSatisfies } from "@/lib/entitlements/rules";
 import { HomeView } from "@/components/app/HomeView";
 import { formatStaleAge } from "@/lib/sports/staleness";
+import { loadCompetitionPriority, sortMatchesForDisplay } from "@/lib/sports/curation";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
@@ -28,6 +29,11 @@ export default async function HomePage() {
     () => provider.getTodayMatches()
   );
 
+  // A resposta do provedor vem em ordem alfabetica de torneio, entao sem
+  // isto a Home abriria com uma copa africana em vez do Brasileirao.
+  const { available, priority } = await loadCompetitionPriority();
+  const curatedMatches = sortMatchesForDisplay(todayMatches, priority, available);
+
   const accessLevel = appUser?.access_level ?? "APP_USER";
   const registrationDone = accessLevel !== "APP_USER" && accessLevel !== "VISITOR";
   const communityUnlocked = accessLevelSatisfies(accessLevel, "REGISTERED_USER");
@@ -39,7 +45,7 @@ export default async function HomePage() {
       registrationDone={registrationDone}
       communityUnlocked={communityUnlocked}
       ftdDone={ftdDone}
-      todayMatches={todayMatches}
+      todayMatches={curatedMatches}
       matchesStaleAge={formatStaleAge(staleSince)}
       analyses={analyses ?? []}
     />

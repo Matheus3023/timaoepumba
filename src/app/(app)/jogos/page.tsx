@@ -5,6 +5,7 @@ import { MatchesFilterTabs } from "@/components/app/MatchesFilterTabs";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StaleDataNotice } from "@/components/app/StaleDataNotice";
 import { formatStaleAge } from "@/lib/sports/staleness";
+import { loadCompetitionPriority, sortGroupsForDisplay, sortMatchesForDisplay } from "@/lib/sports/curation";
 import type { Match } from "@/lib/sports/types";
 
 const DAYS = [
@@ -45,6 +46,12 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
     return acc;
   }, {});
 
+  // As competicoes de maior peso sobem para o topo, em vez da ordem
+  // alfabetica que vem do provedor.
+  const { available, priority } = await loadCompetitionPriority();
+  const orderedGroups = sortGroupsForDisplay(Object.entries(grouped), priority, available);
+  const orderedLive = sortMatchesForDisplay(liveMatches, priority, available);
+
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <PageHeader title="Jogos" />
@@ -71,7 +78,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
         ))}
       </div>
 
-      <MatchesFilterTabs liveMatches={liveMatches} groupedUpcoming={Object.entries(grouped)} showLiveTab={day === 0} />
+      <MatchesFilterTabs liveMatches={orderedLive} groupedUpcoming={orderedGroups} showLiveTab={day === 0} />
     </div>
   );
 }
