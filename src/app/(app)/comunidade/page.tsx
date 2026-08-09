@@ -70,7 +70,11 @@ async function CommunityChatEmbed({ roomId, roomName, userId }: { roomId: string
   await trackServerEvent({ eventName: "CommunityRoomEntered", userId, properties: { room_id: roomId } });
 
   return (
-    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
+    // A altura desconta exatamente o que o rodapé ocupa: 4rem da barra mais
+    // a área segura de baixo. Antes descontava também `safe-area-inset-top`,
+    // que nesta tela não é consumida por nada — num iPhone eram uns 47px de
+    // altura jogados fora, e o chat parecia sobrar espaço embaixo.
+    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] flex-col">
       <CommunityRoomChat
         roomId={roomId}
         roomName={roomName}

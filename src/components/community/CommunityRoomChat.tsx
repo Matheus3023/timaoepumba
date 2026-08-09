@@ -10,13 +10,13 @@ import { Avatar } from "@/components/ui/Avatar";
 
 const PRESENCE_HEARTBEAT_MS = 25_000;
 
-const REPORT_REASONS = ["Spam", "Discurso de odio", "Assedio", "Conteudo inadequado", "Outro"];
+const REPORT_REASONS = ["Spam", "Discurso de ódio", "Assédio", "Conteúdo inadequado", "Outro"];
 
 function mapMessageError(message: string): string {
-  if (message.includes("links_not_allowed")) return "Links nao sao permitidos para usuarios comuns.";
-  if (message.includes("user_muted")) return "Voce foi silenciado nesta sala.";
-  if (message.includes("user_restricted")) return "Sua conta esta restrita e nao pode enviar mensagens.";
-  return "Nao foi possivel enviar a mensagem.";
+  if (message.includes("links_not_allowed")) return "Links não são permitidos para usuários comuns.";
+  if (message.includes("user_muted")) return "Você foi silenciado nesta sala.";
+  if (message.includes("user_restricted")) return "Sua conta está restrita e não pode enviar mensagens.";
+  return "Não foi possível enviar a mensagem.";
 }
 
 const STAFF_ROLE_LABEL: Record<string, string> = {
@@ -39,6 +39,27 @@ interface ChatMessage {
   is_pinned: boolean;
   author_name: string;
   author_role: string;
+}
+
+/** Só a hora, no fuso de quem está lendo. Data não cabe numa linha de chat. */
+function formatMessageTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Mensagens seguidas do mesmo autor, dentro de uma janela curta, formam um
+ * bloco visual. A janela evita colar mensagens separadas por meia hora só
+ * porque ninguém falou no meio.
+ */
+const GROUPING_WINDOW_MS = 5 * 60 * 1000;
+
+function isGroupedWithPrevious(
+  message: { user_id: string; created_at: string },
+  previous: { user_id: string; created_at: string } | undefined
+): boolean {
+  if (!previous || previous.user_id !== message.user_id) return false;
+  const gap = new Date(message.created_at).getTime() - new Date(previous.created_at).getTime();
+  return gap >= 0 && gap < GROUPING_WINDOW_MS;
 }
 
 /**
@@ -216,11 +237,11 @@ export function CommunityRoomChat({
     });
 
     if (reportError) {
-      showToast("Nao foi possivel enviar a denuncia.", "error");
+      showToast("Não foi possível enviar a denúncia.", "error");
       return;
     }
 
-    showToast("Denuncia enviada. A moderacao vai revisar.", "success");
+    showToast("Denúncia enviada. A moderação vai revisar.", "success");
     setReportedIds((prev) => new Set(prev).add(messageId));
   }
 
@@ -234,50 +255,87 @@ export function CommunityRoomChat({
         </div>
       </div>
 
-      <div className="scrollbar-none flex-1 overflow-y-auto px-4">
-        <div className="flex min-h-full flex-col justify-end gap-2 pb-4">
-          {messages.map((message) => {
+      <div className="scrollbar-none flex-1 overflow-y-auto px-3">
+        <div className="flex min-h-full flex-col justify-end gap-0.5 pb-3">
+          {messages.map((message, index) => {
             const isOwn = message.user_id === currentUserId;
             const isStaff = isStaffRole(message.author_role);
+            // Mensagens seguidas da mesma pessoa viram um bloco só: o nome e
+            // a foto aparecem uma vez, no topo. Repetir os dois a cada linha
+            // enche a tela de moldura e deixa pouco espaço para o que
+            // importa, que é o texto.
+            const grouped = isGroupedWithPrevious(message, messages[index - 1]);
 
             return (
-              <div key={message.id} className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse self-end" : "self-start"}`}>
-                <Avatar name={message.author_name} size={28} className="mb-4" />
+              <div
+                key={message.id}
+                className={`flex items-start gap-2.5 ${grouped ? "mt-0.5" : "mt-3 first:mt-0"} ${
+                  isOwn ? "flex-row-reverse self-end" : "self-start"
+                }`}
+              >
+                {/* Espaçador do mesmo tamanho do avatar mantém as mensagens
+                    agrupadas alinhadas com a primeira do bloco. */}
+                {grouped ? (
+                  <span className="w-8 shrink-0" aria-hidden />
+                ) : (
+                  <Avatar name={message.author_name} size={32} className="shrink-0" />
+                )}
 
-                <div className={`flex max-w-[78%] flex-col ${isOwn ? "items-end" : "items-start"}`}>
-                  {!isOwn && (
-                    <p className="mb-1 flex items-center gap-1.5 px-1 text-xs font-semibold">
-                      <span className={isStaff ? "text-emerald-300" : "text-secondary"}>{message.author_name}</span>
+                <div className={`flex max-w-[76%] min-w-0 flex-col ${isOwn ? "items-end" : "items-start"}`}>
+                  {!grouped && (
+                    <p
+                      className={`mb-1 flex items-baseline gap-1.5 px-0.5 text-xs ${
+                        isOwn ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      {/* O nome aparece para todo mundo, inclusive para quem
+                          escreveu — antes a própria mensagem saía anônima. */}
+                      <span className={`font-semibold ${isStaff ? "text-emerald-300" : "text-strong"}`}>
+                        {isOwn ? currentUserName : message.author_name}
+                      </span>
                       {isStaff && (
                         <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
                           {STAFF_ROLE_LABEL[message.author_role]}
                         </span>
                       )}
+                      <time
+                        dateTime={message.created_at}
+                        className="text-[10px] font-normal tabular-nums text-faint"
+                      >
+                        {formatMessageTime(message.created_at)}
+                      </time>
                     </p>
                   )}
 
-                  <div
-                    className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
-                      isOwn
-                        ? "rounded-br-md bg-primary text-surface"
-                        : isStaff
-                          ? "rounded-bl-md border border-emerald-500/30 bg-emerald-500/10 text-neutral-100"
-                          : "rounded-bl-md bg-surface-elevated text-neutral-100"
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-
-                  {!isOwn && (
-                    <button
-                      type="button"
-                      onClick={() => setReportTarget(message.id)}
-                      disabled={reportedIds.has(message.id)}
-                      className="mt-1 px-1 text-[10px] text-muted hover:text-red-400 disabled:text-faint"
+                  <div className={`group flex items-center gap-1.5 ${isOwn ? "flex-row-reverse" : ""}`}>
+                    <div
+                      className={`min-w-0 whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] leading-snug ${
+                        isOwn
+                          ? "bg-primary text-surface"
+                          : isStaff
+                            ? "border border-emerald-500/25 bg-emerald-500/10 text-neutral-100"
+                            : "bg-surface-elevated text-neutral-100"
+                      }`}
                     >
-                      {reportedIds.has(message.id) ? "Denunciado" : "🚩 Denunciar"}
-                    </button>
-                  )}
+                      {message.content}
+                    </div>
+
+                    {/* Denúncia sai de baixo da bolha e vira um ícone ao lado.
+                        Uma linha de "🚩 Denunciar" embaixo de cada mensagem
+                        dobrava a altura da conversa por uma ação rara. */}
+                    {!isOwn && (
+                      <button
+                        type="button"
+                        onClick={() => setReportTarget(message.id)}
+                        disabled={reportedIds.has(message.id)}
+                        aria-label={reportedIds.has(message.id) ? "Mensagem denunciada" : "Denunciar mensagem"}
+                        title={reportedIds.has(message.id) ? "Mensagem denunciada" : "Denunciar mensagem"}
+                        className="shrink-0 rounded-full p-1 text-[11px] leading-none text-faint opacity-0 transition-opacity hover:text-red-400 focus-visible:opacity-100 disabled:text-faint group-hover:opacity-100 max-sm:opacity-60"
+                      >
+                        {reportedIds.has(message.id) ? "✓" : "⚑"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -288,21 +346,32 @@ export function CommunityRoomChat({
 
       {error && <p className="px-4 pb-2 text-xs text-red-400">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="flex gap-2 border-t border-surface-elevated px-4 py-3">
+      <form
+        onSubmit={handleSubmit}
+        className="flex shrink-0 items-center gap-2 border-t border-white/[0.06] bg-sunken/60 px-3 py-2.5"
+      >
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Escreva uma mensagem..."
-          className="input flex-1"
+          placeholder="Mensagem"
+          aria-label="Escreva uma mensagem"
+          className="input min-w-0 flex-1 rounded-full py-2.5"
           maxLength={1000}
         />
-        <button type="submit" disabled={sending || !draft.trim()} className="btn-primary px-4">
-          Enviar
+        {/* Botão redondo com o ícone de enviar: em tela de celular, "Enviar"
+            escrito come largura que faz falta para o campo de texto. */}
+        <button
+          type="submit"
+          disabled={sending || !draft.trim()}
+          aria-label="Enviar mensagem"
+          className="btn-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 text-lg leading-none disabled:opacity-40"
+        >
+          ↑
         </button>
       </form>
 
       <BottomSheet open={reportTarget !== null} onClose={() => setReportTarget(null)} title="Denunciar mensagem">
-        <p className="mb-3 text-sm text-secondary">Qual o motivo da denuncia?</p>
+        <p className="mb-3 text-sm text-secondary">Qual o motivo da denúncia?</p>
         <div className="flex flex-col gap-1.5 pb-2">
           {REPORT_REASONS.map((reason) => (
             <button
