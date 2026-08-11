@@ -12,24 +12,27 @@ ou ação, ele sai.
 
 ## 1. Cor
 
-Preto de painel de controle, não preto de "dark mode genérico". A base é fria e
-levemente azulada, do jeito que overlay de transmissão aparece sobre gramado.
+Preto de painel de controle, não preto de "dark mode genérico". A base puxa
+**verde**, não azul: é gramado visto no escuro, não console de nave. Foi uma
+correção deliberada — a primeira versão veio azulada e ficou com cara de
+dashboard de infra qualquer, sem dizer nada sobre futebol.
 
 ```css
---hud-void:      #05070A;  /* fundo da página */
---hud-deck:      #0B1014;  /* superfície: card, painel */
---hud-deck-2:    #131A20;  /* superfície elevada: linha ativa, hover */
---hud-rule:      #1E272F;  /* borda 1px, divisória */
---hud-rule-soft: #141C22;  /* divisória interna, mais discreta */
+--hud-void:      #050B07;  /* fundo da página */
+--hud-deck:      #0A1410;  /* superfície: card, painel */
+--hud-deck-2:    #112019;  /* superfície elevada: linha ativa, hover */
+--hud-rule:      #1D3227;  /* borda 1px, divisória */
+--hud-rule-soft: #142219;  /* divisória interna, mais discreta */
 ```
 
-Texto em escala de 4 níveis. Mais que isso vira ruído.
+Texto em escala de 4 níveis, com a mesma temperatura verde para não brigar com
+o fundo. Mais que isso vira ruído.
 
 ```css
---hud-ink:       #F2F5F7;  /* título, número que importa */
---hud-body:      #B8C2CA;  /* corpo */
---hud-dim:       #7A8792;  /* rótulo, metadado */
---hud-faint:     #4A5560;  /* desabilitado, placeholder */
+--hud-ink:       #F2F7F4;  /* título, número que importa */
+--hud-body:      #B9C9BF;  /* corpo */
+--hud-dim:       #7B9086;  /* rótulo, metadado */
+--hud-faint:     #4B5C53;  /* desabilitado, placeholder */
 ```
 
 Acento único: **amarelo de transmissão**. Não é o `yellow-400` do Tailwind
@@ -45,7 +48,7 @@ levemente mais quente, com peso de faixa de sinalização.
 Sinais de estado. **Só aparecem quando há estado real** — nunca como enfeite.
 
 ```css
---hud-on:    #16E27C;  /* verde: sinal confirmado, green, ativo */
+--hud-on:    #17C46A;  /* verde da marca: sinal confirmado, green, ativo */
 --hud-off:   #FF3B2F;  /* vermelho: AO VIVO pulsando, red, erro */
 --hud-wait:  #FF9F0A;  /* âmbar: pendente, aguardando resolução */
 ```
