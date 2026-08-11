@@ -64,7 +64,7 @@ export function UsersFilters({
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-surface/40 p-3">
+    <div className="rounded-none border border-white/[0.06] bg-surface/40 p-3">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <form
           onSubmit={(event) => {

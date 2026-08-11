@@ -1,8 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --background: #080b09;
-  --foreground: #f5f5f0;
+  /* ── Sports HUD ──────────────────────────────────────────────────────────
+     Sistema do DESIGN.md na raiz do repo. Base fria e azulada, do jeito que
+     overlay de transmissão aparece sobre gramado — e não o cinza-neutro do
+     Tailwind, que é o dark mode que toda IA entrega. Ler DESIGN.md antes de
+     inventar valor novo aqui. */
+  --hud-void: #05070a;
+  --hud-deck: #0b1014;
+  --hud-deck-2: #131a20;
+  --hud-rule: #1e272f;
+  --hud-rule-soft: #141c22;
+
+  --hud-ink: #f2f5f7;
+  --hud-body: #b8c2ca;
+  --hud-dim: #7a8792;
+  --hud-faint: #4a5560;
+
+  /* Amarelo de transmissão, deliberadamente fora do #facc15 (yellow-400) que
+     vinha antes. Só entra em ação e em número que decide. */
+  --hud-live: #ffd100;
+  --hud-live-deep: #e5bc00;
+  --hud-live-haze: rgba(255, 209, 0, 0.1);
+
+  /* Estado só aparece quando há estado real. Vermelho é "ao vivo" e perda,
+     nunca botão de destaque. */
+  --hud-on: #16e27c;
+  --hud-off: #ff3b2f;
+  --hud-wait: #ff9f0a;
+
+  --hud-radius: 0px;
+
+  --background: var(--hud-void);
+  --foreground: var(--hud-ink);
   --brand-green: #0a5c36;
   --brand-green-light: #12a35c;
   --brand-green-dark: #06371f;
@@ -20,30 +50,30 @@
      the theme becomes changeable from one place. The scale deliberately
      covers every step the screens actually use — a partial set would just
      split the codebase between tokens and raw classes. */
-  --surface-sunken: #0a0a0a; /* neutral-950 */
-  --surface: #171717; /* neutral-900 */
-  --surface-elevated: #262626; /* neutral-800 */
-  --surface-highlighted: #404040; /* neutral-700 */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-soft: rgba(255, 255, 255, 0.05);
+  --surface-sunken: var(--hud-void);
+  --surface: var(--hud-deck);
+  --surface-elevated: var(--hud-deck-2);
+  --surface-highlighted: #24303a;
+  --border: var(--hud-rule);
+  --border-soft: var(--hud-rule-soft);
 
-  --primary: #facc15; /* yellow-400 */
-  --primary-hover: #eab308;
-  --primary-soft: rgba(250, 204, 21, 0.12);
+  --primary: var(--hud-live);
+  --primary-hover: var(--hud-live-deep);
+  --primary-soft: var(--hud-live-haze);
 
-  --text-strong: #e5e5e5; /* neutral-200 */
-  --text-body: #d4d4d4; /* neutral-300 */
-  --text-secondary: #a3a3a3; /* neutral-400 */
-  --text-muted: #737373; /* neutral-500 */
-  --text-faint: #525252; /* neutral-600 */
+  --text-strong: var(--hud-ink);
+  --text-body: var(--hud-body);
+  --text-secondary: var(--hud-dim);
+  --text-muted: var(--hud-dim);
+  --text-faint: var(--hud-faint);
 
-  --success: #34d399;
-  --success-soft: rgba(52, 211, 153, 0.12);
-  --warning: #fbbf24;
-  --warning-soft: rgba(251, 191, 36, 0.12);
-  --error: #f87171;
-  --error-soft: rgba(248, 113, 113, 0.12);
-  --live: #f87171;
+  --success: var(--hud-on);
+  --success-soft: rgba(22, 226, 124, 0.12);
+  --warning: var(--hud-wait);
+  --warning-soft: rgba(255, 159, 10, 0.12);
+  --error: var(--hud-off);
+  --error-soft: rgba(255, 59, 47, 0.12);
+  --live: var(--hud-off);
 
   --overlay: rgba(0, 0, 0, 0.72);
 
@@ -85,8 +115,12 @@
   --color-overlay: var(--overlay);
   --color-chart-home: var(--chart-home);
   --color-chart-away: var(--chart-away);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Três papéis, definidos no DESIGN.md: display condensado para título e
+     rótulo, corpo para texto, mono tabular para todo número. `font-sans` e
+     `font-mono` continuam existindo porque as telas antigas os usam. */
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-data);
 }
 
 html {
@@ -108,6 +142,24 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Título sempre no condensado. É o que dá cara de transmissão e o que mais
+   diferencia o app do dark-mode-com-Inter que todo concorrente usa. O
+   uppercase fica a cargo de cada tela: nem todo h2 quer gritar. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* Número não dança quando o placar vira. */
+time,
+[data-hud-number] {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
 button,
 a {
   touch-action: manipulation;
@@ -121,47 +173,91 @@ a {
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: 0.5rem;
+  border-radius: var(--hud-radius);
 }
 
+/* Componentes na linguagem Sports HUD (ver DESIGN.md na raiz).
+   Os nomes de classe são os mesmos de antes de propósito: as 34 telas
+   continuam consumindo `.card`, `.btn-primary` etc., então trocar a
+   implementação aqui repagina o app inteiro sem editar componente por
+   componente. O que saiu: raio grande, gradiente, sombra difusa e
+   backdrop-blur — os quatro juntos são a assinatura de interface gerada
+   por IA, e nenhum deles existe em overlay de transmissão esportiva. */
 @layer components {
   .input {
-    @apply rounded-xl border border-neutral-700/80 bg-neutral-900/80 px-4 py-3 text-white outline-none backdrop-blur transition placeholder:text-neutral-600 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20;
+    @apply border border-[var(--hud-rule)] bg-[var(--hud-deck)] px-4 py-3 text-[var(--hud-ink)] outline-none transition-colors placeholder:text-[var(--hud-faint)] focus:border-[var(--hud-live)];
+    border-radius: var(--hud-radius);
   }
 
+  /* Retângulo sólido, sem gradiente e sem sombra. O feedback de toque é
+     escurecer o amarelo, não levitar — botão de painel não flutua. */
   .btn-primary {
-    @apply relative inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-yellow-300 to-yellow-500 px-4 py-3 font-bold text-neutral-900 shadow-[0_4px_20px_-4px_rgba(250,204,21,0.5)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(250,204,21,0.65)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+    @apply relative inline-flex items-center justify-center bg-[var(--hud-live)] px-5 py-3 font-semibold uppercase tracking-[0.08em] text-[var(--hud-void)] transition-colors duration-150 hover:bg-[var(--hud-live-deep)] disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--hud-radius);
+    font-family: var(--font-display), system-ui, sans-serif;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-neutral-700 bg-neutral-900/40 px-4 py-3 font-semibold text-neutral-200 backdrop-blur transition-all duration-200 hover:border-neutral-500 hover:bg-neutral-800/60 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center border border-[var(--hud-rule)] bg-transparent px-5 py-3 font-semibold uppercase tracking-[0.08em] text-[var(--hud-body)] transition-colors duration-150 hover:border-[var(--hud-live)] hover:text-[var(--hud-live)] disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--hud-radius);
+    font-family: var(--font-display), system-ui, sans-serif;
   }
 
+  /* Elevação por borda e superfície, nunca por sombra. */
   .card {
-    @apply rounded-2xl border border-white/[0.06] bg-gradient-to-b from-neutral-900/80 to-neutral-950/80 p-4 shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset] backdrop-blur-sm;
+    @apply border border-[var(--hud-rule)] bg-[var(--hud-deck)] p-4;
+    border-radius: var(--hud-radius);
   }
 
-  /* For cards that are links/buttons. Gives them the press feedback a
-     native app has — the app's tappable cards previously only had a hover
-     lift, which does nothing on a phone. */
   .card-interactive {
-    @apply transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-white/[0.12] active:translate-y-0 active:scale-[0.99];
+    @apply transition-colors duration-150 hover:border-[var(--hud-live)] hover:bg-[var(--hud-deck-2)];
   }
 
+  /* Card em destaque: a faixa de 3px na borda esquerda é a marca do card de
+     sinal do DESIGN.md, e custa menos atenção que um fundo inteiro tingido. */
   .card-glow {
-    @apply relative rounded-2xl border border-yellow-400/15 bg-gradient-to-b from-yellow-400/[0.06] to-transparent p-4 backdrop-blur-sm;
+    @apply relative border border-[var(--hud-rule)] border-l-[3px] border-l-[var(--hud-live)] bg-[var(--hud-deck)] p-4;
+    border-radius: var(--hud-radius);
   }
 
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.1em];
+    border-radius: var(--hud-radius);
+    font-family: var(--font-display), system-ui, sans-serif;
   }
 
   .glass-panel {
-    @apply rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+    @apply border border-[var(--hud-rule)] bg-[var(--hud-deck)];
+    border-radius: var(--hud-radius);
   }
 
+  /* A régua de rótulo: traço curto no acento + rótulo condensado maiúsculo.
+     É a assinatura visual da marca, repetida em toda abertura de seção. */
+  .hud-label {
+    @apply inline-flex items-center gap-2.5 text-[0.6875rem] uppercase tracking-[0.14em] text-[var(--hud-dim)];
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 500;
+  }
+  .hud-label::before {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: var(--hud-live);
+    flex: none;
+  }
+
+  /* Todo número do produto passa por aqui: placar, minuto, odd, CPM. O
+     tabular é o que impede os dígitos de dançarem quando o placar vira. */
+  .hud-data {
+    font-family: var(--font-data), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Mantida como no-op: o texto com gradiente era item da checagem anti-IA.
+     Vira amarelo chapado, e as telas que a usam não quebram. */
   .text-gradient-gold {
-    @apply bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent;
+    color: var(--hud-live);
   }
 
   .bg-grid {
@@ -197,36 +293,12 @@ a {
   animation: pulse-live 1.6s ease-in-out infinite;
 }
 
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(2%, -3%) scale(1.05);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 12s ease-in-out infinite;
-}
-
-@keyframes float-slower {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-3%, 3%) scale(1.08);
-  }
-}
-
-.animate-float-slower {
-  animation: float-slower 16s ease-in-out infinite;
-}
+/* As animações float-slow/float-slower saíram: moviam as esferas borradas do
+   fundo, que já tinham sido removidas do hero, então eram CSS morto — e
+   "orbs flutuantes com blur" é item da checagem anti-IA do DESIGN.md. */
 
 ::selection {
-  background: rgba(255, 204, 41, 0.3);
+  background: var(--hud-live-haze);
 }
 
 * {

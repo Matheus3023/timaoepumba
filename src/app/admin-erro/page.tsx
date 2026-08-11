@@ -14,7 +14,7 @@ export default async function AdminErrorPage({
   return (
     <div className="mx-auto max-w-md px-4 py-10">
       <h1 className="text-lg font-bold text-red-400">Erro ao carregar o painel administrativo</h1>
-      <p className="mt-3 whitespace-pre-wrap rounded-lg bg-surface p-3 font-mono text-xs text-body">
+      <p className="mt-3 whitespace-pre-wrap rounded-none bg-surface p-3 font-mono text-xs text-body">
         {message || "Erro desconhecido."}
       </p>
       <p className="mt-3 text-sm text-secondary">

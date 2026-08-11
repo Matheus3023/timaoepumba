@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { RootAttributionTracker } from "@/components/RootAttributionTracker";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -7,15 +7,55 @@ import { InstallPromptProvider } from "@/lib/onboarding/InstallPromptProvider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { SHARE_DESCRIPTION, SHARE_TITLE, SITE_NAME, SITE_URL } from "@/lib/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+/* Tipografia do DESIGN.md (âncora Sports HUD). Arquivos servidos do próprio
+   domínio a partir de src/fonts — Google Fonts CDN em produção adiciona um
+   terceiro no caminho crítico e vaza IP do usuário. Subset latino, que cobre
+   os acentos do português. */
+
+/* Display: o condensado é o que dá cara de transmissão — cabe placar, minuto e
+   liga na mesma largura. Usado em título, rótulo de HUD e número de destaque. */
+const displayFont = localFont({
+  variable: "--font-display",
+  display: "swap",
+  src: [
+    { path: "../fonts/BarlowCondensed-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/BarlowCondensed-Bold.woff2", weight: "700", style: "normal" },
+  ],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+/* Corpo: Barlow normal, mesma família do display, então o par tem parentesco
+   sem parecer a mesma fonte repetida. */
+const bodyFont = localFont({
+  variable: "--font-body",
+  display: "swap",
+  src: [
+    { path: "../fonts/Barlow-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/Barlow-SemiBold.woff2", weight: "600", style: "normal" },
+  ],
 });
+
+/* Dado: todo número passa por aqui, com tabular-nums ligado no globals.css para
+   os dígitos não dançarem quando o placar vira. */
+const dataFont = localFont({
+  variable: "--font-data",
+  display: "swap",
+  src: [
+    { path: "../fonts/JetBrainsMono-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/JetBrainsMono-Bold.woff2", weight: "700", style: "normal" },
+  ],
+});
+
+/* As telas antigas referenciam --font-geist-sans/--font-geist-mono direto.
+   Reapontar os nomes legados aqui faz as 34 rotas herdarem a tipografia nova
+   sem editar componente por componente; conforme cada tela for repaginada, a
+   referência legada sai junto. */
+const fontVariables = [
+  displayFont.variable,
+  bodyFont.variable,
+  dataFont.variable,
+  "[--font-geist-sans:var(--font-body)]",
+  "[--font-geist-mono:var(--font-data)]",
+].join(" ");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -90,11 +130,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-[#0b0f0c] text-neutral-100">
+    <html lang="pt-BR" className={`${fontVariables} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-[var(--hud-void)] text-[var(--hud-body)]">
         <InstallPromptProvider>
           <ToastProvider>
             <RootAttributionTracker />

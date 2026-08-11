@@ -64,7 +64,7 @@ export function UsersTable({
 
   return (
     <form action={bulkAction}>
-      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-surface/40">
+      <div className="overflow-hidden rounded-none border border-white/[0.06] bg-surface/40">
         {/* Tabela: telas médias para cima */}
         <div className="hidden md:block">
           <TableShell minWidth={880}>
@@ -185,7 +185,7 @@ export function UsersTable({
       </div>
 
       {writable && selected.length > 0 && (
-        <div className="sticky bottom-3 z-20 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-sunken/95 px-4 py-3 backdrop-blur">
+        <div className="sticky bottom-3 z-20 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-none border border-primary/25 bg-sunken/95 px-4 py-3">
           <p className="text-sm text-body">
             <span className="font-semibold tabular-nums text-primary">{selected.length}</span>{" "}
             {selected.length === 1 ? "usuário selecionado" : "usuários selecionados"}

@@ -173,7 +173,7 @@ export function SmarticoDebugClient({ canWrite }: { canWrite: boolean }) {
             </button>
           </div>
           <p className="mt-2 break-all font-mono text-xs text-muted">{String(result.requested_url)}</p>
-          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-sunken p-3 text-xs text-body">
+          <pre className="mt-3 max-h-[500px] overflow-auto rounded-none bg-sunken p-3 text-xs text-body">
             {JSON.stringify(result.body, null, 2)}
           </pre>
         </div>

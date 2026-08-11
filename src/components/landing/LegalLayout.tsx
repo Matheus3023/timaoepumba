@@ -28,7 +28,7 @@ export function LegalLayout({
               alt=""
               width={30}
               height={30}
-              className="h-[30px] w-[30px] rounded-lg"
+              className="h-[30px] w-[30px] rounded-none"
             />
             <span className="text-[15px] font-extrabold tracking-tight text-white">
               Timão<span className="text-primary">&</span>Pumba

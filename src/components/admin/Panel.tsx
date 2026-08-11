@@ -21,7 +21,7 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-xl border border-white/[0.06] bg-surface/40 ${className}`}>
+    <section className={`overflow-hidden rounded-none border border-white/[0.06] bg-surface/40 ${className}`}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3">
           <div className="min-w-0">
@@ -38,7 +38,7 @@ export function Panel({
 
 /** Classe do cabeçalho de tabela, repetida em cinco telas do painel. */
 export const TABLE_HEAD_CLASS =
-  "sticky top-0 z-10 bg-sunken/95 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-faint backdrop-blur";
+  "sticky top-0 z-10 bg-sunken/95 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-faint";
 
 /**
  * Moldura de tabela com rolagem horizontal contida. O `minWidth` é

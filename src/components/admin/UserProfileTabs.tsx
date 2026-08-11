@@ -313,7 +313,7 @@ export function UserProfileTabs({
                   </div>
 
                   {score.risk_blocked && (
-                    <p className="mt-4 rounded-lg border border-error/25 bg-error-soft px-3 py-2 text-xs text-error">
+                    <p className="mt-4 rounded-none border border-error/25 bg-error-soft px-3 py-2 text-xs text-error">
                       Comunicações promocionais bloqueadas
                       {score.risk_reason ? `: ${RISK_REASON_LABEL[score.risk_reason] ?? score.risk_reason}` : ""}.
                     </p>

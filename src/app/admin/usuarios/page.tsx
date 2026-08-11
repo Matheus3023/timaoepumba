@@ -260,7 +260,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
               <li key={lead.id} className="shrink-0">
                 <Link
                   href={`/admin/usuarios/${lead.id}`}
-                  className="flex w-56 items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface/40 px-3 py-2.5 transition-colors hover:border-white/[0.12] hover:bg-surface"
+                  className="flex w-56 items-center justify-between gap-3 rounded-none border border-white/[0.06] bg-surface/40 px-3 py-2.5 transition-colors hover:border-white/[0.12] hover:bg-surface"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-[13px] font-semibold text-strong">{lead.name}</span>

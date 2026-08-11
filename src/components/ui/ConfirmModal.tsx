@@ -43,7 +43,7 @@ export function ConfirmModal({
           disabled={confirmDisabled}
           className={
             destructive
-              ? "flex-1 rounded-xl bg-red-500 px-4 py-3 font-bold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+              ? "flex-1 rounded-none bg-red-500 px-4 py-3 font-bold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
               : "btn-primary flex-1"
           }
         >

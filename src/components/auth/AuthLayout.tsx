@@ -33,7 +33,7 @@ function Wordmark({ className = "" }: { className?: string }) {
         alt=""
         width={34}
         height={34}
-        className="h-[34px] w-[34px] rounded-lg"
+        className="h-[34px] w-[34px] rounded-none"
         priority
       />
       <span className="text-[17px] font-extrabold tracking-tight text-white">

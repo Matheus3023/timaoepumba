@@ -19,7 +19,7 @@ export function StatStrip({ children, columns = 6 }: { children: ReactNode; colu
 
   return (
     <div
-      className={`grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.06] ${columnClass}`}
+      className={`grid grid-cols-2 gap-px overflow-hidden rounded-none border border-white/[0.06] bg-white/[0.06] ${columnClass}`}
     >
       {children}
     </div>

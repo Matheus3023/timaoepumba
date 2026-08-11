@@ -62,7 +62,7 @@ export function BottomSheet({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateY(${dragOffset}px)` }}
-        className="w-full max-w-md rounded-t-2xl border-t border-white/[0.06] bg-sunken/95 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-8px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-transform"
+        className="w-full max-w-md rounded-t-2xl border-t border-white/[0.06] bg-sunken/95 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_-8px_rgba(0,0,0,0.5)] transition-transform"
       >
         <div className="mx-auto mb-3 h-1.5 w-10 shrink-0 rounded-full bg-surface-highlighted" />
 

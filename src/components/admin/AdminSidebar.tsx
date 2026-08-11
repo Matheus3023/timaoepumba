@@ -45,7 +45,7 @@ export function AdminSidebar({
                       key={link.href}
                       href={link.href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center gap-2 rounded-lg py-1.5 pl-2 pr-2 text-[13px] transition-colors ${
+                      className={`flex items-center gap-2 rounded-none py-1.5 pl-2 pr-2 text-[13px] transition-colors ${
                         active ? "bg-primary/10 font-semibold text-primary" : "text-secondary hover:bg-surface hover:text-body"
                       }`}
                     >
@@ -68,7 +68,7 @@ export function AdminSidebar({
           </p>
           <Link
             href="/home"
-            className="mt-3 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted transition-colors hover:bg-surface hover:text-body"
+            className="mt-3 flex items-center gap-1.5 rounded-none px-2 py-1.5 text-xs text-muted transition-colors hover:bg-surface hover:text-body"
           >
             <span aria-hidden>&larr;</span> Voltar ao aplicativo
           </Link>

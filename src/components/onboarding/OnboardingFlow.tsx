@@ -208,7 +208,7 @@ function InstallStep({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={64} height={64} className="h-16 w-16 rounded-2xl" priority />
+      <Image src="/icons/icon-512.png" alt="Timao e Pumba Tips" width={64} height={64} className="h-16 w-16 rounded-none" priority />
 
       <div>
         <h1 className="text-2xl font-bold text-white">{config.welcome_title}</h1>

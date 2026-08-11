@@ -107,7 +107,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
 function OddsBlock({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-xl border border-white/[0.04] bg-surface/60 py-2">
+    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-none border border-white/[0.04] bg-surface/60 py-2">
       <span className="text-[10px] uppercase tracking-wide text-muted">{label}</span>
       <span className="text-sm font-bold tabular-nums text-white">{value.toFixed(2)}</span>
     </div>

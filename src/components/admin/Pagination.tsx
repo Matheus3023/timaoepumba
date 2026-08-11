@@ -63,7 +63,7 @@ function PageLink({
   children: React.ReactNode;
 }) {
   const base =
-    "flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm transition-colors";
+    "flex h-9 min-w-9 items-center justify-center rounded-none border px-2 text-sm transition-colors";
 
   if (disabled) {
     return (

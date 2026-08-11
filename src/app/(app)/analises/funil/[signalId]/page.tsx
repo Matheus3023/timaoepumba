@@ -104,7 +104,7 @@ export default async function FunilSignalDetailPage({ params }: { params: Promis
         </div>
 
         {signal.entryLineLabel && (
-          <div className="mt-3 rounded-xl border border-white/[0.06] bg-surface/60 p-3 text-center">
+          <div className="mt-3 rounded-none border border-white/[0.06] bg-surface/60 p-3 text-center">
             <p className="text-[10px] uppercase tracking-wide text-muted">Entrada analisada</p>
             <p className="mt-0.5 text-sm font-bold text-white">{signal.entryLineLabel}</p>
             <p className="mt-1 text-[11px] text-secondary">

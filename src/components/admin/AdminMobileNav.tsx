@@ -45,7 +45,7 @@ export function AdminMobileNav({
   }, [open]);
 
   return (
-    <div className="sticky top-0 z-30 border-b border-white/[0.06] bg-sunken/95 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:hidden">
+    <div className="sticky top-0 z-30 border-b border-white/[0.06] bg-sunken/95 pt-[env(safe-area-inset-top)] sm:hidden">
       <button
         ref={toggleRef}
         type="button"
@@ -61,7 +61,7 @@ export function AdminMobileNav({
             <span className="block truncate text-sm font-semibold text-white">{current?.label ?? "Administrativo"}</span>
           </span>
         </span>
-        <span className="shrink-0 rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-secondary">
+        <span className="shrink-0 rounded-none border border-white/[0.08] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-secondary">
           {open ? "Fechar" : "Seções"}
         </span>
       </button>
@@ -84,7 +84,7 @@ export function AdminMobileNav({
                     href={link.href}
                     onClick={() => setOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    className={`flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm ${
+                    className={`flex min-h-11 items-center gap-2 rounded-none px-2 text-sm ${
                       active ? "bg-primary/10 font-semibold text-primary" : "text-body active:bg-surface"
                     }`}
                   >

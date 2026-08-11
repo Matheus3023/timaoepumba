@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Chaves locais de desenvolvimento (Supabase). Nunca versionar.
+.env.local

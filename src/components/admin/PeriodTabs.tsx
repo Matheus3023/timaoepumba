@@ -47,7 +47,7 @@ export function resolvePeriod(raw: string | undefined): ResolvedPeriod {
 
 export function PeriodTabs({ current, hrefFor }: { current: PeriodKey; hrefFor: (key: PeriodKey) => string }) {
   return (
-    <div className="flex items-center gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.06] p-px">
+    <div className="flex items-center gap-px overflow-hidden rounded-none border border-white/[0.08] bg-white/[0.06] p-px">
       {PERIOD_OPTIONS.map((option) => {
         const active = option.key === current;
         return (

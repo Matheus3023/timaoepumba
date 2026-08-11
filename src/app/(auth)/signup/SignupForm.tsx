@@ -176,7 +176,7 @@ export function SignupForm() {
         hint="Precisamos confirmar que você tem 18 anos ou mais."
       />
 
-      <fieldset className="mt-1 flex flex-col gap-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+      <fieldset className="mt-1 flex flex-col gap-3.5 rounded-none border border-white/[0.07] bg-white/[0.02] p-4">
         <legend className="px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
           Confirmações
         </legend>

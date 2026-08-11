@@ -69,7 +69,7 @@ export function FunilLiveList({ signals }: { signals: FunilSignalView[] }) {
             type="button"
             onClick={() => setTab(item.key)}
             aria-pressed={tab === item.key}
-            className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+            className={`shrink-0 rounded-none px-3 py-2 text-xs font-semibold transition-colors ${
               tab === item.key
                 ? "bg-neutral-100 text-surface"
                 : "bg-surface/60 text-secondary hover:bg-white/[0.04] hover:text-strong"

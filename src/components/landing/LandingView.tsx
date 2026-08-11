@@ -119,7 +119,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
               alt=""
               width={34}
               height={34}
-              className="h-[34px] w-[34px] rounded-lg"
+              className="h-[34px] w-[34px] rounded-none"
               priority
             />
             <span className="text-[17px] font-extrabold tracking-tight text-white">
@@ -298,7 +298,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
             </h2>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2 md:gap-5">
-              <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-5">
+              <div className="rounded-none border border-primary/20 bg-primary/[0.04] p-5">
                 <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
                   Faz sentido se
                 </h3>
@@ -317,7 +317,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-dashed border-white/10 p-5">
+              <div className="rounded-none border border-dashed border-white/10 p-5">
                 <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
                   Não é pra você se
                 </h3>
@@ -409,7 +409,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
                 alt=""
                 width={26}
                 height={26}
-                className="h-[26px] w-[26px] rounded-md"
+                className="h-[26px] w-[26px] rounded-none"
               />
               <span className="text-sm font-bold tracking-tight text-body">
                 Timão<span className="text-primary">&</span>Pumba

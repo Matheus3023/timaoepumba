@@ -36,7 +36,7 @@ export default async function AnalysisDetailPage({ params }: { params: Promise<{
 
       {analysis.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={analysis.image_url} alt={analysis.title} className="mb-4 w-full rounded-xl object-cover" />
+        <img src={analysis.image_url} alt={analysis.title} className="mb-4 w-full rounded-none object-cover" />
       )}
       <p className="text-xs text-muted">{analysis.market ?? "Análise"}</p>
       <h1 className="mt-1 text-xl font-bold text-white">{analysis.title}</h1>

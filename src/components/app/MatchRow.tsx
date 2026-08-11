@@ -12,7 +12,7 @@ export function MatchRow({ match }: { match: Match }) {
   return (
     <Link
       href={`/jogos/${match.id}`}
-      className={`card-interactive relative flex flex-col gap-2.5 overflow-hidden rounded-2xl border px-3.5 py-3 ${
+      className={`card-interactive relative flex flex-col gap-2.5 overflow-hidden rounded-none border px-3.5 py-3 ${
         isLive ? "border-red-500/25 bg-red-500/[0.06]" : "border-white/5 bg-surface/60"
       }`}
     >
@@ -68,7 +68,7 @@ export function MatchRow({ match }: { match: Match }) {
 
 function OddsPill({ label, value }: { label: string; value: number }) {
   return (
-    <span className="flex flex-1 items-center justify-between rounded-lg bg-surface-elevated/70 px-2 py-1 text-xs text-body">
+    <span className="flex flex-1 items-center justify-between rounded-none bg-surface-elevated/70 px-2 py-1 text-xs text-body">
       <span className="text-muted">{label}</span>
       <span className="font-semibold text-white">{value.toFixed(2)}</span>
     </span>

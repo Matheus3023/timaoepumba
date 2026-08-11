@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-sunken/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl [-webkit-tap-highlight-color:transparent]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-sunken/90 pb-[env(safe-area-inset-bottom)] [-webkit-tap-highlight-color:transparent]">
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-1">
         {TABS.map((tab) => {
           const active = pathname.startsWith(tab.href);

@@ -49,7 +49,7 @@ export function LiveScoreboard({ matches }: { matches: TickerMatch[] }) {
   return (
     <section
       aria-labelledby="placar-de-hoje"
-      className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0b0f0d]"
+      className="overflow-hidden rounded-none border border-white/[0.07] bg-[#0b0f0d]"
     >
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3">
         <h2

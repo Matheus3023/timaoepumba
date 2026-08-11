@@ -134,7 +134,7 @@ export default async function AdminAuditLogPage({
       {/* Formulário GET puro: a tela segue Server Component e o filtro fica
           na URL, então um achado pode ser mandado por link para outra
           pessoa da equipe. */}
-      <form className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-surface/40 p-3 lg:flex-row lg:items-center">
+      <form className="flex flex-col gap-2 rounded-none border border-white/[0.06] bg-surface/40 p-3 lg:flex-row lg:items-center">
         <input
           name="q"
           defaultValue={rawQuery}

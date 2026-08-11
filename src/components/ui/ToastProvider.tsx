@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={() => dismiss(toast.id)}
             aria-label="Fechar aviso"
-            className={`pointer-events-auto w-full max-w-sm rounded-xl border px-4 py-3 text-left text-sm shadow-lg backdrop-blur ${VARIANT_STYLE[toast.variant]}`}
+            className={`pointer-events-auto w-full max-w-sm rounded-none border px-4 py-3 text-left text-sm shadow-lg ${VARIANT_STYLE[toast.variant]}`}
           >
             {toast.message}
           </button>

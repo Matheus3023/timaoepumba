@@ -59,7 +59,7 @@ export function PasswordField({
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-pressed={visible}
-          className="absolute right-1.5 top-1/2 flex min-h-11 -translate-y-1/2 items-center rounded-lg px-2.5 font-mono text-[11px] uppercase tracking-wide text-muted transition-colors hover:text-primary"
+          className="absolute right-1.5 top-1/2 flex min-h-11 -translate-y-1/2 items-center rounded-none px-2.5 font-mono text-[11px] uppercase tracking-wide text-muted transition-colors hover:text-primary"
         >
           {visible ? "ocultar" : "mostrar"}
         </button>
