@@ -7,10 +7,13 @@ import { GROUP_ICON, SIGNAL_STATE_LABEL, buildChips } from "@/lib/funil/presenta
 import { STRATEGY_GROUP } from "@/lib/funil/defaults";
 import type { FunilSignalView } from "@/lib/funil/view";
 
+/* Um estado, uma cor, e só três cores no produto inteiro (DESIGN.md sec. 1):
+   verde = entrada liberada, amarelo = validado, cinza = ainda observando.
+   Antes eram emerald/yellow/sky, três acentos brigando no mesmo card. */
 const STATE_STYLE: Record<string, string> = {
-  ENTRY_AVAILABLE: "bg-emerald-500/15 text-emerald-300",
-  VALIDATED: "bg-primary/15 text-yellow-300",
-  PRE_SIGNAL: "bg-sky-500/15 text-sky-300",
+  ENTRY_AVAILABLE: "bg-[var(--hud-on)] text-[var(--hud-void)]",
+  VALIDATED: "bg-[var(--hud-live)] text-[var(--hud-void)]",
+  PRE_SIGNAL: "border border-[var(--hud-rule)] text-[var(--hud-dim)]",
 };
 
 const TP_CLASS_LABEL: Record<string, string> = {
@@ -58,15 +61,19 @@ export function FunilSignalCard({ signal }: { signal: FunilSignalView }) {
           <p className="text-xs font-semibold leading-tight text-strong">{signal.homeTeamName}</p>
         </div>
 
-        <div className="flex shrink-0 flex-col items-center gap-1 px-2">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-white">
+        <div className="flex shrink-0 flex-col items-center gap-1.5 px-2">
+          {/* O placar é o maior número do card: em transmissão é o primeiro
+              lugar onde o olho pousa. */}
+          <p className="hud-data text-[2rem] font-bold leading-none text-strong">
             {signal.scoreHome ?? 0}
-            <span className="mx-1 text-faint">-</span>
+            <span className="mx-1.5 text-faint">-</span>
             {signal.scoreAway ?? 0}
           </p>
-          <span className="badge bg-red-500/15 text-[10px] text-red-300">
-            <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse-live rounded-full bg-red-400 align-middle" />
-            {signal.minute !== null ? `${signal.minute}'` : "AO VIVO"}
+          <span className="flex items-center gap-1.5 text-[var(--hud-off)]">
+            <span className="h-1.5 w-1.5 animate-pulse-live rounded-full bg-[var(--hud-off)]" />
+            <span className="hud-data text-[13px] font-bold">
+              {signal.minute !== null ? `${signal.minute}'` : "AO VIVO"}
+            </span>
           </span>
         </div>
 
@@ -77,9 +84,13 @@ export function FunilSignalCard({ signal }: { signal: FunilSignalView }) {
       </div>
 
       {signal.entryLineLabel && (
-        <div className="mt-3 rounded-none border border-white/[0.06] bg-surface/60 p-3 text-center">
-          <p className="text-[10px] uppercase tracking-wide text-muted">Entrada analisada</p>
-          <p className="mt-0.5 text-sm font-bold text-white">{signal.entryLineLabel}</p>
+        <div className="mt-3 border border-[var(--hud-rule)] bg-[var(--hud-deck-2)] p-3 text-center">
+          <p className="font-[family-name:var(--font-display)] text-[10px] uppercase tracking-[0.14em] text-muted">
+            Entrada analisada
+          </p>
+          <p className="hud-data mt-1 text-[15px] font-bold text-[var(--hud-live)]">
+            {signal.entryLineLabel}
+          </p>
           {/* Sem fonte de odds ao vivo nesta API (PRD sec. 9): mostramos a
               linha e deixamos claro que a odd tem de ser conferida na casa. */}
           <p className="mt-1 text-[11px] text-secondary">
@@ -89,30 +100,47 @@ export function FunilSignalCard({ signal }: { signal: FunilSignalView }) {
       )}
 
       {signal.tpScore !== null && (
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="mt-3 flex items-end justify-between gap-2 border-t border-[var(--hud-rule-soft)] pt-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-muted">Força do sinal</p>
-            <p className="text-lg font-bold tabular-nums text-white">
+            <p className="font-[family-name:var(--font-display)] text-[10px] uppercase tracking-[0.14em] text-muted">
+              Força do sinal
+            </p>
+            <p className="hud-data text-[1.5rem] font-bold leading-none text-strong">
               {signal.tpScore}
-              <span className="text-sm text-faint">/100</span>
+              <span className="text-[0.875rem] text-faint">/100</span>
             </p>
           </div>
-          <span className="badge bg-surface-elevated text-[10px] text-secondary">
+          <span className="badge border border-[var(--hud-rule)] text-secondary">
             {TP_CLASS_LABEL[signal.tpClass ?? ""] ?? signal.tpClass}
           </span>
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      {/* Grade de métrica: rótulo em cima, número embaixo, divisória de 1px.
+          O ✅/❌ saiu — emoji decorativo é item da checagem anti-IA. Critério
+          atendido vira a barra superior acesa no acento; reprovado, vermelha;
+          não avaliado, cinza. Lê mais rápido e imprime melhor. */}
+      <div className="mt-3 flex flex-wrap">
         {chips.map((chip) => (
           <span
             key={chip.label}
-            className="badge bg-surface-elevated text-[11px] text-body"
+            className="flex min-w-[4.5rem] flex-1 flex-col gap-1 border-l border-[var(--hud-rule-soft)] px-2.5 py-1 first:border-l-0 first:pl-0"
             title={chip.ok === null ? "Sem critério avaliado para este número" : undefined}
           >
-            {chip.label} <span className="font-semibold tabular-nums text-white">{chip.value}</span>
-            {chip.ok === true && " ✅"}
-            {chip.ok === false && " ❌"}
+            <span
+              aria-hidden
+              className={`h-[2px] w-full ${
+                chip.ok === true
+                  ? "bg-[var(--hud-on)]"
+                  : chip.ok === false
+                    ? "bg-[var(--hud-off)]"
+                    : "bg-[var(--hud-rule)]"
+              }`}
+            />
+            <span className="font-[family-name:var(--font-display)] text-[10px] uppercase tracking-[0.12em] text-muted">
+              {chip.label}
+            </span>
+            <span className="hud-data text-[13px] font-medium text-strong">{chip.value}</span>
           </span>
         ))}
       </div>
