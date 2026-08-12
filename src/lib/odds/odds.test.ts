@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { mapAltenarEvents } from "@/lib/odds/altenarPayload";
+import { mapAltenarEventDetails, mapAltenarEvents } from "@/lib/odds/altenarPayload";
+import { findCornerOverOdd, listCornerLines } from "@/lib/odds/cornerMarket";
 import { matchFixtureToOdds, teamNamesMatch } from "@/lib/odds/matchOdds";
 import type { FixtureKey, HouseOddsEvent } from "@/lib/odds/types";
 
@@ -163,5 +164,80 @@ describe("matchFixtureToOdds", () => {
 
     expect(resultado.status).toBe("ambiguous");
     if (resultado.status === "ambiguous") expect(resultado.candidates).toHaveLength(2);
+  });
+});
+
+/**
+ * Recorte de `widget/GetEventDetails?eventId=`, capturado em 12/08/2026.
+ * Formato DIFERENTE do da listagem: o grupo aponta para os mercados e o
+ * mercado usa `desktopOddIds`. Ler isto com o mapeador da listagem devolve
+ * zero mercados sem erro nenhum — daí o teste.
+ */
+const PAYLOAD_DETALHE = {
+  id: 17080187,
+  name: "Real Salt Lake vs. Juárez",
+  startDate: "2026-08-12T02:00:00Z",
+  liveTime: "68'",
+  ls: "2ª parte",
+  champ: { name: "Taça da Liga" },
+  marketGroups: [
+    { id: 1, name: "Principal", marketIds: [900] },
+    { id: 5, name: "Escanteios", marketIds: [901, 902, 903] },
+  ],
+  markets: [
+    { id: 900, name: "Vencedor do encontro", desktopOddIds: [1, 2] },
+    { id: 901, name: "Total de escanteios", sv: "7.5", desktopOddIds: [[10, 11], [12, 13]] },
+    { id: 902, name: "Real Salt Lake total de escanteios", sv: "3.5", desktopOddIds: [20, 21] },
+    { id: 903, name: "Escanteios impar/par", desktopOddIds: [30, 31] },
+  ],
+  odds: [
+    { id: 1, name: "Real Salt Lake", price: 1.9 },
+    { id: 2, name: "Juárez", price: 3.4 },
+    { id: 10, name: "Mais de 6.5", price: 1.25 },
+    { id: 11, name: "Mais de 7.5", price: 1.72 },
+    { id: 12, name: "Menos de 6.5", price: 3.45 },
+    { id: 13, name: "Mais de 10.5", price: 4.2 },
+    { id: 20, name: "Mais de 3.5", price: 2.6 },
+    { id: 30, name: "Ímpar", price: 1.83 },
+    { id: 31, name: "Par", price: 1.83 },
+  ],
+};
+
+describe("mapAltenarEventDetails", () => {
+  it("le o formato de detalhe: grupo -> marketIds e desktopOddIds aninhado", () => {
+    const evento = mapAltenarEventDetails(PAYLOAD_DETALHE)!;
+
+    expect(evento.homeTeam).toBe("Real Salt Lake");
+    expect(evento.liveClock).toBe("68'");
+    expect(evento.livePeriod).toBe("2ª parte");
+    const total = evento.markets.find((m) => m.name === "Total de escanteios")!;
+    expect(total.group).toBe("Escanteios");
+    expect(total.selections).toHaveLength(4);
+  });
+
+  it("o mapeador da LISTAGEM nao le este formato — e por isso os dois existem", () => {
+    expect(mapAltenarEvents(PAYLOAD_DETALHE)).toEqual([]);
+  });
+});
+
+describe("findCornerOverOdd", () => {
+  const evento = mapAltenarEventDetails(PAYLOAD_DETALHE)!;
+
+  it("acha a cotacao de 'mais de X' na linha exata", () => {
+    expect(findCornerOverOdd(evento, 7.5)).toEqual({ line: 7.5, odd: 1.72, marketName: "Total de escanteios" });
+    expect(findCornerOverOdd(evento, 6.5)?.odd).toBe(1.25);
+  });
+
+  it("devolve null quando a casa nao oferece exatamente a linha pedida", () => {
+    expect(findCornerOverOdd(evento, 9.5)).toBeNull();
+  });
+
+  it("ignora o mercado de escanteios POR TIME, que casaria a linha e daria a odd errada", () => {
+    // "Real Salt Lake total de escanteios" tem "Mais de 3.5" a 2.6.
+    expect(findCornerOverOdd(evento, 3.5)).toBeNull();
+  });
+
+  it("ignora impar/par sem derrubar mercado que contenha 'parte'", () => {
+    expect(listCornerLines(evento)).toEqual([6.5, 7.5, 10.5]);
   });
 });

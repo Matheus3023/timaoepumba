@@ -42,6 +42,100 @@ interface AltenarPayload {
 }
 
 /**
+ * O endpoint de detalhe usa uma forma DIFERENTE da lista, e a diferença é
+ * silenciosa — ambos devolvem 200 com JSON parecido:
+ *
+ *   lista    (GetLiveEvents):   market.oddIds, evento aponta para mercados
+ *   detalhe  (GetEventDetails): market.desktopOddIds / mobileOddIds, e é o
+ *                               GRUPO que aponta para os mercados
+ *
+ * Ler o detalhe com o mapeador da lista devolve zero mercados sem erro
+ * nenhum. Por isso os dois formatos moram aqui, lado a lado e testados.
+ */
+interface AltenarDetailsPayload {
+  id?: number;
+  name?: string | null;
+  startDate?: string | null;
+  liveTime?: string | null;
+  ls?: string | null;
+  markets?: (AltenarMarket & { desktopOddIds?: unknown[]; mobileOddIds?: unknown[] })[] | null;
+  childMarkets?: (AltenarMarket & { desktopOddIds?: unknown[]; mobileOddIds?: unknown[] })[] | null;
+  odds?: AltenarOdd[] | null;
+  marketGroups?: { id: number; name?: string | null; marketIds?: number[] | null }[] | null;
+  champ?: { name?: string | null } | null;
+}
+
+/** `desktopOddIds` às vezes vem aninhado (`[[1,2],[3]]`); achatamos sempre. */
+function flattenIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  const out: number[] = [];
+  for (const item of value) {
+    if (Array.isArray(item)) out.push(...item.filter((x): x is number => typeof x === "number"));
+    else if (typeof item === "number") out.push(item);
+  }
+  return out;
+}
+
+/**
+ * Detalhe de um evento: todos os mercados, agrupados como a casa agrupa
+ * ("Principal", "Escanteios", "2° tempo"...). O nome do grupo vai em cada
+ * mercado para que quem consome possa pedir "os de escanteio" sem conhecer
+ * id de grupo da Altenar.
+ */
+export function mapAltenarEventDetails(payload: unknown): HouseOddsEvent | null {
+  const data = (payload ?? {}) as AltenarDetailsPayload;
+  const name = typeof data.name === "string" ? data.name : "";
+  const teams = splitEventName(name);
+  if (!teams || !data.id || !data.startDate) return null;
+
+  const oddById = new Map<number, AltenarOdd>();
+  for (const odd of data.odds ?? []) oddById.set(odd.id, odd);
+
+  const groupOfMarket = new Map<number, string>();
+  for (const group of data.marketGroups ?? []) {
+    for (const marketId of group.marketIds ?? []) {
+      if (group.name) groupOfMarket.set(marketId, group.name);
+    }
+  }
+
+  const markets: OddsMarket[] = [];
+  for (const market of [...(data.markets ?? []), ...(data.childMarkets ?? [])]) {
+    const ids = flattenIds(market.desktopOddIds).length
+      ? flattenIds(market.desktopOddIds)
+      : flattenIds(market.mobileOddIds).length
+        ? flattenIds(market.mobileOddIds)
+        : (market.oddIds ?? []);
+
+    const selections: OddsSelection[] = [];
+    for (const oddId of ids) {
+      const odd = oddById.get(oddId);
+      if (!odd || typeof odd.price !== "number" || !Number.isFinite(odd.price)) continue;
+      selections.push({ name: odd.name ?? "", price: odd.price });
+    }
+    if (selections.length === 0) continue;
+
+    markets.push({
+      providerMarketId: String(market.id),
+      name: market.name ?? "",
+      line: market.sv ?? null,
+      group: groupOfMarket.get(market.id) ?? null,
+      selections,
+    });
+  }
+
+  return {
+    providerEventId: String(data.id),
+    homeTeam: teams.home,
+    awayTeam: teams.away,
+    startsAt: new Date(data.startDate).toISOString(),
+    championship: data.champ?.name ?? null,
+    markets,
+    liveClock: data.liveTime ?? null,
+    livePeriod: data.ls ?? null,
+  };
+}
+
+/**
  * A Altenar nomeia o evento como "Mandante vs. Visitante" — não há campo
  * separado por time. O separador é literal e estável; quando não aparecer,
  * devolvemos null em vez de chutar qual metade é quem.

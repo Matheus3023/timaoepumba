@@ -1,6 +1,6 @@
 import "server-only";
 
-import { mapAltenarEvents } from "@/lib/odds/altenarPayload";
+import { mapAltenarEventDetails, mapAltenarEvents } from "@/lib/odds/altenarPayload";
 import type { HouseOddsEvent } from "@/lib/odds/types";
 
 /**
@@ -65,4 +65,28 @@ export async function fetchLiveHouseOdds(
   }
 
   return mapAltenarEvents(await response.json());
+}
+
+/**
+ * Todos os mercados de um evento, incluindo o grupo de escanteios — que é o
+ * que a listagem ao vivo NÃO traz. É desta chamada que sai a cotação de
+ * entrada de verdade.
+ */
+export async function fetchHouseEventDetails(
+  eventId: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
+): Promise<HouseOddsEvent | null> {
+  const url = buildUrl("widget/GetEventDetails", { eventId });
+
+  const response = await fetch(url, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(timeoutMs),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Odds da casa: HTTP ${response.status} em widget/GetEventDetails`);
+  }
+
+  return mapAltenarEventDetails(await response.json());
 }

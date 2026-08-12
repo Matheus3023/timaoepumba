@@ -21,6 +21,11 @@ export interface OddsMarket {
   name: string;
   /** Linha do mercado quando existe ("3.5", "1.5"), senão null. */
   line: string | null;
+  /**
+   * Grupo como a casa organiza na tela ("Principal", "Escanteios", "2° tempo").
+   * Só o endpoint de detalhe traz; na listagem vem null.
+   */
+  group?: string | null;
   selections: OddsSelection[];
 }
 
@@ -32,6 +37,10 @@ export interface HouseOddsEvent {
   startsAt: string;
   championship: string | null;
   markets: OddsMarket[];
+  /** Relógio da casa ("68'"). Só no endpoint de detalhe. */
+  liveClock?: string | null;
+  /** Período como a casa exibe ("2ª parte"). Só no endpoint de detalhe. */
+  livePeriod?: string | null;
 }
 
 /**
