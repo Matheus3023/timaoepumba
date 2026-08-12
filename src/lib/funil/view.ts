@@ -141,3 +141,138 @@ export async function loadSignalDetail(signalId: string): Promise<FunilSignalVie
   const [view] = await attachFixtures([signal]);
   return view ?? null;
 }
+
+/* ---------------------------------------------------------------------------
+   HISTÓRICO DE RESULTADO
+
+   Sem isso o produto pede confiança sem prestar contas: o usuário vê o sinal
+   ao vivo e nunca descobre se deu certo. Mostrar green e red — inclusive os
+   reds — é o que separa análise de palpite.
+   --------------------------------------------------------------------------- */
+
+/** Como o motor liquida um sinal (`settle.ts`). */
+export type SignalResult = "GREEN" | "RED" | "PUSH" | "VOID";
+
+export interface SettledSignalView {
+  id: string;
+  strategyId: StrategyId;
+  result: SignalResult;
+  /** Minuto em que o sinal saiu, e minuto em que resolveu. */
+  signalMinute: number | null;
+  resultMinute: number | null;
+  resolvingEvent: string | null;
+  entryLineLabel: string | null;
+  entryOdd: number | null;
+  scoreAtEntry: string | null;
+  /** Nulo enquanto o motor gravou o desfecho mas ainda não carimbou a hora. */
+  resolvedAt: string | null;
+  competition: string;
+  homeTeamName: string;
+  awayTeamName: string;
+}
+
+export interface StrategyTally {
+  strategyId: StrategyId;
+  green: number;
+  red: number;
+  /** PUSH e VOID entram separados: não são acerto nem erro, e diluir os dois
+   *  dentro de "green" inflaria o aproveitamento de graça. */
+  neutral: number;
+  /** green / (green + red). `null` quando ainda não houve nenhum resolvido —
+   *  0% e "sem dados" são coisas diferentes e não podem virar o mesmo número. */
+  hitRate: number | null;
+}
+
+export interface FunilHistory {
+  settled: SettledSignalView[];
+  byStrategy: StrategyTally[];
+  total: { green: number; red: number; neutral: number; hitRate: number | null };
+}
+
+/**
+ * Sinais já resolvidos, do mais recente para o mais antigo.
+ *
+ * Junta três tabelas porque cada uma guarda um pedaço: `signal_results` tem o
+ * desfecho, `live_strategy_signals` tem o contexto da entrada, e
+ * `funil_fixtures` tem os nomes dos times.
+ */
+export async function loadFunilHistory(limit = 50): Promise<FunilHistory> {
+  const vazio: FunilHistory = {
+    settled: [],
+    byStrategy: [],
+    total: { green: 0, red: 0, neutral: 0, hitRate: null },
+  };
+
+  const admin = createAdminSupabaseClient();
+
+  const { data: results, error } = await admin
+    .from("signal_results")
+    .select("*")
+    .order("resolved_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[funil] falha ao carregar histórico", error);
+    return vazio;
+  }
+  if (!results || results.length === 0) return vazio;
+
+  /* Só sinais reais entram no histórico. Sinal em shadow serve para o
+     operador calibrar a estratégia, e contá-lo aqui inflaria o placar com
+     entradas que ninguém chegou a ver. */
+  const { data: signals } = await admin
+    .from("live_strategy_signals")
+    .select("*")
+    .eq("shadow", false)
+    .in("id", results.map((r) => r.signal_id));
+
+  const signalById = new Map((signals ?? []).map((s) => [s.id, s]));
+
+  const { data: fixtures } = await admin
+    .from("funil_fixtures")
+    .select("*")
+    .eq("provider", PROVIDER)
+    .in("provider_match_id", [...new Set((signals ?? []).map((s) => s.provider_match_id))]);
+
+  const fixtureById = new Map((fixtures ?? []).map((f) => [f.provider_match_id, f]));
+
+  const settled: SettledSignalView[] = [];
+  for (const row of results) {
+    const signal = signalById.get(row.signal_id);
+    if (!signal) continue;
+    const fixture = fixtureById.get(signal.provider_match_id);
+    settled.push({
+      id: row.signal_id,
+      strategyId: signal.strategy_id as StrategyId,
+      result: row.result as SignalResult,
+      signalMinute: row.signal_minute,
+      resultMinute: row.result_minute,
+      resolvingEvent: row.resolving_event,
+      entryLineLabel: signal.entry_line_label,
+      entryOdd: row.entry_odd === null ? null : Number(row.entry_odd),
+      scoreAtEntry: row.score_at_entry,
+      resolvedAt: row.resolved_at,
+      competition: fixture?.league_name ?? "Competição",
+      homeTeamName: fixture?.home_team_name ?? "Casa",
+      awayTeamName: fixture?.away_team_name ?? "Fora",
+    });
+  }
+
+  const tallyOf = (linhas: SettledSignalView[]) => {
+    const green = linhas.filter((s) => s.result === "GREEN").length;
+    const red = linhas.filter((s) => s.result === "RED").length;
+    const neutral = linhas.length - green - red;
+    const decididos = green + red;
+    return { green, red, neutral, hitRate: decididos === 0 ? null : green / decididos };
+  };
+
+  const estrategias = [...new Set(settled.map((s) => s.strategyId))];
+  const byStrategy: StrategyTally[] = estrategias
+    .map((strategyId) => ({
+      strategyId,
+      ...tallyOf(settled.filter((s) => s.strategyId === strategyId)),
+    }))
+    .sort((a, b) => b.green + b.red - (a.green + a.red));
+
+  return { settled, byStrategy, total: tallyOf(settled) };
+}
