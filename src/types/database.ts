@@ -572,6 +572,22 @@ export type SignalResultRow = {
   updated_at: string;
 }
 
+/**
+ * Sondagem do mercado da casa, minuto a minuto. Instrumentacao para descobrir
+ * em que minuto a Bateu fecha o mercado de escanteios — nao alimenta decisao
+ * do motor. Ver `src/lib/odds/probe.ts`.
+ */
+export type HouseMarketProbeRow = {
+  id: string;
+  provider_match_id: string;
+  minute: number;
+  has_corner_market: boolean;
+  available_lines: number[];
+  match_status: string;
+  house_event_id: string | null;
+  probed_at: string;
+}
+
 export type FunilNotificationLogRow = {
   id: string;
   signal_id: string | null;
@@ -883,6 +899,7 @@ export type Database = {
       signal_snapshots: TableDef<SignalSnapshotRow, Partial<SignalSnapshotRow>>;
       signal_results: TableDef<SignalResultRow, Partial<SignalResultRow>>;
       funil_notification_logs: TableDef<FunilNotificationLogRow, Partial<FunilNotificationLogRow>>;
+      house_market_probes: TableDef<HouseMarketProbeRow, Partial<HouseMarketProbeRow>>;
     };
     Views: {
       strategy_performance: {

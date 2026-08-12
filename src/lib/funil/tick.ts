@@ -19,6 +19,7 @@ import { FUNIL_LOG_CODES } from "@/lib/funil/logCodes";
 import { normalizeLiveStats } from "@/lib/funil/normalize";
 import { settleSignal } from "@/lib/funil/settle";
 import { getSportsDataProvider } from "@/lib/sports";
+import { houseProbeEnabled, probeHouseMarkets } from "@/lib/odds/probe";
 import { evaluateStrategyById } from "@/lib/funil/strategies";
 import type { FixtureSnapshot, StrategyConfig, StrategyEvaluation, StrategyId, StrategyParams } from "@/lib/funil/types";
 import type { LiveStrategySignalRow } from "@/types/database";
@@ -51,6 +52,8 @@ export interface TickSummary {
   signalsChanged: number;
   notificationsSent: number;
   settled: number;
+  /** Sondagens do mercado da casa gravadas (instrumentacao, ver odds/probe.ts). */
+  probes: number;
   unmappedLabels: string[];
   errors: string[];
 }
@@ -505,6 +508,7 @@ export async function runFunilTick(): Promise<TickSummary> {
     signalsChanged: 0,
     notificationsSent: 0,
     settled: 0,
+    probes: 0,
     unmappedLabels: [],
     errors: [],
   };
@@ -537,6 +541,40 @@ export async function runFunilTick(): Promise<TickSummary> {
     for (const label of fixture.unmappedLabels) unmapped.add(label);
   }
   summary.unmappedLabels = [...unmapped];
+
+  // Instrumentacao, nao decisao: mede em que minuto a casa fecha o mercado de
+  // escanteios, para recalibrar a janela das estrategias com dado. Tem chave
+  // propria (HOUSE_ODDS_PROBE) para poder medir sem ligar a regra de odd.
+  if (houseProbeEnabled() && collected.length > 0) {
+    summary.probes = await (async () => {
+      const admin = createAdminSupabaseClient();
+      const ids = collected.map((fixture) => fixture.snapshot.fixture.fixtureId);
+      const { data: rows } = await admin
+        .from("funil_fixtures")
+        .select("provider_match_id, kickoff_at")
+        .in("provider_match_id", ids);
+      const kickoffById = new Map((rows ?? []).map((row) => [row.provider_match_id, row.kickoff_at]));
+
+      return probeHouseMarkets(
+        collected.flatMap((fixture) => {
+          const kickoffAt = kickoffById.get(fixture.snapshot.fixture.fixtureId);
+          if (!kickoffAt) return [];
+          return [
+            {
+              providerMatchId: fixture.snapshot.fixture.fixtureId,
+              homeTeamName: fixture.snapshot.fixture.homeTeamName,
+              awayTeamName: fixture.snapshot.fixture.awayTeamName,
+              kickoffAt,
+              minute: fixture.snapshot.liveMinute,
+            },
+          ];
+        })
+      );
+    })().catch((error) => {
+      summary.errors.push(`probeHouseMarkets: ${(error as Error).message}`);
+      return 0;
+    });
+  }
 
   if (collected.length > 0) {
     const admin = createAdminSupabaseClient();
