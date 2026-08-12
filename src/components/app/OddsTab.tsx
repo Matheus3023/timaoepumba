@@ -17,6 +17,31 @@ import { EmptyState } from "@/components/ui/EmptyState";
 const VALORES_RAPIDOS = [10, 25, 50, 100];
 
 /**
+ * Ordem de leitura dos grupos. O que não estiver aqui vai para o fim, na
+ * ordem em que a casa mandou.
+ */
+const ORDEM_GRUPOS = ["Principal", "Gols", "Escanteios", "1° tempo", "2° tempo", "Cartões"];
+
+/**
+ * Quantos mercados aparecem por grupo antes do "ver mais".
+ *
+ * A casa manda MUITO mais do que cabe numa tela: um Palmeiras x Cerro veio
+ * com 1931 mercados em 11 grupos. Renderizar tudo de uma vez trava o
+ * aparelho e ninguém rola até o fim. Só o primeiro grupo abre sozinho.
+ */
+const MERCADOS_POR_GRUPO = 6;
+
+/**
+ * Teto absoluto por grupo, mesmo depois de "ver mais".
+ *
+ * Um grupo sozinho pode ter mais de mil mercados (o "Criar Aposta" de um
+ * Palmeiras x Cerro tinha). Expandir sem teto trava o aparelho do mesmo
+ * jeito. O que passar disso não é escondido em silêncio: a tela diz quantos
+ * ficaram e onde estão.
+ */
+const TETO_POR_GRUPO = 40;
+
+/**
  * Aba de Odds com boletim.
  *
  * O app não aceita aposta — quem aceita é a casa, que tem a licença. O
@@ -43,11 +68,23 @@ export function OddsTab({
   const grupos = useMemo(() => {
     const mapa = new Map<string, OddsMarket[]>();
     for (const market of markets) {
+      // Mercado sem opção com preço não vira botão nenhum — fora, para não
+      // criar grupo vazio que o usuário abre e não encontra nada.
+      if (market.selections.length === 0) continue;
       const chave = market.group ?? "Mercados";
       mapa.set(chave, [...(mapa.get(chave) ?? []), market]);
     }
-    return [...mapa.entries()];
+    const ordenado = [...mapa.entries()].sort(([a], [b]) => {
+      const ia = ORDEM_GRUPOS.indexOf(a);
+      const ib = ORDEM_GRUPOS.indexOf(b);
+      return (ia === -1 ? ORDEM_GRUPOS.length : ia) - (ib === -1 ? ORDEM_GRUPOS.length : ib);
+    });
+    return ordenado;
   }, [markets]);
+
+  const [aberto, setAberto] = useState<string | null>(null);
+  const [expandido, setExpandido] = useState<Record<string, boolean>>({});
+  const grupoAberto = aberto ?? grupos[0]?.[0] ?? null;
 
   const odds = combinedOdds(slip);
   const retorno = potentialReturn(slip, stake);
@@ -63,56 +100,92 @@ export function OddsTab({
 
   return (
     <div className="flex flex-col gap-4 pb-40">
-      {grupos.map(([grupo, itens]) => (
-        <section key={grupo} className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">{grupo}</h3>
+      {grupos.map(([grupo, itens]) => {
+        const estaAberto = grupo === grupoAberto;
+        const mostrarTodos = expandido[grupo] === true;
+        const limite = mostrarTodos ? TETO_POR_GRUPO : MERCADOS_POR_GRUPO;
+        const visiveis = itens.slice(0, limite);
+        const restantes = itens.length - visiveis.length;
 
-          {itens.map((market) => (
-            <div key={market.providerMarketId} className="card flex flex-col gap-2.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-semibold text-strong">{market.name}</span>
-                {market.line ? <span className="font-mono text-xs text-muted">{market.line}</span> : null}
-              </div>
+        return (
+          <section key={grupo} className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setAberto(estaAberto ? "" : grupo)}
+              aria-expanded={estaAberto}
+              className="flex items-center justify-between rounded-lg bg-surface-elevated px-3 py-2.5 text-left"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wider text-strong">{grupo}</span>
+              <span className="font-mono text-xs text-muted">
+                {itens.length} {estaAberto ? "−" : "+"}
+              </span>
+            </button>
 
-              <div className="flex flex-wrap gap-2">
-                {market.selections.map((selection, index) => {
-                  const marcada = isSelected(slip, market.providerMarketId, selection.name);
-                  return (
-                    <button
-                      key={`${market.providerMarketId}-${index}`}
-                      type="button"
-                      aria-pressed={marcada}
-                      onClick={() =>
-                        setSlip((atual) =>
-                          toggleSelection(atual, {
-                            marketId: market.providerMarketId,
-                            marketName: market.name,
-                            line: market.line ?? null,
-                            selectionName: selection.name,
-                            odd: selection.price,
-                            eventId,
-                            eventName,
-                          })
-                        )
-                      }
-                      className={`flex min-w-[7.5rem] flex-1 items-center justify-between gap-3 rounded-lg px-3 py-2 transition ${
-                        marcada
-                          ? "bg-primary text-black"
-                          : "bg-surface-elevated text-secondary hover:bg-surface-elevated/70"
-                      }`}
-                    >
-                      <span className="text-xs">{selection.name}</span>
-                      <span className="font-mono text-sm font-semibold tabular-nums">
-                        {formatOdd(selection.price)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </section>
-      ))}
+            {estaAberto
+              ? visiveis.map((market) => (
+                  <div key={market.providerMarketId} className="card flex flex-col gap-2.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm font-semibold text-strong">{market.name}</span>
+                      {market.line ? <span className="font-mono text-xs text-muted">{market.line}</span> : null}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {market.selections.map((selection, index) => {
+                        const marcada = isSelected(slip, market.providerMarketId, selection.name);
+                        return (
+                          <button
+                            key={`${market.providerMarketId}-${index}`}
+                            type="button"
+                            aria-pressed={marcada}
+                            onClick={() =>
+                              setSlip((atual) =>
+                                toggleSelection(atual, {
+                                  marketId: market.providerMarketId,
+                                  marketName: market.name,
+                                  line: market.line ?? null,
+                                  selectionName: selection.name,
+                                  odd: selection.price,
+                                  eventId,
+                                  eventName,
+                                })
+                              )
+                            }
+                            className={`flex min-w-[7.5rem] flex-1 items-center justify-between gap-3 rounded-lg px-3 py-2 transition ${
+                              marcada
+                                ? "bg-primary text-black"
+                                : "bg-surface-elevated text-secondary hover:bg-surface-elevated/70"
+                            }`}
+                          >
+                            <span className="text-xs">{selection.name}</span>
+                            <span className="font-mono text-sm font-semibold tabular-nums">
+                              {formatOdd(selection.price)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              : null}
+
+            {estaAberto && !mostrarTodos && restantes > 0 ? (
+              <button
+                type="button"
+                onClick={() => setExpandido((atual) => ({ ...atual, [grupo]: true }))}
+                className="text-xs text-secondary underline underline-offset-4"
+              >
+                ver mais {Math.min(restantes, TETO_POR_GRUPO - MERCADOS_POR_GRUPO)} mercados
+              </button>
+            ) : null}
+
+            {estaAberto && mostrarTodos && restantes > 0 ? (
+              <p className="text-xs text-muted">
+                Mais {restantes} mercados deste grupo estão disponíveis na {houseName}.
+              </p>
+            ) : null}
+          </section>
+        );
+      })}
 
       {slip.length > 0 ? (
         <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-md px-4">
