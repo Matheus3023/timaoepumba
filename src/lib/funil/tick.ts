@@ -256,10 +256,23 @@ async function persistEvaluation(
         tp_score: evaluation.tpScore?.score ?? null,
         tp_class: evaluation.tpScore?.classification ?? null,
         reason: evaluation.reason,
-        entry_market: evaluation.entryLine?.market ?? null,
-        entry_line: evaluation.entryLine?.line ?? null,
-        entry_line_label: evaluation.entryLine?.label ?? null,
         entry_odd: snapshot.market?.currentOdd ?? null,
+        // A linha sugerida acompanha o jogo ENQUANTO o sinal ainda não virou
+        // entrada. Depois de entrar, congela junto do resto.
+        //
+        // Ela ficava fora do congelamento, e era justamente contra ela que a
+        // apuração resolvia: um sinal que entrou aos 83' na linha 8.0 era
+        // apurado aos 90' contra a linha 14.0, que só existia porque os
+        // escanteios continuaram subindo. Isso virava GREEN em RED de forma
+        // sistemática — os quatro primeiros resultados do motor eram todos
+        // acertos registrados como erro.
+        ...(existing?.entered_at
+          ? {}
+          : {
+              entry_market: evaluation.entryLine?.market ?? null,
+              entry_line: evaluation.entryLine?.line ?? null,
+              entry_line_label: evaluation.entryLine?.label ?? null,
+            }),
         // Congelados na PRIMEIRA vez que o sinal virou entrada: é contra
         // estes números que o resultado será apurado depois, e eles não
         // podem ser reescritos pelos ticks seguintes.
