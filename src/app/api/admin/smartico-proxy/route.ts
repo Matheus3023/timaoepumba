@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   const apiKey = process.env.SMARTICO_API_KEY;
-  const baseUrl = process.env.SMARTICO_BASE_URL || "https://boapi.smartico.ai";
+  const baseUrl = process.env.SMARTICO_BASE_URL || "https://boapi3.smartico.ai";
   if (!apiKey) {
     return NextResponse.json({ error: "smartico_not_configured" }, { status: 500 });
   }

@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { promoteAccessLevel } from "@/lib/entitlements/rules";
 import { REQUIRED_LEVEL, accessLevelSatisfies } from "@/lib/entitlements/levels";
+import { fetchAfpSummary } from "@/lib/affiliate/tapClient";
 
 export { REQUIRED_LEVEL, accessGateEnabled, needsRegistration } from "@/lib/entitlements/levels";
 
@@ -12,6 +13,7 @@ export interface VerifyResult {
   reason:
     | "ja_liberado"
     | "promovido_por_evento"
+    | "promovido_pela_casa"
     | "sem_cadastro_encontrado"
     | "sem_lead_id"
     | "erro";
@@ -67,10 +69,28 @@ export async function verifyAndRelease(userId: string): Promise<VerifyResult> {
       .limit(1)
       .maybeSingle();
 
-    if (!event) return { released: false, reason: "sem_cadastro_encontrado" };
+    if (event) {
+      await promoteAccessLevel(userId, event.event_type === "ftd" ? "FTD_USER" : REQUIRED_LEVEL);
+      return { released: true, reason: "promovido_por_evento" };
+    }
 
-    await promoteAccessLevel(userId, event.event_type === "ftd" ? "FTD_USER" : REQUIRED_LEVEL);
-    return { released: true, reason: "promovido_por_evento" };
+    // Terceira via: pergunta direto à casa.
+    //
+    // As duas anteriores (postback e evento gravado) dependem de algo ter
+    // dado certo do nosso lado. Esta não: consulta o relatório do programa
+    // de afiliados pelo `afp`, que é o Lead ID. Se a casa diz que aquele
+    // lead registrou, registrou — mesmo que nenhum postback tenha chegado.
+    const summary = await fetchAfpSummary(user.lead_id);
+
+    // `null` significa "não consegui perguntar" (sem chave, casa fora do
+    // ar), NÃO "não tem cadastro". Tratar como ausência marcaria o usuário
+    // como não cadastrado por causa de um problema nosso.
+    if (summary && (summary.registrations > 0 || summary.ftds > 0)) {
+      await promoteAccessLevel(userId, summary.ftds > 0 ? "FTD_USER" : REQUIRED_LEVEL);
+      return { released: true, reason: "promovido_pela_casa" };
+    }
+
+    return { released: false, reason: "sem_cadastro_encontrado" };
   } catch (error) {
     console.error("[gate] verifyAndRelease falhou", error);
     return { released: false, reason: "erro" };
