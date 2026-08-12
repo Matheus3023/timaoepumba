@@ -18,6 +18,8 @@ export interface SlipSelection {
   line: string | null;
   selectionName: string;
   odd: number;
+  /** Id da cotação na casa — o que o SDK dela recebe. */
+  providerOddId: string;
   /** Para agrupar por partida quando o boletim passar a aceitar vários jogos. */
   eventId: string;
   eventName: string;

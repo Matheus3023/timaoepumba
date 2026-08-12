@@ -17,6 +17,7 @@ const vencedorCasa: SlipSelection = {
   line: null,
   selectionName: "RU Irún",
   odd: 2.4,
+  providerOddId: "9001",
 };
 
 const vencedorFora: SlipSelection = {
@@ -26,6 +27,7 @@ const vencedorFora: SlipSelection = {
   line: null,
   selectionName: "CA Osasuna B",
   odd: 3.1,
+  providerOddId: "9002",
 };
 
 const maisDe25: SlipSelection = {
@@ -35,6 +37,7 @@ const maisDe25: SlipSelection = {
   line: "2.5",
   selectionName: "Mais de 2.5",
   odd: 1.75,
+  providerOddId: "9003",
 };
 
 describe("boletim — composição", () => {

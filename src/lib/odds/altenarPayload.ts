@@ -110,7 +110,7 @@ export function mapAltenarEventDetails(payload: unknown): HouseOddsEvent | null 
     for (const oddId of ids) {
       const odd = oddById.get(oddId);
       if (!odd || typeof odd.price !== "number" || !Number.isFinite(odd.price)) continue;
-      selections.push({ name: odd.name ?? "", price: odd.price });
+      selections.push({ name: odd.name ?? "", price: odd.price, providerOddId: String(odd.id) });
     }
     if (selections.length === 0) continue;
 
@@ -180,7 +180,7 @@ export function mapAltenarEvents(payload: unknown): HouseOddsEvent[] {
         // Cotação sem preço numérico é mercado suspenso — fora, em vez de
         // virar 0 e passar por odd baixíssima lá na frente.
         if (!odd || typeof odd.price !== "number" || !Number.isFinite(odd.price)) continue;
-        selections.push({ name: odd.name ?? "", price: odd.price });
+        selections.push({ name: odd.name ?? "", price: odd.price, providerOddId: String(odd.id) });
       }
       if (selections.length === 0) continue;
 

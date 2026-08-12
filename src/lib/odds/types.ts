@@ -13,6 +13,14 @@ export interface OddsSelection {
   name: string;
   /** Cotação decimal. */
   price: number;
+  /**
+   * Id da cotação NA CASA.
+   *
+   * É por ele que o boletim do app empurra a seleção para o boletim dela
+   * (`toggleSelections` do SDK). Sem isso o usuário teria de remarcar tudo
+   * do outro lado, que é justamente o atrito que queremos eliminar.
+   */
+  providerOddId: string;
 }
 
 export interface OddsMarket {

@@ -145,6 +145,7 @@ export function OddsTab({
                                   line: market.line ?? null,
                                   selectionName: selection.name,
                                   odd: selection.price,
+                                  providerOddId: selection.providerOddId,
                                   eventId,
                                   eventName,
                                 })
@@ -256,7 +257,12 @@ export function OddsTab({
       {/* Montado so quando aberto: o estado interno da camada se reinicia
           sozinho a cada abertura, sem reset manual. */}
       {apostando ? (
-        <BetSheet onClose={() => setApostando(false)} houseName={houseName} eventName={eventName} />
+        <BetSheet
+          onClose={() => setApostando(false)}
+          houseName={houseName}
+          eventName={eventName}
+          oddIds={slip.map((item) => Number(item.providerOddId)).filter((n) => Number.isFinite(n))}
+        />
       ) : null}
     </div>
   );

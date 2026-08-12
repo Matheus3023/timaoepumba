@@ -71,9 +71,9 @@ describe("mapAltenarEvents", () => {
     expect(libertadores.championship).toBe("Copa Libertadores");
     expect(libertadores.markets[0].name).toBe("Vencedor do encontro");
     expect(libertadores.markets[0].selections).toEqual([
-      { name: "Estudiantes de La Plata", price: 6 },
-      { name: "Empate", price: 1.1819 },
-      { name: "Universidad Católica", price: 21 },
+      { name: "Estudiantes de La Plata", price: 6, providerOddId: "4332920072" },
+      { name: "Empate", price: 1.1819, providerOddId: "4332920073" },
+      { name: "Universidad Católica", price: 21, providerOddId: "4332920074" },
     ]);
   });
 
@@ -92,7 +92,9 @@ describe("mapAltenarEvents", () => {
         { id: 101, name: "B", price: null },
       ],
     };
-    expect(mapAltenarEvents(suspenso)[0].markets[0].selections).toEqual([{ name: "A", price: 1.5 }]);
+    expect(mapAltenarEvents(suspenso)[0].markets[0].selections).toEqual([
+      { name: "A", price: 1.5, providerOddId: "100" },
+    ]);
   });
 
   it("ignora evento cujo nome nao separa os dois times", () => {
