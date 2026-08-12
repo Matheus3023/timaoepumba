@@ -1,8 +1,8 @@
 import "server-only";
 
-import { fetchHouseEventDetails, fetchLiveHouseOdds } from "@/lib/odds/altenarClient";
+import { fetchHouseEventDetails, fetchLiveHouseOdds, fetchUpcomingHouseOdds } from "@/lib/odds/altenarClient";
 import { matchFixtureToOdds } from "@/lib/odds/matchOdds";
-import type { HouseOddsEvent } from "@/lib/odds/types";
+import type { HouseOddsEvent, OddsMatchResult } from "@/lib/odds/types";
 import type { Match } from "@/lib/sports/types";
 
 /**
@@ -15,19 +15,61 @@ import type { Match } from "@/lib/sports/types";
  *
  * Nunca lança: a tela de jogo tem de abrir mesmo com a casa fora do ar.
  */
+
+/**
+ * A grade de agendados é grande (perto de mil jogos) e muda devagar; a lista
+ * ao vivo muda rápido. TTLs diferentes por isso — sem cache, cada abertura de
+ * tela de jogo puxaria o catálogo inteiro da casa.
+ */
+const LIVE_TTL_MS = 30_000;
+const UPCOMING_TTL_MS = 5 * 60_000;
+
+let liveCache: { at: number; events: HouseOddsEvent[] } | null = null;
+let upcomingCache: { at: number; events: HouseOddsEvent[] } | null = null;
+
+async function cached(
+  slot: "live" | "upcoming",
+  ttl: number,
+  load: () => Promise<HouseOddsEvent[]>
+): Promise<HouseOddsEvent[]> {
+  const current = slot === "live" ? liveCache : upcomingCache;
+  if (current && Date.now() - current.at < ttl) return current.events;
+
+  const events = await load();
+  const entry = { at: Date.now(), events };
+  if (slot === "live") liveCache = entry;
+  else upcomingCache = entry;
+  return events;
+}
+
 export async function getHouseOddsForMatch(match: Match): Promise<HouseOddsEvent | null> {
+  const key = {
+    homeTeamName: match.homeTeam.name,
+    awayTeamName: match.awayTeam.name,
+    kickoffAt: match.kickoffAt,
+  };
+
   try {
-    const events = await fetchLiveHouseOdds();
-    const found = matchFixtureToOdds(
-      { homeTeamName: match.homeTeam.name, awayTeamName: match.awayTeam.name, kickoffAt: match.kickoffAt },
-      events
+    // Ao vivo primeiro: quando a partida está rolando, é a cotação corrente
+    // que interessa. Só cai para a grade quando não achar — e é esse fallback
+    // que faz a tela funcionar para jogo agendado, que é a maioria dos casos.
+    let found: OddsMatchResult = matchFixtureToOdds(
+      key,
+      await cached("live", LIVE_TTL_MS, () => fetchLiveHouseOdds()).catch(() => [])
     );
+
+    if (found.status !== "matched") {
+      found = matchFixtureToOdds(
+        key,
+        await cached("upcoming", UPCOMING_TTL_MS, () => fetchUpcomingHouseOdds()).catch(() => [])
+      );
+    }
 
     if (found.status !== "matched") return null;
 
-    // A listagem ao vivo traz poucos mercados; o detalhe traz todos,
-    // inclusive o grupo de escanteios. Se o detalhe falhar, o que veio da
-    // listagem ainda é melhor do que nada.
+    // A listagem traz poucos mercados; o detalhe traz todos, inclusive o
+    // grupo de escanteios. Se o detalhe falhar, o que veio da listagem ainda
+    // é melhor do que nada.
     const details = await fetchHouseEventDetails(found.event.providerEventId).catch(() => null);
     return details ?? found.event;
   } catch {

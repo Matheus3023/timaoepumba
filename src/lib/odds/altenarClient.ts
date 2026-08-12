@@ -68,6 +68,36 @@ export async function fetchLiveHouseOdds(
 }
 
 /**
+ * Grade de jogos AGENDADOS, com as cotações de pré-jogo.
+ *
+ * `GetLiveEvents` só devolve o que está rolando neste segundo. Como a maior
+ * parte das partidas que o usuário abre no app está agendada ou encerrada,
+ * usar só a lista ao vivo fazia a tela de odds ficar vazia quase sempre —
+ * era o comportamento na primeira versão desta integração.
+ *
+ * O payload tem exatamente a mesma forma da listagem ao vivo (`events`,
+ * `markets`, `odds`, `champs`), então o mesmo mapeador serve.
+ */
+export async function fetchUpcomingHouseOdds(
+  sportId: number = ALTENAR_FOOTBALL_SPORT_ID,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
+): Promise<HouseOddsEvent[]> {
+  const url = buildUrl("widget/GetEvents", { sportId: String(sportId) });
+
+  const response = await fetch(url, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(timeoutMs),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Odds da casa: HTTP ${response.status} em widget/GetEvents`);
+  }
+
+  return mapAltenarEvents(await response.json());
+}
+
+/**
  * Todos os mercados de um evento, incluindo o grupo de escanteios — que é o
  * que a listagem ao vivo NÃO traz. É desta chamada que sai a cotação de
  * entrada de verdade.
