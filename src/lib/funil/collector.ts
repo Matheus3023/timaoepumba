@@ -293,10 +293,11 @@ export async function collectLiveSnapshots(configs: StrategyConfig[]): Promise<C
         provider: PROVIDER,
       };
 
+      // Ataque perigoso fica fora da conta: a Flashscore nunca o publica, então
+      // exigi-lo aqui marcaria toda partida como sem estatística — e esse flag
+      // remove a partida do polling (ver selectFixturesToPoll).
       const unsupportedLiveStats =
-        stats.dangerous_attacks_home === null &&
-        stats.shots_on_target_home === null &&
-        stats.corners_home === null;
+        stats.shots_on_target_home === null && stats.corners_home === null;
 
       // Persiste a observação e a memória de congelamento. `changed_at` só
       // avança quando o valor realmente muda — se atualizássemos a cada

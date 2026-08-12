@@ -14,6 +14,7 @@ import type {
 import { isBestLeague } from "@/lib/sports/bestLeagues";
 import { isBlockedContent } from "@/lib/sports/contentPolicy";
 import { resolveAndFetch, type MatchOperation } from "@/lib/sports/endpointResolver";
+import { mapMatchStatsPayload } from "@/lib/sports/statsPayload";
 import {
   loadCompetitionPolicy,
   recordDiscoveredCompetitions,
@@ -441,22 +442,7 @@ export class FlashscoreProvider implements SportsDataProvider {
 
   async getMatchStats(matchId: string): Promise<Record<string, { home: number | string; away: number | string }>> {
     const payload = await this.matchRequest<unknown>("stats", { match_id: matchId });
-    const rows = pickArray(payload, ["stats", "statistics", "groups"]);
-
-    const stats: Record<string, { home: number | string; away: number | string }> = {};
-    for (const item of rows) {
-      const raw = item as Record<string, unknown>;
-      const label = pickString(raw, ["name", "label", "title", "key"]);
-      if (!label) continue;
-      const home = raw.home ?? (raw.values as Record<string, unknown> | undefined)?.home;
-      const away = raw.away ?? (raw.values as Record<string, unknown> | undefined)?.away;
-      if (home === undefined && away === undefined) continue;
-      stats[label] = {
-        home: (typeof home === "number" || typeof home === "string" ? home : String(home ?? "—")),
-        away: (typeof away === "number" || typeof away === "string" ? away : String(away ?? "—")),
-      };
-    }
-    return stats;
+    return mapMatchStatsPayload(payload);
   }
 
   private mapGenericMatchRow(item: unknown, index: number, idPrefix: string): HeadToHeadMatch | null {

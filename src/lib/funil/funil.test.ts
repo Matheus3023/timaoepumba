@@ -287,13 +287,30 @@ describe("TESTE 09 — CANTOS FT asiatico", () => {
 });
 
 describe("TESTE 10 — dados ausentes", () => {
-  it("dangerous_attacks null resulta em DATA_INCOMPLETE, nunca em zero", () => {
-    const snapshot = goalHtScenario({ dangerous_attacks_home: null });
+  it("campo obrigatorio null resulta em DATA_INCOMPLETE, nunca em zero", () => {
+    const snapshot = goalHtScenario({ corners_home: null });
     const evaluation = evaluateGoalHT(snapshot, defaultConfigFor("FUNIL_GOAL_HT"));
 
     expect(evaluation.state).toBe("DATA_INCOMPLETE");
+  });
+
+  /**
+   * Ataque perigoso deixou de ser obrigatorio: a Flashscore nao publica esse
+   * rotulo em competicao nenhuma. Enquanto esteve na lista, o portao de
+   * missingRequired cortava toda avaliacao, em todo jogo. A avaliacao agora
+   * segue com o criterio de APPM marcado como indisponivel — e o aviso tem de
+   * chegar ao sinal, para ninguem confundir "criterio nao avaliado" com
+   * "criterio aprovado".
+   */
+  it("dangerous_attacks null nao bloqueia, mas avisa que APPM ficou indisponivel", () => {
+    const snapshot = goalHtScenario({ dangerous_attacks_home: null, dangerous_attacks_away: null });
+    const evaluation = evaluateGoalHT(snapshot, defaultConfigFor("FUNIL_GOAL_HT"));
+
+    expect(evaluation.state).not.toBe("DATA_INCOMPLETE");
     expect(evaluation.metrics.appmHome).toBeNull();
     expect(evaluation.metrics.dominantTeam).toBeNull();
+    expect(evaluation.rules.find((rule) => rule.key === "appm")?.status).toBe("unavailable");
+    expect(evaluation.warnings.join(" ")).toMatch(/APPM/i);
   });
 
   it("competicao sem nenhuma estatistica ao vivo e marcada como nao suportada", () => {

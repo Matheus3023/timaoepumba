@@ -21,10 +21,17 @@ export const MAX_STATS_AGE_SECONDS = 180;
  */
 export const FROZEN_STATS_SECONDS = 420;
 
-/** Campos sem os quais nenhuma das seis estratégias fecha conta. */
+/**
+ * Campos sem os quais nenhuma das seis estratégias fecha conta.
+ *
+ * Ataque perigoso NÃO entra aqui: a Flashscore não publica esse rótulo em
+ * nenhuma competição — não está entre os 34 que ela devolve. Enquanto esteve
+ * na lista, o portão de `missingRequired` em strategies/common.ts cortava
+ * toda avaliação, em todo jogo, para sempre. Pressão recente é medida por
+ * chute e escanteio (ver momentum.ts) e, quando disponível, pelo endpoint
+ * de momentum do provedor.
+ */
 const REQUIRED_FIELDS: (keyof LiveStats)[] = [
-  "dangerous_attacks_home",
-  "dangerous_attacks_away",
   "shots_on_target_home",
   "shots_on_target_away",
   "shots_off_target_home",
@@ -35,8 +42,6 @@ const REQUIRED_FIELDS: (keyof LiveStats)[] = [
 
 /** Campos que definem se a competição entrega estatística ao vivo. */
 const CORE_FIELDS: (keyof LiveStats)[] = [
-  "dangerous_attacks_home",
-  "dangerous_attacks_away",
   "shots_on_target_home",
   "shots_on_target_away",
   "corners_home",
