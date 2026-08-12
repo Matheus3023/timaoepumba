@@ -7,6 +7,7 @@ import { StaleDataNotice } from "@/components/app/StaleDataNotice";
 import { formatStaleAge } from "@/lib/sports/staleness";
 import { loadCompetitionPriority, sortGroupsForDisplay, sortMatchesForDisplay } from "@/lib/sports/curation";
 import type { Match } from "@/lib/sports/types";
+import { filterToHouseCovered } from "@/lib/odds/houseCoverage";
 
 const DAYS = [
   { offset: -1, label: "Ontem" },
@@ -37,8 +38,16 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
       : Promise.resolve({ data: [] as Match[] }),
   ]);
 
-  const liveIds = new Set(liveMatches.map((m) => m.id));
-  const upcoming = matches.filter((m) => !liveIds.has(m.id));
+  // A casa decide o que aparece: jogo sem mercado nela nao gera aposta e so
+  // ocupa a lista. `filterToHouseCovered` falha ABERTO — se o sportsbook
+  // estiver fora do ar, a lista volta inteira em vez de esvaziar.
+  const [cobertos, cobertosAoVivo] = await Promise.all([
+    filterToHouseCovered(matches),
+    filterToHouseCovered(liveMatches),
+  ]);
+
+  const liveIds = new Set(cobertosAoVivo.matches.map((m) => m.id));
+  const upcoming = cobertos.matches.filter((m) => !liveIds.has(m.id));
 
   const grouped = upcoming.reduce<Record<string, Match[]>>((acc, match) => {
     const key = match.league.name;
@@ -50,7 +59,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Prom
   // alfabetica que vem do provedor.
   const { available, priority } = await loadCompetitionPriority();
   const orderedGroups = sortGroupsForDisplay(Object.entries(grouped), priority, available);
-  const orderedLive = sortMatchesForDisplay(liveMatches, priority, available);
+  const orderedLive = sortMatchesForDisplay(cobertosAoVivo.matches, priority, available);
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
