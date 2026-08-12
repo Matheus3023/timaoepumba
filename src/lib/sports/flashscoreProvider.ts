@@ -278,6 +278,98 @@ async function curateMatches(payload: unknown): Promise<Match[]> {
  * to the browser — this class is only ever imported from server code,
  * enforced by the `server-only` import.
  */
+/**
+ * `matches/details` devolve um OBJETO com forma propria — nada a ver com a
+ * grade agrupada por torneio que `matches/list` manda.
+ *
+ * Isto aqui existe porque `getMatchDetails` usava `curateMatches`, que
+ * comeca com `if (!Array.isArray(payload)) return []`. Como o detalhe nunca
+ * e array, a funcao SEMPRE devolvia vazio, `getMatchDetails` sempre lancava
+ * e a pagina de qualquer partida respondia 404. O app inteiro nao passava da
+ * lista.
+ */
+interface RawMatchDetails {
+  match_id?: string;
+  match_status?: RawMatchStatus;
+  timestamp?: number;
+  country?: { name?: string | null } | null;
+  tournament?: {
+    tournament_id?: string | null;
+    tournament_stage_id?: string | null;
+    name?: string | null;
+  } | null;
+  home_team?: RawTeam;
+  away_team?: RawTeam;
+  scores?: { home?: number | null; away?: number | null } | null;
+}
+
+function mapMatchDetailsPayload(payload: unknown): Match | null {
+  const raw = (payload ?? {}) as RawMatchDetails;
+  if (!raw.match_id || !raw.home_team || !raw.away_team) return null;
+
+  const status = raw.match_status ?? ({} as RawMatchStatus);
+  const { minute, label } = mapLiveMinute(status.live_time ?? status.live_minute);
+
+  const countryName = raw.country?.name ?? null;
+  const tournamentName = raw.tournament?.name ?? "";
+  // A grade nomeia a competicao como "PAIS: Torneio"; o detalhe manda os dois
+  // separados. Reconstruimos no mesmo formato para o nome bater com o
+  // catalogo quando o id nao vier.
+  const leagueName = countryName ? `${countryName.toUpperCase()}: ${tournamentName}` : tournamentName;
+
+  // Em competicao sem estagio (amistoso, por exemplo) os DOIS ids vem nulos.
+  const leagueId = raw.tournament?.tournament_stage_id ?? raw.tournament?.tournament_id ?? "";
+
+  return {
+    id: raw.match_id,
+    league: { id: leagueId, name: leagueName, country: countryName, logoUrl: null },
+    homeTeam: mapTeam(raw.home_team),
+    awayTeam: mapTeam(raw.away_team),
+    homeScore: raw.scores?.home ?? null,
+    awayScore: raw.scores?.away ?? null,
+    status: mapStatus(status),
+    kickoffAt: new Date((raw.timestamp ?? 0) * 1000).toISOString(),
+    minute,
+    minuteLabel: label,
+    stage: status.stage ?? null,
+    homeRedCards: raw.home_team.red_cards ?? null,
+    awayRedCards: raw.away_team.red_cards ?? null,
+    odds: null,
+  };
+}
+
+/**
+ * A partida pode ser exibida? Mesma regra da grade, mas resolvida por id
+ * QUANDO existe id — em amistoso ele vem nulo, e ai o nome reconstruido
+ * ("WORLD: Club Friendly") e o que casa com o catalogo.
+ */
+async function detailIsAllowed(match: Match): Promise<boolean> {
+  if (
+    isBlockedContent({
+      competitionName: match.league.name,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+    })
+  ) {
+    return false;
+  }
+
+  const { available, policy } = await loadCompetitionPolicy();
+  if (!available || policy.size === 0) return isBestLeague(match.league.name, match.league.country);
+
+  if (match.league.id) {
+    const row = policy.get(normalizeCompetitionId(match.league.id));
+    if (row) return row.is_active;
+  }
+
+  const porNome = [...policy.values()].find(
+    (row) => (row.provider_name ?? "").trim().toLowerCase() === match.league.name.trim().toLowerCase()
+  );
+  if (porNome) return porNome.is_active;
+
+  return isBestLeague(match.league.name, match.league.country);
+}
+
 export class FlashscoreProvider implements SportsDataProvider {
   private readonly apiKey: string;
   private readonly apiHost: string;
@@ -368,9 +460,8 @@ export class FlashscoreProvider implements SportsDataProvider {
     // synthetic { name: "Jogo" } league when curation returned nothing,
     // which let a blocked competition's match render via a direct URL.
     // Throwing surfaces as notFound() on the page.
-    const matches = await curateMatches(payload);
-    const match = matches[0];
-    if (!match) {
+    const match = mapMatchDetailsPayload(payload);
+    if (!match || !(await detailIsAllowed(match))) {
       throw new Error(`FlashscoreProvider.getMatchDetails: match ${matchId} is unavailable or not allowed`);
     }
 
