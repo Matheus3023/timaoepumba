@@ -89,20 +89,19 @@ export function HouseSportsbook({
 
         setEstado("pronto");
 
-        // toggleSelections SO depois do widget montar. Chamado cedo demais,
-        // o SDK estoura com "Cannot read properties of undefined (reading
-        // 'odd')" — o boletim ainda nao existe. Damos um respiro e protegemos
-        // com try/catch para nunca derrubar a tela por causa disso.
-        const ids = oddIds.map(Number).filter((n) => Number.isFinite(n));
-        if (ids.length > 0) {
-          setTimeout(() => {
-            try {
-              window.altenarWSDK?.toggleSelections(ids);
-            } catch {
-              /* seguir sem pre-selecao e melhor do que quebrar a camada */
-            }
-          }, 1500);
-        }
+        // NAO pre-marcamos a selecao por enquanto.
+        //
+        // toggleSelections estoura com "Cannot read properties of undefined
+        // (reading 'odd')" mesmo depois do widget montar: o id que a nossa
+        // listagem carrega (providerOddId da API REST) NAO e o mesmo que o
+        // boletim do SDK indexa internamente. Passar o id errado deixa o
+        // boletim vazio e polui o console.
+        //
+        // Ate mapear o id certo, o comportamento e: o usuario ja chega no
+        // jogo certo, com a cartela aberta, e marca a odd dentro do widget.
+        // E menos do que o ideal, mas honesto — melhor do que um boletim que
+        // aparece vazio sem o usuario entender por que.
+        void oddIds;
       } catch {
         if (vivo) setEstado("erro");
       }
