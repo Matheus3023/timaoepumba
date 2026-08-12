@@ -32,9 +32,18 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   const houseMarkets = houseOdds ? sortMarketsForDisplay(houseOdds) : [];
   const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
-  // So renderiza o CTA de aposta quando existe link de afiliado configurado —
-  // sem ele o clique nao gera revshare e o botao seria so ruido.
-  const houseUrl = process.env.NEXT_PUBLIC_HOUSE_AFFILIATE_URL ?? null;
+  // Sempre /api/affiliate/click, nunca o link cru da casa.
+  //
+  // Essa rota anexa o Lead ID do usuario como subid, registra o clique em
+  // affiliate_clicks, move o estagio no CRM e dispara o evento de tracking.
+  // Mandar o usuario direto para o link de afiliado renderia revshare, mas
+  // sem subid a casa nao consegue dizer QUEM se cadastrou — e e desse
+  // vinculo que dependem a atribuicao por usuario e o gate de acesso
+  // (users.lead_id = subid do postback em /api/webhooks/affiliate).
+  //
+  // A rota so funciona com uma casa ativa em affiliate_configurations; sem
+  // ela redireciona para /home com affiliate_error=not_configured.
+  const houseUrl = "/api/affiliate/click";
 
   const supabase = await createServerSupabaseClient();
   const {

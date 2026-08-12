@@ -121,12 +121,7 @@ export function MatchDetailTabs({
                 </div>
               ))}
               {houseUrl ? (
-                <a
-                  href={houseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className="btn-primary w-full text-center"
-                >
+                <a href={houseUrl} rel="sponsored" className="btn-primary w-full text-center">
                   Apostar na {houseName}
                 </a>
               ) : null}
