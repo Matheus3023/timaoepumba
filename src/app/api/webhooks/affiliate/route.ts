@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "node:crypto";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/affiliate/webhookSecurity";
@@ -242,4 +243,65 @@ async function notifyInternalTeam(message: string) {
   } catch (error) {
     console.error("[affiliate-webhook] failed to notify internal team via n8n", error);
   }
+}
+
+/**
+ * Variante GET do postback, para plataformas que só sabem chamar URL.
+ *
+ * A TAP (plataforma do programa de afiliados da Bateu Bet) só oferece pixel
+ * do tipo "S2S HTTP — Server-to-Server call with GET method": querystring,
+ * sem corpo e sem header customizado. Não dá para exigir dela o
+ * X-Webhook-Key/X-Webhook-Signature que o POST espera.
+ *
+ * Em vez de duplicar validação e auditoria, esta rota traduz a chamada GET
+ * na mesma requisição POST que já sabemos tratar: monta o corpo canônico e
+ * assina com o segredo QUE VEIO NA URL. Se o segredo estiver errado, a
+ * assinatura não confere e o caminho POST devolve 401 — a validação continua
+ * sendo uma só, e o log de webhook registra a tentativa do mesmo jeito.
+ *
+ * Formato esperado (o que se configura no painel da casa):
+ *   GET /api/webhooks/affiliate
+ *       ?key=<webhook_key>&secret=<webhook_secret>
+ *       &event=registration|ftd
+ *       &subid={{subid}}&transaction_id={{registration_id}}&timestamp={{...}}
+ *
+ * O segredo viaja na URL porque a plataforma não permite header. É aceitável
+ * sobre HTTPS e é o padrão de postback do mercado, mas significa que ele vai
+ * aparecer em log de acesso da casa — se vazar, rotacionar
+ * `affiliate_configurations.webhook_secret` e reconfigurar o pixel lá.
+ */
+export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+
+  const key = params.get("key");
+  const secret = params.get("secret");
+  if (!key || !secret) {
+    return NextResponse.json({ error: "missing_credentials" }, { status: 400 });
+  }
+
+  const body = JSON.stringify({
+    event: params.get("event"),
+    subid: params.get("subid"),
+    transaction_id: params.get("transaction_id"),
+    timestamp: params.get("timestamp") ?? new Date().toISOString(),
+  });
+
+  const signature = createHmac("sha256", secret).update(body).digest("hex");
+
+  return POST(
+    new NextRequest(request.nextUrl, {
+      method: "POST",
+      body,
+      headers: {
+        "content-type": "application/json",
+        "x-webhook-key": key,
+        "x-webhook-signature": signature,
+        // Preserva a origem real para o log de auditoria não registrar
+        // toda chamada como se fosse interna.
+        "x-forwarded-for": request.headers.get("x-forwarded-for") ?? "",
+        "user-agent": request.headers.get("user-agent") ?? "",
+        "x-postback-transport": "get",
+      },
+    })
+  );
 }
