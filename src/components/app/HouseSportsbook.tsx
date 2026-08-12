@@ -81,16 +81,28 @@ export function HouseSportsbook({
         if (!vivo || !container.current) return;
 
         window.altenarWSDK.addSportsBook({
-          props: { page: "sports" },
+          // "overview" e o nome de pagina que o SDK reconhece; "sports"
+          // devolvia [WSDK] page not found e deixava a tela em branco.
+          props: { page: "overview" },
           container: container.current,
         });
 
-        // Empurra o que o usuário já escolheu aqui. Ids numéricos: o SDK
-        // rejeita string em silêncio, sem erro nenhum.
-        const ids = oddIds.map(Number).filter((n) => Number.isFinite(n));
-        if (ids.length > 0) window.altenarWSDK.toggleSelections(ids);
-
         setEstado("pronto");
+
+        // toggleSelections SO depois do widget montar. Chamado cedo demais,
+        // o SDK estoura com "Cannot read properties of undefined (reading
+        // 'odd')" — o boletim ainda nao existe. Damos um respiro e protegemos
+        // com try/catch para nunca derrubar a tela por causa disso.
+        const ids = oddIds.map(Number).filter((n) => Number.isFinite(n));
+        if (ids.length > 0) {
+          setTimeout(() => {
+            try {
+              window.altenarWSDK?.toggleSelections(ids);
+            } catch {
+              /* seguir sem pre-selecao e melhor do que quebrar a camada */
+            }
+          }, 1500);
+        }
       } catch {
         if (vivo) setEstado("erro");
       }
