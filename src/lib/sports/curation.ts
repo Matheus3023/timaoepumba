@@ -7,7 +7,7 @@ import "server-only";
  * `allowed_competitions`, degrada em vez de quebrar: sem a tabela, quem
  * chama cai na prioridade derivada do nome da competição.
  */
-import { loadCompetitionPolicy } from "@/lib/sports/competitionRegistry";
+import { loadCompetitionPolicy, normalizeCompetitionId } from "@/lib/sports/competitionRegistry";
 import type { CompetitionPriority } from "@/lib/sports/curationRules";
 
 export async function loadCompetitionPriority(): Promise<{ available: boolean; priority: CompetitionPriority }> {
@@ -16,7 +16,7 @@ export async function loadCompetitionPriority(): Promise<{ available: boolean; p
 
   return {
     available: true,
-    priority: new Map([...policy.values()].map((row) => [row.provider_competition_id, row.priority])),
+    priority: new Map([...policy.values()].map((row) => [normalizeCompetitionId(row.provider_competition_id), row.priority])),
   };
 }
 

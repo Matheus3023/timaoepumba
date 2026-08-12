@@ -47,7 +47,9 @@ function statusRank(match: Match): number {
 
 export function priorityOf(match: Match, priority: CompetitionPriority, available: boolean): number {
   if (available) {
-    return priority.get(match.league.id) ?? DEFAULT_PRIORITY;
+    // Mesmo motivo do policy: o provedor varia a caixa do id entre
+    // endpoints (ver normalizeCompetitionId).
+    return priority.get(match.league.id.trim().toLowerCase()) ?? DEFAULT_PRIORITY;
   }
   return keywordPriority(match.league.name, match.league.country);
 }

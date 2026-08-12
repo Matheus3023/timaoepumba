@@ -47,8 +47,24 @@ export async function loadCompetitionPolicy(): Promise<CompetitionPolicyResult> 
 
   return {
     available: true,
-    policy: new Map((data ?? []).map((row) => [row.provider_competition_id, row])),
+    // Chave normalizada: o provedor devolve o MESMO id de competição com
+    // caixa diferente conforme o endpoint. `matches/list` manda "edmhdnn8",
+    // `matches/details` manda "EDMhdnN8" — e comparar cru fazia a curadoria
+    // considerar a competição desconhecida na tela de detalhe, que respondia
+    // 404 para TODO jogo. Ver `normalizeCompetitionId`.
+    policy: new Map((data ?? []).map((row) => [normalizeCompetitionId(row.provider_competition_id), row])),
   };
+}
+
+/**
+ * Id de competição comparável entre endpoints.
+ *
+ * O Flashscore devolve o mesmo identificador com caixa diferente dependendo
+ * de onde ele aparece: a grade do dia manda minúsculo, o detalhe da partida
+ * manda com maiúsculas. Toda comparação passa por aqui.
+ */
+export function normalizeCompetitionId(id: string): string {
+  return id.trim().toLowerCase();
 }
 
 /**
@@ -105,13 +121,13 @@ export async function recordDiscoveredCompetitions(competitions: DiscoveredCompe
     return;
   }
 
-  const knownIds = new Set((existing ?? []).map((row) => row.provider_competition_id));
+  const knownIds = new Set((existing ?? []).map((row) => normalizeCompetitionId(row.provider_competition_id)));
 
   const inserts = [...byId.values()]
-    .filter((competition) => !knownIds.has(competition.providerCompetitionId))
+    .filter((competition) => !knownIds.has(normalizeCompetitionId(competition.providerCompetitionId)))
     .map((competition) => ({
       provider: PROVIDER,
-      provider_competition_id: competition.providerCompetitionId,
+      provider_competition_id: normalizeCompetitionId(competition.providerCompetitionId),
       canonical_name: competition.name,
       provider_name: competition.name,
       country_name: competition.countryName ?? null,

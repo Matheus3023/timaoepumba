@@ -17,6 +17,7 @@ import { resolveAndFetch, type MatchOperation } from "@/lib/sports/endpointResol
 import { mapMatchStatsPayload } from "@/lib/sports/statsPayload";
 import {
   loadCompetitionPolicy,
+  normalizeCompetitionId,
   recordDiscoveredCompetitions,
   type DiscoveredCompetition,
 } from "@/lib/sports/competitionRegistry";
@@ -257,7 +258,7 @@ async function curateMatches(payload: unknown): Promise<Match[]> {
   return matches.filter((match) => {
     const allowed = degraded
       ? isBestLeague(match.league.name, match.league.country)
-      : Boolean(policy.get(match.league.id)?.is_active);
+      : Boolean(policy.get(normalizeCompetitionId(match.league.id))?.is_active);
     if (!allowed) return false;
 
     return !isBlockedContent({
