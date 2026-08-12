@@ -31,6 +31,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   ]);
 
   const houseMarkets = houseOdds ? sortMarketsForDisplay(houseOdds) : [];
+  const houseEventId = houseOdds?.providerEventId ?? "";
   const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
   // Sempre /api/affiliate/click, nunca o link cru da casa.
   //
@@ -122,6 +123,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         houseMarkets={houseMarkets}
         houseName={houseName}
         houseUrl={houseUrl}
+        houseEventId={houseEventId}
       />
     </div>
   );
