@@ -34,7 +34,6 @@ export function MatchDetailTabs({
   momentum,
   houseMarkets,
   houseName,
-  houseUrl,
   houseEventId,
 }: {
   kickoffLabel: string;
@@ -53,7 +52,6 @@ export function MatchDetailTabs({
   momentum: MomentumPoint[];
   houseMarkets: OddsMarket[];
   houseName: string;
-  houseUrl: string;
   houseEventId: string;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
@@ -103,7 +101,6 @@ export function MatchDetailTabs({
           <OddsTab
             markets={houseMarkets}
             houseName={houseName}
-            houseUrl={houseUrl}
             eventId={houseEventId}
             eventName={`${homeTeamName} x ${awayTeamName}`}
           />

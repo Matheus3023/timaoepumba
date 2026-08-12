@@ -13,6 +13,7 @@ import {
   type SlipSelection,
 } from "@/lib/odds/betSlip";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { BetSheet } from "@/components/app/BetSheet";
 
 const VALORES_RAPIDOS = [10, 25, 50, 100];
 
@@ -52,17 +53,16 @@ const TETO_POR_GRUPO = 40;
 export function OddsTab({
   markets,
   houseName,
-  houseUrl,
   eventId,
   eventName,
 }: {
   markets: OddsMarket[];
   houseName: string;
-  houseUrl: string;
   eventId: string;
   eventName: string;
 }) {
   const [slip, setSlip] = useState<SlipSelection[]>([]);
+  const [apostando, setApostando] = useState(false);
   const [stake, setStake] = useState<number>(25);
 
   const grupos = useMemo(() => {
@@ -235,9 +235,12 @@ export function OddsTab({
               </span>
             </div>
 
-            <a href={houseUrl} rel="sponsored" className="btn-primary w-full text-center">
+            {/* Abre a casa DENTRO do app em vez de mandar o usuario embora.
+                `houseUrl` continua sendo /api/affiliate/click, que e o que
+                anexa o afp e registra o clique — ver BetSheet. */}
+            <button type="button" onClick={() => setApostando(true)} className="btn-primary w-full text-center">
               Apostar na {houseName}
-            </a>
+            </button>
 
             {/* A aposta é registrada na casa, não aqui. Dizer isso evita que
                 alguém ache que apostou só por ter montado o boletim. */}
@@ -248,6 +251,12 @@ export function OddsTab({
             </p>
           </div>
         </div>
+      ) : null}
+
+      {/* Montado so quando aberto: o estado interno da camada se reinicia
+          sozinho a cada abertura, sem reset manual. */}
+      {apostando ? (
+        <BetSheet onClose={() => setApostando(false)} houseName={houseName} eventName={eventName} />
       ) : null}
     </div>
   );
