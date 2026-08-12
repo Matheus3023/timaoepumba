@@ -117,7 +117,12 @@ export function SignupForm() {
         return;
       }
 
-      router.push("/onboarding");
+      // Emenda direto no cadastro da casa, em vez de passar pelo onboarding
+      // primeiro. Quem acabou de preencher um formulario esta no melhor
+      // momento para preencher o segundo — depois de instalar PWA e aceitar
+      // notificacao, a conversao despenca. O onboarding acontece na volta,
+      // porque o layout do app cobra ele antes do /home.
+      router.push("/liberar");
     } catch (err) {
       setError(describeClientError(err));
     } finally {

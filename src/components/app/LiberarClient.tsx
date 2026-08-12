@@ -41,10 +41,10 @@ export function LiberarClient({ houseName }: { houseName: string }) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-bold text-strong">Falta um passo</h1>
+        <h1 className="text-2xl font-bold text-strong">Último passo</h1>
         <p className="text-secondary">
-          Os palpites, as análises e a comunidade são liberados para quem tem conta na {houseName}. É de
-          graça e leva um minuto.
+          Sua conta no app está criada. Falta a conta na {houseName} — é ela que libera os palpites, as
+          análises e a comunidade. É de graça e leva um minuto.
         </p>
       </div>
 
@@ -52,7 +52,10 @@ export function LiberarClient({ houseName }: { houseName: string }) {
         <ol className="flex flex-col gap-3 text-sm text-secondary">
           <li className="flex gap-3">
             <span className="font-mono font-semibold text-yellow-300">1</span>
-            <span>Toque no botão abaixo e crie sua conta na {houseName}.</span>
+            <span>
+              Toque no botão abaixo. O formulário da {houseName} abre já com o seu código de indicação
+              preenchido.
+            </span>
           </li>
           <li className="flex gap-3">
             <span className="font-mono font-semibold text-yellow-300">2</span>

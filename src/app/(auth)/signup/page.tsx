@@ -28,6 +28,12 @@ export default function SignupPage() {
       <p className="mt-2 text-sm leading-relaxed text-secondary">
         Jogos, análises e comunidade em um só lugar. Uso restrito a maiores de 18 anos.
       </p>
+      {/* Dito aqui, e nao so depois: o cadastro tem dois passos, e esconder o
+          segundo ate o usuario terminar o primeiro derruba a conclusao. */}
+      <p className="mt-2 text-xs leading-relaxed text-muted">
+        Depois de criar sua conta você cria também a conta na {process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet"} — é
+        ela que libera os palpites e a comunidade.
+      </p>
 
       <SignupForm />
     </AuthLayout>
