@@ -1,7 +1,11 @@
 import "server-only";
 
 import { fetchHouseEventDetails, fetchLiveHouseOdds, fetchUpcomingHouseOdds } from "@/lib/odds/altenarClient";
-import { matchFixtureToOdds } from "@/lib/odds/matchOdds";
+import {
+  KICKOFF_TOLERANCE_MINUTES,
+  LIVE_KICKOFF_TOLERANCE_MINUTES,
+  matchFixtureToOdds,
+} from "@/lib/odds/matchOdds";
 import type { HouseOddsEvent, OddsMatchResult } from "@/lib/odds/types";
 import type { Match } from "@/lib/sports/types";
 
@@ -49,19 +53,26 @@ export async function getHouseOddsForMatch(match: Match): Promise<HouseOddsEvent
     kickoffAt: match.kickoffAt,
   };
 
+  // Em jogo ao vivo o `kickoffAt` que chega do provedor é "agora", não o
+  // inicio — ver LIVE_KICKOFF_TOLERANCE_MINUTES.
+  const tolerancia =
+    match.status === "live" ? LIVE_KICKOFF_TOLERANCE_MINUTES : KICKOFF_TOLERANCE_MINUTES;
+
   try {
     // Ao vivo primeiro: quando a partida está rolando, é a cotação corrente
     // que interessa. Só cai para a grade quando não achar — e é esse fallback
     // que faz a tela funcionar para jogo agendado, que é a maioria dos casos.
     let found: OddsMatchResult = matchFixtureToOdds(
       key,
-      await cached("live", LIVE_TTL_MS, () => fetchLiveHouseOdds()).catch(() => [])
+      await cached("live", LIVE_TTL_MS, () => fetchLiveHouseOdds()).catch(() => []),
+      tolerancia
     );
 
     if (found.status !== "matched") {
       found = matchFixtureToOdds(
         key,
-        await cached("upcoming", UPCOMING_TTL_MS, () => fetchUpcomingHouseOdds()).catch(() => [])
+        await cached("upcoming", UPCOMING_TTL_MS, () => fetchUpcomingHouseOdds()).catch(() => []),
+        tolerancia
       );
     }
 

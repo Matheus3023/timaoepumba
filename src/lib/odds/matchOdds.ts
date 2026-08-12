@@ -22,6 +22,20 @@ import type { FixtureKey, HouseOddsEvent, OddsMatchResult } from "@/lib/odds/typ
 /** Minutos de diferença tolerados entre os dois provedores no horário de início. */
 export const KICKOFF_TOLERANCE_MINUTES = 15;
 
+/**
+ * Tolerância para partida AO VIVO.
+ *
+ * O provedor de dados não devolve o horário de início numa partida em
+ * andamento: o campo `timestamp` de `matches/details` passa a valer "agora".
+ * Um jogo que começou às 15:00 chega como 16:54 aos 74 minutos. Com a
+ * tolerância normal de 15 min, nenhum jogo ao vivo casaria com a casa — e é
+ * exatamente quando o apostador mais quer a odd.
+ *
+ * 4 horas cobre 90 minutos, intervalo, acréscimos e prorrogação com folga.
+ * O risco de casar errado continua baixo porque os DOIS times precisam bater.
+ */
+export const LIVE_KICKOFF_TOLERANCE_MINUTES = 240;
+
 /** Abreviação curta demais casa com qualquer coisa; "SP" pegaria meio mundo. */
 const MIN_ABBREVIATION_LENGTH = 3;
 

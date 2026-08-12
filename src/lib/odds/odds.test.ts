@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { mapAltenarEventDetails, mapAltenarEvents } from "@/lib/odds/altenarPayload";
 import { findCornerOverOdd, listCornerLines } from "@/lib/odds/cornerMarket";
-import { matchFixtureToOdds, teamNamesMatch } from "@/lib/odds/matchOdds";
+import { LIVE_KICKOFF_TOLERANCE_MINUTES, matchFixtureToOdds, teamNamesMatch } from "@/lib/odds/matchOdds";
 import type { FixtureKey, HouseOddsEvent } from "@/lib/odds/types";
 
 /**
@@ -239,5 +239,49 @@ describe("findCornerOverOdd", () => {
 
   it("ignora impar/par sem derrubar mercado que contenha 'parte'", () => {
     expect(listCornerLines(evento)).toEqual([6.5, 7.5, 10.5]);
+  });
+});
+
+/**
+ * Regressão do bug que deixou a aba de Odds vazia em TODO jogo ao vivo.
+ *
+ * `matches/details` do provedor de dados não devolve o horário de início
+ * numa partida em andamento — o campo passa a valer "agora". Um jogo que
+ * começou às 15:00 chega como 16:54 aos 74 minutos, e com a tolerância
+ * normal de 15 min nenhum jogo ao vivo casava com a casa.
+ */
+describe("tolerancia de jogo ao vivo", () => {
+  const eventoDaCasa: HouseOddsEvent = {
+    providerEventId: "999",
+    homeTeam: "Arkadag",
+    awayTeam: "Goa",
+    startsAt: "2026-08-12T15:00:00.000Z",
+    championship: "AFC",
+    markets: [],
+  };
+
+  const aoVivo: FixtureKey = {
+    homeTeamName: "ARK",
+    awayTeamName: "GOA",
+    // o que o provedor manda aos 74 minutos: "agora", nao o inicio
+    kickoffAt: "2026-08-12T16:54:11.000Z",
+  };
+
+  it("com a tolerancia padrao NAO casa — era o bug", () => {
+    expect(matchFixtureToOdds(aoVivo, [eventoDaCasa]).status).toBe("not_found");
+  });
+
+  it("com a tolerancia de jogo ao vivo casa", () => {
+    expect(matchFixtureToOdds(aoVivo, [eventoDaCasa], LIVE_KICKOFF_TOLERANCE_MINUTES).status).toBe("matched");
+  });
+
+  it("a folga maior nao passa a casar jogo de outro dia", () => {
+    const outroDia = { ...aoVivo, kickoffAt: "2026-08-13T16:54:11.000Z" };
+    expect(matchFixtureToOdds(outroDia, [eventoDaCasa], LIVE_KICKOFF_TOLERANCE_MINUTES).status).toBe("not_found");
+  });
+
+  it("mesmo com folga, os DOIS times precisam bater", () => {
+    const outroVisitante = { ...aoVivo, awayTeamName: "FLA" };
+    expect(matchFixtureToOdds(outroVisitante, [eventoDaCasa], LIVE_KICKOFF_TOLERANCE_MINUTES).status).toBe("not_found");
   });
 });

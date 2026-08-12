@@ -1,7 +1,11 @@
 import "server-only";
 
 import { fetchLiveHouseOdds, fetchUpcomingHouseOdds } from "@/lib/odds/altenarClient";
-import { matchFixtureToOdds } from "@/lib/odds/matchOdds";
+import {
+  KICKOFF_TOLERANCE_MINUTES,
+  LIVE_KICKOFF_TOLERANCE_MINUTES,
+  matchFixtureToOdds,
+} from "@/lib/odds/matchOdds";
 import type { HouseOddsEvent } from "@/lib/odds/types";
 import type { Match } from "@/lib/sports/types";
 
@@ -63,7 +67,10 @@ export async function filterToHouseCovered<T extends Match>(
         awayTeamName: match.awayTeam.name,
         kickoffAt: match.kickoffAt,
       },
-      catalog
+      catalog,
+      // Jogo ao vivo chega com `kickoffAt` valendo "agora" — sem isso, a aba
+      // AO VIVO ficaria vazia, que e o pior lugar para ficar vazia.
+      match.status === "live" ? LIVE_KICKOFF_TOLERANCE_MINUTES : KICKOFF_TOLERANCE_MINUTES
     );
     return resultado.status === "matched";
   });
