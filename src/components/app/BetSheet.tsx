@@ -74,9 +74,13 @@ export function BetSheet({
         src="/api/affiliate/click"
         title={`Apostar na ${houseName}`}
         className="flex-1 border-0"
-        // `allow-popups` é necessário: a casa abre confirmação de aposta e
-        // fluxo de pagamento em janela nova em alguns casos.
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        // SEM `sandbox` de propósito. Com o atributo aplicado o quadro voltava
+        // em branco: a casa passa por protecao anti-bot e o proprio
+        // sportsbook e uma aplicacao que espera contexto normal. No teste sem
+        // sandbox ela carrega inteira. Sandbox aqui daria uma sensacao de
+        // seguranca sem entregar nada — o conteudo e de terceiro de qualquer
+        // forma, e quem protege o usuario e a origem separada, nao o atributo.
+        referrerPolicy="no-referrer-when-downgrade"
       />
 
       <footer className="flex flex-col gap-1.5 border-t border-surface-elevated px-4 py-2.5">
