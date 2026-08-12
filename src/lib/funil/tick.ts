@@ -16,7 +16,9 @@ import { collectLiveSnapshots, purgeOldObservations, recordTodayFixtures } from 
 import { decideTransition, type NotificationKind, type PersistedSignalState } from "@/lib/funil/engine";
 import { DEFAULT_STRATEGY_CONFIGS, STRATEGY_LABEL } from "@/lib/funil/defaults";
 import { FUNIL_LOG_CODES } from "@/lib/funil/logCodes";
+import { normalizeLiveStats } from "@/lib/funil/normalize";
 import { settleSignal } from "@/lib/funil/settle";
+import { getSportsDataProvider } from "@/lib/sports";
 import { evaluateStrategyById } from "@/lib/funil/strategies";
 import type { FixtureSnapshot, StrategyConfig, StrategyEvaluation, StrategyId, StrategyParams } from "@/lib/funil/types";
 import type { LiveStrategySignalRow } from "@/types/database";
@@ -344,16 +346,61 @@ async function persistEvaluation(
  * chamada à API: a partida encerrada some da lista ao vivo, e buscá-la de
  * novo custaria requisição para obter o que já temos.
  */
+/**
+ * Placar e escanteios definitivos de uma partida encerrada, direto do
+ * provedor. Uma chamada por partida, uma única vez — a partida já saiu do
+ * polling, então não há custo recorrente de cota.
+ *
+ * Devolve `null` quando não dá para confiar no que voltou; quem chama cai
+ * para a última observação. Nunca lança: falhar a busca do resultado não pode
+ * derrubar o tick inteiro.
+ */
+async function fetchFinalSnapshot(matchId: string): Promise<{ goals: number | null; corners: number | null } | null> {
+  try {
+    const provider = getSportsDataProvider();
+    const [details, rawStats] = await Promise.all([
+      provider.getMatchDetails(matchId).catch(() => null),
+      provider.getMatchStats(matchId).catch(() => ({}) as Record<string, { home: number | string; away: number | string }>),
+    ]);
+
+    const { stats } = normalizeLiveStats(rawStats);
+    const corners =
+      stats.corners_home === null || stats.corners_away === null ? null : stats.corners_home + stats.corners_away;
+
+    const goals =
+      details && details.homeScore !== null && details.awayScore !== null
+        ? details.homeScore + details.awayScore
+        : null;
+
+    if (goals === null && corners === null) return null;
+    return { goals, corners };
+  } catch (error) {
+    console.error(`[funil] falha ao buscar resultado final de ${matchId}`, error);
+    return null;
+  }
+}
+
 export async function settleFinishedFixtures(): Promise<number> {
   const admin = createAdminSupabaseClient();
   const cutoff = new Date(Date.now() - FIXTURE_FINISHED_AFTER_MINUTES * 60 * 1000).toISOString();
 
+  // O corte é por `last_minute_changed_at`, não por `last_seen_at`.
+  //
+  // `last_seen_at` é renovado a cada tick para toda partida que aparece na
+  // lista do dia — e jogo encerrado continua nessa lista até o dia virar.
+  // Enquanto o corte foi por ele, o período de silêncio nunca acontecia e
+  // NENHUM sinal era apurado: ficavam todos em PENDING e a taxa de acerto
+  // não existia. `last_minute_changed_at` é o único campo que realmente para
+  // quando a partida acaba. Nulo significa que nunca foi ao polling — nesse
+  // caso não há sinal a resolver e só marcamos como apurada para não
+  // reprocessar para sempre.
   const { data: fixtures } = await admin
     .from("funil_fixtures")
     .select("provider_match_id")
     .eq("provider", PROVIDER)
     .eq("settled", false)
-    .lt("last_seen_at", cutoff)
+    .in("status", ["finished", "postponed", "canceled"])
+    .or(`last_minute_changed_at.is.null,last_minute_changed_at.lt.${cutoff}`)
     .limit(50);
 
   if (!fixtures || fixtures.length === 0) return 0;
@@ -382,10 +429,17 @@ export async function settleFinishedFixtures(): Promise<number> {
     const goalsOf = (row: { score_home: number | null; score_away: number | null } | undefined): number | null =>
       !row || row.score_home === null || row.score_away === null ? null : row.score_home + row.score_away;
 
-    const finalGoals = goalsOf(last);
-    const finalCorners = cornersOf(last?.stats as Record<string, number | null> | undefined);
     const htGoals = goalsOf(lastFirstHalf);
     const htCorners = cornersOf(lastFirstHalf?.stats as Record<string, number | null> | undefined);
+
+    // A última observação não é o resultado final: o polling só olha até o
+    // minuto 90, então escanteio e gol dos acréscimos ficam de fora. Para
+    // FUNIL_CORNER_FT isso inverte GREEN e RED direto. Buscamos o número
+    // definitivo do provedor uma única vez, no momento de apurar, e só
+    // caímos para a última observação se essa busca falhar.
+    const snapshot = await fetchFinalSnapshot(matchId);
+    const finalGoals = snapshot?.goals ?? goalsOf(last);
+    const finalCorners = snapshot?.corners ?? cornersOf(last?.stats as Record<string, number | null> | undefined);
 
     const { data: signals } = await admin
       .from("live_strategy_signals")
