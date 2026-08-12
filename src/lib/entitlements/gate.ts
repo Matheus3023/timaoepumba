@@ -49,6 +49,16 @@ export async function verifyAndRelease(userId: string): Promise<VerifyResult> {
     // O postback grava em affiliate_events antes de tentar promover. Se o
     // evento existe mas o nível não subiu, houve falha depois da gravação —
     // e é exatamente esse buraco que esta função fecha.
+    //
+    // NÃO filtramos por `status`, e isso é deliberado. `rejected` significa
+    // apenas "não achei o usuário naquele instante" (o webhook marca assim
+    // quando o lead_id ainda não tinha dono), não "cadastro inválido". Se o
+    // usuário existe agora, o evento continua sendo prova de que a casa
+    // confirmou o cadastro dele — filtrar por `processed` prenderia
+    // justamente quem esta função existe para destravar.
+    //
+    // Aceitar qualquer status é seguro porque a linha só é inserida DEPOIS
+    // da validação de assinatura (passo 2 do webhook); não há como forjar.
     const { data: event } = await admin
       .from("affiliate_events")
       .select("id, event_type")
