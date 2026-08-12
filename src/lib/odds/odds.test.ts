@@ -132,6 +132,20 @@ describe("teamNamesMatch", () => {
   it("mantem 'Atletico' como token valido — e o que a abreviacao costuma citar", () => {
     expect(teamNamesMatch("ATL", "Atlético Mineiro")).toBe(true);
   });
+
+  it("casa nome nosso com espaco contra nome completo da casa", () => {
+    // O bug que deixava La Union x Aucas sem odds: "launion" nunca vira token
+    // isolado de "Club La Union".
+    expect(teamNamesMatch("La Union", "Club La Union")).toBe(true);
+    expect(teamNamesMatch("Sao Paulo", "São Paulo FC")).toBe(true);
+  });
+
+  it("nome com espaco nao casa quando nenhuma palavra bate", () => {
+    expect(teamNamesMatch("Sao Paulo", "Real Madrid")).toBe(false);
+    // Protecao contra homonimo real vem do casamento exigir os DOIS times +
+    // horario e devolver "ambiguous" quando sobra mais de um candidato — nao
+    // de teamNamesMatch sozinho.
+  });
 });
 
 describe("matchFixtureToOdds", () => {

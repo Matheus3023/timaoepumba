@@ -81,9 +81,27 @@ export function teamNamesMatch(ours: string, theirs: string): boolean {
   const fullNormalized = normalizeTeamName(theirs);
   if (fullNormalized.replace(/ /g, "") === short) return true;
 
-  return significantTokens(theirs).some(
-    (token) => token.startsWith(short) || short.startsWith(token)
-  );
+  const tokensDeles = significantTokens(theirs);
+  if (tokensDeles.some((token) => token.startsWith(short) || short.startsWith(token))) return true;
+
+  // Nome nosso com MAIS DE UMA palavra ("La Union", "Sao Paulo"): comparar a
+  // versao colada contra cada token deles perde, porque "launion" nunca é um
+  // token isolado de "Club La Union". Então batemos palavra a palavra — cada
+  // palavra nossa precisa aparecer nos tokens deles.
+  //
+  // A contagem usa as palavras BRUTAS, não os tokens significativos: em
+  // "La Union" o "la" é stopword e sobraria só uma, o que jogaria fora
+  // justamente o caso que estamos consertando.
+  const nossasPalavras = normalizeTeamName(ours).split(" ").filter(Boolean);
+  if (nossasPalavras.length >= 2) {
+    const nossosSignificativos = significantTokens(ours);
+    const alvo = nossosSignificativos.length > 0 ? nossosSignificativos : nossasPalavras;
+    return alvo.every((nosso) =>
+      tokensDeles.some((deles) => deles === nosso || deles.startsWith(nosso) || nosso.startsWith(deles))
+    );
+  }
+
+  return false;
 }
 
 function minutesApart(a: string, b: string): number {
