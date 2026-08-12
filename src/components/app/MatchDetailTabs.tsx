@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import type { HeadToHeadMatch, MatchEvent, MatchLineup, MomentumPoint, Standing } from "@/lib/sports/types";
+import type { OddsMarket } from "@/lib/odds/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const TABS = ["Resumo", "Eventos", "Estatísticas", "Escalações", "Momentum", "Classificação", "H2H"] as const;
+const TABS = ["Resumo", "Odds", "Eventos", "Estatísticas", "Escalações", "Momentum", "Classificação", "H2H"] as const;
 
 const EVENT_LABEL: Record<MatchEvent["type"], string> = {
   goal: "⚽ Gol",
@@ -30,6 +31,9 @@ export function MatchDetailTabs({
   awayTeamRecent,
   lineups,
   momentum,
+  houseMarkets,
+  houseName,
+  houseUrl,
 }: {
   kickoffLabel: string;
   competition: string;
@@ -45,6 +49,9 @@ export function MatchDetailTabs({
   awayTeamRecent: HeadToHeadMatch[];
   lineups: MatchLineup[];
   momentum: MomentumPoint[];
+  houseMarkets: OddsMarket[];
+  houseName: string;
+  houseUrl: string | null;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
   const statEntries = Object.entries(statistics);
@@ -87,6 +94,48 @@ export function MatchDetailTabs({
             </ul>
           ) : (
             <EmptyState title="Nenhum evento disponivel para esta partida ainda." />
+          ))}
+
+        {tab === "Odds" &&
+          (houseMarkets.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {houseMarkets.map((market) => (
+                <div key={market.providerMarketId} className="card flex flex-col gap-2.5">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-strong">{market.name}</span>
+                    {market.group ? <span className="text-xs text-muted">{market.group}</span> : null}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {market.selections.map((selection, index) => (
+                      <div
+                        key={`${market.providerMarketId}-${index}`}
+                        className="flex min-w-[7.5rem] flex-1 items-center justify-between gap-3 rounded-lg bg-surface-elevated px-3 py-2"
+                      >
+                        <span className="text-xs text-secondary">{selection.name}</span>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-yellow-300">
+                          {selection.price.toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {houseUrl ? (
+                <a
+                  href={houseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="btn-primary w-full text-center"
+                >
+                  Apostar na {houseName}
+                </a>
+              ) : null}
+              <p className="text-center text-xs text-muted">
+                Cotações da {houseName}, atualizadas na abertura da tela. Podem mudar até a confirmação da aposta.
+              </p>
+            </div>
+          ) : (
+            <EmptyState title="Sem cotações no momento" description={`A ${houseName} não está oferecendo mercado para este jogo agora. Perto do fim da partida vários mercados fecham.`} />
           ))}
 
         {tab === "Estatísticas" &&

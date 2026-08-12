@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { TeamAvatar } from "@/components/app/TeamAvatar";
 import { MatchDetailTabs } from "@/components/app/MatchDetailTabs";
 import { BackButton } from "@/components/ui/BackButton";
+import { getHouseOddsForMatch, sortMarketsForDisplay } from "@/lib/odds/matchHouseOdds";
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,14 +18,23 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  const [h2h, standings, homeTeamRecent, awayTeamRecent, lineups, momentum] = await Promise.all([
+  const [h2h, standings, homeTeamRecent, awayTeamRecent, lineups, momentum, houseOdds] = await Promise.all([
     provider.getHeadToHead(id).catch(() => []),
     provider.getStandingsForMatch(id).catch(() => []),
     provider.getTeamRecentMatches(match.homeTeam.id, 5).catch(() => []),
     provider.getTeamRecentMatches(match.awayTeam.id, 5).catch(() => []),
     provider.getMatchLineups(id).catch(() => []),
     provider.getMatchMomentum(id).catch(() => []),
+    // A casa e fonte externa e opcional: `getHouseOddsForMatch` nunca lanca,
+    // entao a tela abre igual se o sportsbook estiver fora do ar.
+    getHouseOddsForMatch(match),
   ]);
+
+  const houseMarkets = houseOdds ? sortMarketsForDisplay(houseOdds) : [];
+  const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
+  // So renderiza o CTA de aposta quando existe link de afiliado configurado —
+  // sem ele o clique nao gera revshare e o botao seria so ruido.
+  const houseUrl = process.env.NEXT_PUBLIC_HOUSE_AFFILIATE_URL ?? null;
 
   const supabase = await createServerSupabaseClient();
   const {
@@ -100,6 +110,9 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         awayTeamRecent={awayTeamRecent}
         lineups={lineups}
         momentum={momentum}
+        houseMarkets={houseMarkets}
+        houseName={houseName}
+        houseUrl={houseUrl}
       />
     </div>
   );
