@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { syncCommunityMembership } from "@/lib/entitlements/rules";
+import { needsRegistration } from "@/lib/entitlements/levels";
 import { BottomNav } from "@/components/app/BottomNav";
 import { PageTransition } from "@/components/app/PageTransition";
 
@@ -21,6 +22,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!profile?.onboarding_completed) {
     redirect("/onboarding");
+  }
+
+  // Porta de entrada: sem cadastro na casa parceira, o app inteiro fica
+  // fechado. Fica DEPOIS do onboarding de proposito — o usuario precisa ter
+  // conta aqui (e portanto lead_id) antes de ser mandado para a casa, senao
+  // nao ha a quem atribuir o cadastro quando o postback voltar.
+  if (needsRegistration(appUser?.access_level)) {
+    redirect("/liberar");
   }
 
   // Self-heals community room membership on every app page view (not just

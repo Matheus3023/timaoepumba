@@ -4,25 +4,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { logTimelineEvent } from "@/lib/crm/timeline";
 import type { AccessLevel } from "@/types/database";
 
-/**
- * Access level ranking (PRD sec. 10). Higher rank = more features. Used to
- * decide "does this access level satisfy that minimum requirement" without
- * hardcoding feature-by-feature logic — the actual feature list per level
- * lives in the `entitlements` table and is editable by admins (sec. 7).
- */
-const LEVEL_RANK: Record<AccessLevel, number> = {
-  VISITOR: 0,
-  APP_USER: 1,
-  REGISTERED_USER: 2,
-  FTD_USER: 3,
-  ADMIN: 4,
-  RESTRICTED_USER: -1, // always below everything, regardless of prior progress
-};
-
-export function accessLevelSatisfies(current: AccessLevel, required: AccessLevel): boolean {
-  if (current === "RESTRICTED_USER") return false;
-  return LEVEL_RANK[current] >= LEVEL_RANK[required];
-}
+// Ranking e regra de porta vivem em `levels.ts` (modulo puro, testavel).
+// Reexportados aqui para nao quebrar quem ja importava de `rules`.
+export { accessLevelSatisfies, REQUIRED_LEVEL } from "@/lib/entitlements/levels";
+import { accessLevelSatisfies, isUpgrade } from "@/lib/entitlements/levels";
 
 /**
  * Checks whether a given feature_key is released for an access level, per
@@ -53,10 +38,7 @@ export async function promoteAccessLevel(userId: string, newLevel: AccessLevel) 
   const { data: user } = await admin.from("users").select("access_level").eq("id", userId).single();
   if (!user) return;
 
-  const isUpgrade =
-    newLevel === "RESTRICTED_USER" || LEVEL_RANK[newLevel] > LEVEL_RANK[user.access_level];
-
-  if (!isUpgrade) return;
+  if (!isUpgrade(user.access_level, newLevel)) return;
 
   await admin.from("users").update({ access_level: newLevel }).eq("id", userId);
   await syncCommunityMembership(userId, newLevel);
