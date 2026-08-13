@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { syncCommunityMembership } from "@/lib/entitlements/rules";
 import { needsRegistration } from "@/lib/entitlements/levels";
 import { BottomNav } from "@/components/app/BottomNav";
+import { FloatingDepositButton } from "@/components/app/FloatingDepositButton";
 import { PageTransition } from "@/components/app/PageTransition";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -50,6 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex-1">
         <PageTransition>{children}</PageTransition>
       </div>
+      <FloatingDepositButton />
       <BottomNav />
     </div>
   );
