@@ -132,7 +132,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
               18+
             </span>
             <Link
-              href="/login"
+              href="/entrar"
               className="flex min-h-11 items-center px-2 text-sm font-semibold text-body transition-colors hover:text-primary"
             >
               Entrar
@@ -177,14 +177,15 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
               </p>
 
               <div className="tp-in mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
-                <Link
-                  href="/signup"
+                <a
+                  href="/api/affiliate/click"
+                  rel="sponsored"
                   className="btn-primary min-h-[52px] w-full px-7 text-[15px] tracking-wide sm:w-auto"
                 >
-                  CRIAR CONTA GRÁTIS
-                </Link>
+                  CRIAR CONTA GRÁTIS NA BATEU
+                </a>
                 <Link
-                  href="/login"
+                  href="/entrar"
                   className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-body underline decoration-white/25 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary/60"
                 >
                   Já tenho conta
@@ -382,14 +383,15 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
               </div>
 
               <div className="flex w-full flex-col items-start gap-3 md:w-auto md:shrink-0 md:items-end">
-                <Link
-                  href="/signup"
+                <a
+                  href="/api/affiliate/click"
+                  rel="sponsored"
                   className="btn-primary min-h-[52px] w-full px-7 text-[15px] tracking-wide sm:w-auto"
                 >
-                  CRIAR CONTA GRÁTIS
-                </Link>
+                  CRIAR CONTA GRÁTIS NA BATEU
+                </a>
                 <Link
-                  href="/login"
+                  href="/entrar"
                   className="flex min-h-11 items-center text-sm font-semibold text-body underline decoration-white/25 underline-offset-4 transition-colors hover:text-primary"
                 >
                   Já tenho conta
@@ -426,7 +428,7 @@ export function LandingView({ matches }: { matches: TickerMatch[] }) {
               <Link href="/privacidade" className="flex min-h-11 items-center hover:text-primary">
                 Política de Privacidade
               </Link>
-              <Link href="/login" className="flex min-h-11 items-center hover:text-primary">
+              <Link href="/entrar" className="flex min-h-11 items-center hover:text-primary">
                 Entrar
               </Link>
             </nav>
