@@ -29,6 +29,8 @@ declare global {
   }
 }
 
+import { houseThemeConfig } from "@/lib/odds/houseTheme";
+
 const SDK_URL = process.env.NEXT_PUBLIC_HOUSE_WSDK_URL ?? "https://sb2wsdk-altenar2.biahosted.com/altenarWSDK.js";
 const INTEGRATION = process.env.NEXT_PUBLIC_HOUSE_INTEGRATION ?? "bateu";
 
@@ -72,11 +74,15 @@ export function HouseSportsbook({
         await carregarSdk();
         if (!vivo || !container.current || !window.altenarWSDK) return;
 
+        // O tema veste o widget com as cores do app — sem isso ele monta com
+        // a identidade da casa e parece que o usuario saiu do Timao e Pumba.
+        const { themeName, theme } = houseThemeConfig();
         await window.altenarWSDK.init({
           integration: INTEGRATION,
           culture: "pt-BR",
           countryCode: "BR",
-          themeName: "default",
+          themeName,
+          theme,
         });
         if (!vivo || !container.current) return;
 
