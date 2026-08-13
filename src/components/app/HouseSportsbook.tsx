@@ -29,8 +29,6 @@ declare global {
   }
 }
 
-import { houseThemeConfig } from "@/lib/odds/houseTheme";
-
 const SDK_URL = process.env.NEXT_PUBLIC_HOUSE_WSDK_URL ?? "https://sb2wsdk-altenar2.biahosted.com/altenarWSDK.js";
 const INTEGRATION = process.env.NEXT_PUBLIC_HOUSE_INTEGRATION ?? "bateu";
 
@@ -74,15 +72,17 @@ export function HouseSportsbook({
         await carregarSdk();
         if (!vivo || !container.current || !window.altenarWSDK) return;
 
-        // O tema veste o widget com as cores do app — sem isso ele monta com
-        // a identidade da casa e parece que o usuario saiu do Timao e Pumba.
-        const { themeName, theme } = houseThemeConfig();
+        // themeName aponta para um tema CADASTRADO no servidor da Altenar —
+        // o SDK nao aceita preset de cor injetado pelo nosso lado (o `init`
+        // ignora qualquer campo `theme`, e nao ha metodo publico para tema
+        // custom; so `switchTheme(nome)`, que faz fetch de um tema ja
+        // registrado). Para o widget usar as cores do app, o tema precisa
+        // ser criado no painel da Altenar/Bateu com o nome abaixo.
         await window.altenarWSDK.init({
           integration: INTEGRATION,
           culture: "pt-BR",
           countryCode: "BR",
-          themeName,
-          theme,
+          themeName: process.env.NEXT_PUBLIC_HOUSE_THEME_NAME ?? "dark",
         });
         if (!vivo || !container.current) return;
 
