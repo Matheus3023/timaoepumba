@@ -29,6 +29,14 @@ const PROVIDER = "flashscore4";
 /** Depois de sumir da lista ao vivo por este tempo, a partida acabou. */
 const FIXTURE_FINISHED_AFTER_MINUTES = 10;
 
+/**
+ * Minuto mínimo que a última observação precisa ter para um mercado de tempo
+ * integral ser apurado com confiança. Abaixo disso, o jogo parou de atualizar
+ * antes do fim (dado congelado/abandono) e o total de escanteios/gols é
+ * parcial — o sinal FT vira VOID em vez de RED injusto.
+ */
+const FT_SETTLE_MIN_MINUTE = 88;
+
 /** Teto de destinatários por notificação, para um tick não virar um envio massivo. */
 const MAX_PUSH_RECIPIENTS = 500;
 
@@ -463,9 +471,21 @@ export async function settleFinishedFixtures(): Promise<number> {
       .eq("provider_match_id", matchId)
       .not("entered_at", "is", null);
 
+    // Um mercado de tempo integral só pode ser apurado se o jogo REALMENTE
+    // chegou ao fim. Alguns jogos "terminam" cedo no provedor (dado congelado
+    // aos 86', partida abandonada): aí o total de escanteios/gols é parcial, e
+    // um FUNIL_CORNER_FT que precisava de mais um canto nos acréscimos vira RED
+    // sem o jogo ter de fato acabado. Isso é erro de DADO, não do palpite —
+    // então esses viram VOID (não contam na taxa) em vez de RED injusto. HT
+    // não entra nessa: apura no fim do 1º tempo, que já passou.
+    const FT_MARKETS = new Set(["corners_ft", "goals_rest_of_match"]);
+    const lastMinute = last?.minute ?? null;
+    const jogoChegouAoFim = lastMinute !== null && lastMinute >= FT_SETTLE_MIN_MINUTE;
+
     for (const signal of signals ?? []) {
-      const { result, resolvingEvent } = settleSignal({
-        market: signal.entry_market ?? "",
+      const market = signal.entry_market ?? "";
+      let { result, resolvingEvent } = settleSignal({
+        market,
         entryLine: signal.entry_line === null ? null : Number(signal.entry_line),
         goalsAtEntry: signal.goals_at_entry,
         cornersAtEntry: signal.corners_at_entry,
@@ -474,6 +494,11 @@ export async function settleFinishedFixtures(): Promise<number> {
         finalGoals,
         finalCorners,
       });
+
+      if (FT_MARKETS.has(market) && !jogoChegouAoFim && result !== "VOID") {
+        result = "VOID";
+        resolvingEvent = `Dado incompleto: jogo parou de atualizar aos ${lastMinute ?? "?"}' (sem tempo integral confiável)`;
+      }
 
       await admin
         .from("signal_results")
