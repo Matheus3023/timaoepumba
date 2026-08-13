@@ -178,10 +178,34 @@ export default async function FunilSignalDetailPage({ params }: { params: Promis
       )}
 
       {result && (
-        <section className="card mt-4">
+        <section
+          className={`card mt-4 ${
+            result.result === "GREEN"
+              ? "border border-emerald-500/40 bg-emerald-500/[0.06]"
+              : result.result === "RED"
+                ? "border border-red-500/40 bg-red-500/[0.06]"
+                : ""
+          }`}
+        >
           <h2 className="text-sm font-semibold text-strong">Resultado</h2>
-          <p className="mt-1 text-sm font-bold text-white">{RESULT_LABEL[result.result] ?? result.result}</p>
-          {result.resolving_event && <p className="mt-0.5 text-xs text-muted">{result.resolving_event}</p>}
+          <div className="mt-1.5 flex items-center gap-2">
+            <span
+              className={`badge text-sm font-extrabold ${
+                result.result === "GREEN"
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : result.result === "RED"
+                    ? "bg-red-500/20 text-red-300"
+                    : result.result === "PUSH"
+                      ? "bg-slate-500/20 text-slate-200"
+                      : "bg-surface-elevated text-secondary"
+              }`}
+            >
+              {result.result === "GREEN" && "🟢 "}
+              {result.result === "RED" && "🔴 "}
+              {RESULT_LABEL[result.result] ?? result.result}
+            </span>
+          </div>
+          {result.resolving_event && <p className="mt-1.5 text-xs text-muted">{result.resolving_event}</p>}
         </section>
       )}
 

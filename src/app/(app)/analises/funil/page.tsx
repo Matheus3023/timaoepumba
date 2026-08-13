@@ -1,7 +1,9 @@
 import { loadActiveSignals } from "@/lib/funil/view";
+import { getFunilTrackRecord } from "@/lib/funil/trackRecord";
 import { trackServerEvent } from "@/lib/tracking/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { FunilLiveList } from "@/components/funil/FunilLiveList";
+import { FunilTrackRecord } from "@/components/funil/FunilTrackRecord";
 import { BackButton } from "@/components/ui/BackButton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FunilDisclaimer } from "@/components/funil/FunilDisclaimer";
@@ -15,7 +17,10 @@ import { FunilDisclaimer } from "@/components/funil/FunilDisclaimer";
  * (PRD sec. 55).
  */
 export default async function FunilLivePage() {
-  const { signals, available } = await loadActiveSignals();
+  const [{ signals, available }, trackRecord] = await Promise.all([
+    loadActiveSignals(),
+    getFunilTrackRecord(),
+  ]);
 
   const supabase = await createServerSupabaseClient();
   const {
@@ -32,6 +37,8 @@ export default async function FunilLivePage() {
         Análise automática das partidas ao vivo. Cada entrada mostra os critérios que passaram e pode ser
         conferida número por número.
       </p>
+
+      <FunilTrackRecord record={trackRecord} />
 
       {!available ? (
         <ErrorState
