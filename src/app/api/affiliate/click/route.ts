@@ -8,9 +8,16 @@ import { moveUserToStage } from "@/lib/crm/pipeline";
 import { trackServerEvent } from "@/lib/tracking/events";
 
 /**
- * Redirect endpoint used by the "Cadastre-se na casa parceira" button
- * (PRD sec. 9.1). Generates the affiliate URL with the user's Lead ID as
- * subid, logs the click for attribution/CRM, and 302s the browser there.
+ * Redirect endpoint do botão "Criar minha conta na Bateu".
+ *
+ * NÃO exige sessão: no modelo espelho quem clica em "criar conta" normalmente
+ * ainda NÃO tem conta no app (nem na casa). Monta a URL de afiliado com o
+ * Lead ID como `afp` e manda o navegador para o cadastro da casa. A
+ * atribuição real volta pelo postback com esse mesmo `afp` — o clique no DB é
+ * só telemetria.
+ *
+ * Se houver sessão (usuário já provisionado voltando a clicar), aproveita
+ * para mover o CRM; sem sessão, registra o clique só pelo lead_id.
  */
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
@@ -18,13 +25,12 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
   const leadId = request.cookies.get(LEAD_ID_COOKIE)?.value;
   if (!leadId) {
-    return NextResponse.redirect(new URL("/home?affiliate_error=missing_lead_id", request.url));
+    // Sem lead_id não há como atribuir. Isso não deveria acontecer (o
+    // middleware seta para todo visitante), mas se acontecer manda para a
+    // tela de login em vez de deixar o botão morto.
+    return NextResponse.redirect(new URL("/entrar?affiliate_error=missing_lead_id", request.url));
   }
 
   const admin = createAdminSupabaseClient();
@@ -37,32 +43,39 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!config) {
-    return NextResponse.redirect(new URL("/home?affiliate_error=not_configured", request.url));
+    return NextResponse.redirect(new URL("/entrar?affiliate_error=not_configured", request.url));
   }
 
   const generatedUrl = buildAffiliateUrl(config, leadId);
 
-  await Promise.all([
+  // Telemetria best-effort: nunca segura o redirect. O cadastro na casa é o
+  // que importa; se um log falhar, o usuário não pode ficar preso aqui.
+  const tarefas: PromiseLike<unknown>[] = [
     admin.from("affiliate_clicks").insert({
-      user_id: user.id,
+      user_id: user?.id ?? null,
       lead_id: leadId,
       affiliate_configuration_id: config.id,
       generated_url: generatedUrl,
     }),
-    moveUserToStage(user.id, "Clicou na casa"),
-    logTimelineEvent({
-      userId: user.id,
-      eventType: "affiliate_click",
-      description: "Clicou no cadastro da casa parceira",
-    }),
-    trackServerEvent({ eventName: "SportsbookLinkClicked", leadId, userId: user.id }),
-    admin.from("automation_runs").insert({
-      automation_key: "affiliate_clicked",
-      user_id: user.id,
-      status: "success",
-      details: { affiliate_configuration_id: config.id },
-    }),
-  ]);
+    trackServerEvent({ eventName: "SportsbookLinkClicked", leadId, userId: user?.id }),
+  ];
+  if (user) {
+    tarefas.push(
+      moveUserToStage(user.id, "Clicou na casa"),
+      logTimelineEvent({
+        userId: user.id,
+        eventType: "affiliate_click",
+        description: "Clicou no cadastro da casa parceira",
+      }),
+      admin.from("automation_runs").insert({
+        automation_key: "affiliate_clicked",
+        user_id: user.id,
+        status: "success",
+        details: { affiliate_configuration_id: config.id },
+      })
+    );
+  }
+  await Promise.allSettled(tarefas);
 
   return NextResponse.redirect(generatedUrl);
 }

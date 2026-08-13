@@ -245,7 +245,7 @@ export async function resolveAdminAccess(): Promise<AdminAccess | "unauthenticat
  */
 export async function getAdminAccess(): Promise<AdminAccess> {
   const result = await resolve();
-  if (result.kind === "unauthenticated") redirect("/login");
+  if (result.kind === "unauthenticated") redirect("/acesso-interno");
   if (result.kind === "error") redirect(`/admin-erro?message=${encodeURIComponent(result.message)}`);
   if (result.kind === "not_admin") redirect("/home");
   return result.access;

@@ -10,7 +10,7 @@ export default async function OnboardingPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/entrar");
   }
 
   const [{ data: settingsRow }, { data: profile }] = await Promise.all([

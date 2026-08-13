@@ -1,37 +1,15 @@
-import type { Metadata } from "next";
-import { AuthLayout } from "@/components/auth/AuthLayout";
-import { LoginForm } from "./LoginForm";
+import { redirect } from "next/navigation";
 
 /**
- * A pagina em si e Server Component: titulo e moldura ja chegam pintados,
- * e so o formulario (que precisa de estado) vai para o cliente. Antes a
- * rota inteira era client e a tela ficava em branco ate hidratar.
+ * Login antigo do app (conta Supabase) — DESATIVADO.
+ *
+ * Não existe mais conta do app: a porta de entrada é a conta da Bateu, em
+ * /entrar. Esta rota só sobrevive para não quebrar links antigos, marcadores
+ * e o e-mail de quem já tinha o endereço — todo mundo vai para /entrar.
+ *
+ * Era aqui que o usuário se perdia: digitava a senha da Bateu numa tela que
+ * validava contra o nosso banco e nunca batia.
  */
-export const metadata: Metadata = {
-  title: "Entrar",
-  description:
-    "Acesse sua conta do Timão e Pumba Tips para ver os jogos ao vivo, as análises da equipe e a comunidade.",
-  alternates: { canonical: "/login" },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: "Entrar | Timão e Pumba Tips",
-    description: "Acesse sua conta para ver os jogos ao vivo, as análises e a comunidade.",
-    url: "/login",
-  },
-};
-
 export default function LoginPage() {
-  return (
-    <AuthLayout>
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary">Sua conta</p>
-      <h1 className="mt-2.5 text-[1.65rem] font-extrabold leading-tight tracking-[-0.02em] text-white">
-        Bem-vindo de volta
-      </h1>
-      <p className="mt-2 text-sm leading-relaxed text-secondary">
-        Entre para acompanhar os jogos de hoje, as análises da equipe e a resenha na comunidade.
-      </p>
-
-      <LoginForm />
-    </AuthLayout>
-  );
+  redirect("/entrar");
 }

@@ -1,39 +1,13 @@
 import { redirect } from "next/navigation";
 
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { needsRegistration } from "@/lib/entitlements/levels";
-import { LiberarClient } from "@/components/app/LiberarClient";
-
 /**
- * Tela de liberação: o usuário tem conta no app mas ainda não tem cadastro
- * na casa parceira.
+ * Tela de liberação antiga — DESATIVADA.
  *
- * Mora FORA do grupo de rotas `(app)` de propósito. Se ficasse dentro, o
- * layout do app redirecionaria para cá, e esta página redirecionaria para
- * lá — laço infinito.
+ * No modelo antigo o usuário tinha conta no app e era mandado para a casa
+ * para se cadastrar. Agora a conta da Bateu É o login: quem não tem acesso
+ * entra (ou cria a conta na Bateu) em /entrar. Esta rota só sobrevive para
+ * não quebrar link antigo — manda todo mundo para /entrar.
  */
-export const metadata = { title: "Libere seu acesso" };
-
-export default async function LiberarPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: appUser } = await supabase
-    .from("users")
-    .select("access_level")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // Já liberado (ou portão desligado): não faz sentido segurar aqui.
-  if (!needsRegistration(appUser?.access_level)) {
-    redirect("/home");
-  }
-
-  const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
-
-  return <LiberarClient houseName={houseName} />;
+export default function LiberarPage() {
+  redirect("/entrar");
 }

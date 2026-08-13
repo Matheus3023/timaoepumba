@@ -11,8 +11,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Sem sessão do app, a porta é a conta da Bateu (/entrar), não a tela de
+  // login antiga — que não existe mais. Era aí que o usuário se perdia.
   if (!user) {
-    redirect("/login");
+    redirect("/entrar");
   }
 
   const [{ data: profile }, { data: appUser }] = await Promise.all([
