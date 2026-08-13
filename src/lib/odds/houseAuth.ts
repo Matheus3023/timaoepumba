@@ -43,8 +43,12 @@ export async function authenticateWithHouse(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        accept: "application/json",
-        // A casa recusa requisição sem UA de navegador (proteção anti-bot).
+        // Cara de navegador de verdade: a Cloudflare da casa recusa requisição
+        // "de robô". UA + Origin/Referer do próprio site + accept-language BR.
+        accept: "application/json, text/plain, */*",
+        "accept-language": "pt-BR,pt;q=0.9",
+        origin: AUTH_BASE,
+        referer: `${AUTH_BASE.replace(/\/+$/, "")}/`,
         "user-agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
       },

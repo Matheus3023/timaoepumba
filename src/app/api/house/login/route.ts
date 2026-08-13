@@ -9,6 +9,12 @@ import { LEAD_ID_COOKIE } from "@/lib/tracking/leadId";
 import { promoteAccessLevel } from "@/lib/entitlements/rules";
 import { trackServerEvent } from "@/lib/tracking/events";
 
+// A Bateu está atrás de Cloudflare e devolve 403 para IP de datacenter fora
+// do Brasil. Fixamos a função em São Paulo (gru1) para a chamada sair de um
+// IP brasileiro — que é o que ela aceita (testado: BR = 422, US = 403).
+export const preferredRegion = "gru1";
+export const runtime = "nodejs";
+
 const bodySchema = z.object({
   login: z.string().min(1).max(120),
   password: z.string().min(6).max(200),
