@@ -5,6 +5,7 @@ import type { HeadToHeadMatch, MatchEvent, MatchLineup, MomentumPoint, Standing 
 import type { OddsMarket } from "@/lib/odds/types";
 import { OddsTab } from "@/components/app/OddsTab";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { traduzirRotuloEstatistica } from "@/lib/sports/statLabelsPtBr";
 
 const TABS = ["Resumo", "Odds", "Eventos", "Estatísticas", "Escalações", "Momentum", "Classificação", "H2H"] as const;
 
@@ -117,7 +118,7 @@ export function MatchDetailTabs({
                 <div key={label}>
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-strong">{values.home}</span>
-                    <span className="text-secondary">{label}</span>
+                    <span className="text-secondary">{traduzirRotuloEstatistica(label)}</span>
                     <span className="font-semibold text-strong">{values.away}</span>
                   </div>
                   <StatBar home={values.home} away={values.away} />
