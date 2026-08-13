@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Match } from "@/lib/sports/types";
 import { MatchRow } from "@/components/app/MatchRow";
+import { DepositButton } from "@/components/app/DepositButton";
 import { CheckCircleIcon, ChatIcon, LockIcon } from "@/components/icons";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StaleDataNotice } from "@/components/app/StaleDataNotice";
@@ -65,6 +66,7 @@ export function HomeView({
           Ola, <span className="text-gradient-gold">{firstName}</span>!
         </h1>
         <p className="mt-0.5 text-sm text-secondary">Confira os jogos e novidades de hoje.</p>
+        <DepositButton className="mt-4 w-full" />
       </motion.div>
 
       {!allStepsDone && (
