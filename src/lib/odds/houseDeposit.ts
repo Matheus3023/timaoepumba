@@ -54,7 +54,12 @@ export type HouseDepositResult =
       paymentLink: string | null;
       value: number;
     }
-  | { ok: false; reason: "sessao_invalida" | "valor_invalido" | "recusado" | "indisponivel" };
+  | {
+      ok: false;
+      reason: "token_invalido" | "sessao_invalida" | "valor_invalido" | "recusado" | "indisponivel";
+      /** Pista diagnóstica não-sensível (status/mensagem da casa) para depurar sem log. */
+      detail?: string;
+    };
 
 /**
  * Lê o claim `sub` (id do usuário na casa) do JWT sem validar assinatura —
@@ -82,8 +87,10 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
 
   const userId = userIdFromToken(input.token);
   if (!userId) {
-    console.error("[house-deposit] token sem sub reconhecível");
-    return { ok: false, reason: "sessao_invalida" };
+    // O token guardado no login não é um JWT decodificável (sem claim `sub`).
+    const parts = input.token.split(".").length;
+    console.error("[house-deposit] token sem sub reconhecível", { parts, len: input.token.length });
+    return { ok: false, reason: "token_invalido", detail: `token nao-jwt (parts=${parts}, len=${input.token.length})` };
   }
 
   const method = HOUSE_DEPOSIT_METHODS.includes(input.method as HouseDepositMethod)
@@ -100,8 +107,9 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
         "content-type": "application/json",
         accept: "application/json, text/plain, */*",
         "accept-language": "pt-BR,pt;q=0.9",
-        // A casa autentica a carteira pelo cookie jwt_token; mandamos também
-        // Authorization por garantia (o site envia os dois conforme a versão).
+        // A casa autentica a carteira SÓ pelo header Authorization: Bearer —
+        // o cookie jwt_token é ignorado ("Token not provided"). Mandamos o
+        // cookie junto por inofensivo, mas o que vale é o Bearer.
         cookie: `jwt_token=${input.token}`,
         authorization: `Bearer ${input.token}`,
         origin: HOUSE_BASE,
@@ -125,19 +133,37 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
     return { ok: false, reason: "indisponivel" };
   }
 
+  // Lê o corpo uma vez; serve tanto para sucesso quanto para diagnóstico.
+  const bodyText = await response.text().catch(() => "");
+  const data = (() => {
+    try {
+      return JSON.parse(bodyText) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  })();
+  // Mensagem curta e não-sensível da casa, para depurar sem log de servidor.
+  const houseMsg = (typeof data?.status === "string" && data.status) || (typeof data?.message === "string" && data.message) || "";
+
   if (response.status === 401 || response.status === 403) {
-    // Sessão da casa expirou (ou a função rodou fora do BR — checar região).
-    return { ok: false, reason: "sessao_invalida" };
+    // 401 = token recusado pela casa (contexto/assinatura errados, ex.: "Wrong
+    // auth validation" ou "Token not provided"); 403 = geobloqueio (função
+    // rodou fora do BR — checar região gru1).
+    console.error(`[house-deposit] casa negou auth ${response.status}: ${houseMsg}`);
+    return {
+      ok: false,
+      reason: "sessao_invalida",
+      detail: `casa HTTP ${response.status}${houseMsg ? `: ${houseMsg}` : ""}`,
+    };
   }
   if (!response.ok) {
-    console.error(`[house-deposit] HTTP inesperado ${response.status}`);
-    return { ok: false, reason: "indisponivel" };
+    console.error(`[house-deposit] HTTP inesperado ${response.status}: ${houseMsg}`);
+    return { ok: false, reason: "indisponivel", detail: `casa HTTP ${response.status}${houseMsg ? `: ${houseMsg}` : ""}` };
   }
 
-  const data = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!data || data.success === false) {
-    console.error("[house-deposit] casa recusou", data ? Object.keys(data) : null);
-    return { ok: false, reason: "recusado" };
+    console.error("[house-deposit] casa recusou", houseMsg || (data ? Object.keys(data) : null));
+    return { ok: false, reason: "recusado", detail: houseMsg || "casa recusou o depósito" };
   }
 
   const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v : null);

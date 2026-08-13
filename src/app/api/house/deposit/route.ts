@@ -65,11 +65,17 @@ export async function POST(request: NextRequest) {
     await trackServerEvent({
       eventName: "HouseDepositFailed",
       userId: user.id,
-      properties: { reason: result.reason, value: parsed.data.value },
+      properties: { reason: result.reason, detail: result.detail, value: parsed.data.value },
     }).catch(() => {});
-    // Sessão da casa expirada → 401 para a UI mandar refazer login; demais → 502.
-    const status = result.reason === "sessao_invalida" ? 401 : result.reason === "valor_invalido" ? 400 : 502;
-    return NextResponse.json({ error: result.reason }, { status });
+    // sessao_invalida (token recusado) → 401 para a UI mandar refazer login;
+    // token_invalido/valor → 400; demais → 502. O `detail` sobe para depurar.
+    const status =
+      result.reason === "sessao_invalida"
+        ? 401
+        : result.reason === "token_invalido" || result.reason === "valor_invalido"
+          ? 400
+          : 502;
+    return NextResponse.json({ error: result.reason, detail: result.detail ?? null }, { status });
   }
 
   await trackServerEvent({

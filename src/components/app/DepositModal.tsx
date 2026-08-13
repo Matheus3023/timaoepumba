@@ -60,10 +60,13 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
       });
       const data = await resp.json().catch(() => null);
       if (!resp.ok || !data?.ok) {
+        // Diagnóstico temporário: mostra o motivo/detalhe real vindo da API,
+        // para depurar o primeiro depósito. (Trocar por texto amigável depois.)
+        const diag = [data?.error, data?.detail].filter(Boolean).join(" — ");
         if (resp.status === 401) {
-          setError("Sua sessão expirou. Saia e entre de novo para depositar.");
+          setError(`Sessão da casa recusada${diag ? `: ${diag}` : ". Saia e entre de novo."}`);
         } else {
-          setError("Não foi possível gerar o PIX agora. Tente novamente.");
+          setError(`Não foi possível gerar o PIX${diag ? `: ${diag}` : ". Tente novamente."}`);
         }
         return;
       }
