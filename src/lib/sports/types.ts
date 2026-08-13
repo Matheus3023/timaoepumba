@@ -58,10 +58,25 @@ export interface MatchEvent {
   detail?: string | null;
 }
 
+export interface LineupPlayer {
+  name: string;
+  /** Número da camisa, se a Flashscore mandar. */
+  number: string | null;
+  isCaptain: boolean;
+  isGoalkeeper: boolean;
+}
+
 export interface MatchLineup {
-  teamId: string;
+  /** A Flashscore identifica o time por lado, não por id — casamos com o
+   *  time da casa/visitante pelo `side`. */
+  side: "home" | "away";
   formation?: string | null;
-  players: string[];
+  /** Titulares (ou a escalação provável, antes do time confirmado). */
+  starters: LineupPlayer[];
+  /** Reservas no banco. */
+  substitutes: LineupPlayer[];
+  /** true quando ainda é escalação PROVÁVEL (o time oficial não saiu). */
+  predicted: boolean;
 }
 
 export interface MomentumPoint {

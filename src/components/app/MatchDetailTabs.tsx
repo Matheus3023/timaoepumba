@@ -133,16 +133,48 @@ export function MatchDetailTabs({
           (lineups.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {lineups.map((lineup) => (
-                <div key={lineup.teamId} className="card">
-                  <p className="text-xs text-muted">
-                    {lineup.teamId === homeTeamId ? homeTeamName : lineup.teamId === awayTeamId ? awayTeamName : "Time"}
-                    {lineup.formation && ` • ${lineup.formation}`}
-                  </p>
-                  <ul className="mt-2 flex flex-col gap-1 text-sm text-strong">
-                    {lineup.players.map((player, i) => (
-                      <li key={i}>{player}</li>
+                <div key={lineup.side} className="card">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-semibold text-strong">
+                      {lineup.side === "home" ? homeTeamName : awayTeamName}
+                    </p>
+                    {lineup.formation && (
+                      <span className="font-mono text-xs text-muted">{lineup.formation}</span>
+                    )}
+                  </div>
+                  {lineup.predicted && (
+                    <p className="mt-0.5 text-[11px] text-yellow-300/90">Escalação provável</p>
+                  )}
+
+                  <ul className="mt-2 flex flex-col gap-1.5 text-sm text-strong">
+                    {lineup.starters.map((player, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="w-5 shrink-0 text-right font-mono text-xs tabular-nums text-muted">
+                          {player.number ?? "–"}
+                        </span>
+                        <span className="truncate">{player.name}</span>
+                        {player.isGoalkeeper && <span className="text-[10px] text-sky-300">GOL</span>}
+                        {player.isCaptain && <span className="text-[10px] font-bold text-yellow-300">(C)</span>}
+                      </li>
                     ))}
                   </ul>
+
+                  {lineup.substitutes.length > 0 && (
+                    <>
+                      <p className="mt-3 text-[10px] uppercase tracking-wide text-muted">Reservas</p>
+                      <ul className="mt-1.5 flex flex-col gap-1 text-xs text-secondary">
+                        {lineup.substitutes.map((player, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <span className="w-5 shrink-0 text-right font-mono tabular-nums text-faint">
+                              {player.number ?? "–"}
+                            </span>
+                            <span className="truncate">{player.name}</span>
+                            {player.isGoalkeeper && <span className="text-[10px] text-sky-300">GOL</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

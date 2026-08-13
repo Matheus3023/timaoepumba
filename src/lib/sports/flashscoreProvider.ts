@@ -6,6 +6,7 @@ import type {
   MatchDetails,
   MatchEvent,
   MatchLineup,
+  LineupPlayer,
   MomentumPoint,
   SportsDataProvider,
   Standing,
@@ -159,6 +160,24 @@ function pickArray(payload: unknown, keys: string[]): unknown[] {
     }
   }
   return [];
+}
+
+/** Converte a lista crua de jogadores da Flashscore em LineupPlayer[]. */
+function mapLineupPlayers(rows: unknown[]): LineupPlayer[] {
+  return rows
+    .map((p): LineupPlayer | null => {
+      const raw = p as Record<string, unknown>;
+      const name = pickString(raw, ["name", "fieldName", "player_name", "short_name"]);
+      if (!name) return null;
+      const number = pickString(raw, ["number", "shirt_number"]);
+      return {
+        name,
+        number: number || null,
+        isCaptain: raw.is_captain === true || raw.isCaptain === true,
+        isGoalkeeper: raw.is_goalkeeper === true || raw.isGoalkeeper === true,
+      };
+    })
+    .filter((p): p is LineupPlayer => p !== null);
 }
 
 /**
@@ -580,22 +599,34 @@ export class FlashscoreProvider implements SportsDataProvider {
 
   async getMatchLineups(matchId: string): Promise<MatchLineup[]> {
     const payload = await this.matchRequest<unknown>("lineups", { match_id: matchId });
+    // A Flashscore devolve um ARRAY direto de dois blocos (side home/away),
+    // com `startingLineups`/`substitutes` — NÃO um objeto com `players` e
+    // `team_id`. O mapeamento antigo procurava esses campos inexistentes e
+    // descartava tudo, então a escalação nunca aparecia.
     const rows = pickArray(payload, ["lineups", "teams"]);
 
     return rows
       .map((item): MatchLineup | null => {
         const raw = item as Record<string, unknown>;
-        const teamId = pickString(raw, ["team_id", "teamId"]);
-        if (!teamId) return null;
-        const playerRows = pickArray(raw, ["players", "starting_lineup", "lineup"]);
-        const players = playerRows
-          .map((p) => pickString(p as Record<string, unknown>, ["name", "player_name", "short_name"]))
-          .filter(Boolean);
-        if (players.length === 0) return null;
+        const side = pickString(raw, ["side"]);
+        if (side !== "home" && side !== "away") return null;
+
+        // Antes do time oficial, a Flashscore só tem `predictedLineups`.
+        const startersRaw = pickArray(raw, ["startingLineups"]);
+        const predictedRaw = pickArray(raw, ["predictedLineups"]);
+        const usandoProvavel = startersRaw.length === 0 && predictedRaw.length > 0;
+        const starters = mapLineupPlayers(usandoProvavel ? predictedRaw : startersRaw);
+        const substitutes = mapLineupPlayers(pickArray(raw, ["substitutes"]));
+
+        if (starters.length === 0 && substitutes.length === 0) return null;
+
         return {
-          teamId,
-          formation: pickString(raw, ["formation"]) || null,
-          players,
+          side,
+          formation:
+            pickString(raw, ["formation"]) || pickString(raw, ["predictedFormation"]) || null,
+          starters,
+          substitutes,
+          predicted: usandoProvavel,
         };
       })
       .filter((l): l is MatchLineup => l !== null);
