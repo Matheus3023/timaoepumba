@@ -23,7 +23,7 @@ const AUTH_PATH = process.env.HOUSE_AUTH_PATH ?? "/api/auth/login";
 const DEFAULT_TIMEOUT_MS = 12_000;
 
 export type HouseAuthResult =
-  | { ok: true; token: string }
+  | { ok: true; token: string; raw: Record<string, unknown> | null }
   | { ok: false; reason: "credenciais" | "indisponivel" | "sem_token" };
 
 /**
@@ -76,7 +76,7 @@ export async function authenticateWithHouse(
     console.error("[house-auth] resposta sem token reconhecível", data ? Object.keys(data) : null);
     return { ok: false, reason: "sem_token" };
   }
-  return { ok: true, token };
+  return { ok: true, token, raw: data };
 }
 
 /**

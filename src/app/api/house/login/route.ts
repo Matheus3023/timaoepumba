@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { authenticateWithHouse } from "@/lib/odds/houseAuth";
 import { HOUSE_TOKEN_COOKIE } from "@/lib/odds/houseSession";
+import { extractHouseIdentity, provisionAppUser } from "@/lib/odds/houseProvision";
+import { LEAD_ID_COOKIE } from "@/lib/tracking/leadId";
 import { promoteAccessLevel } from "@/lib/entitlements/rules";
 import { trackServerEvent } from "@/lib/tracking/events";
 
@@ -13,56 +15,71 @@ const bodySchema = z.object({
 });
 
 /**
- * Login do usuário com a conta da casa.
+ * Login com a conta da casa — e ÚNICA porta de entrada do app.
  *
- * Recebe login (email ou CPF) + senha, repassa para a casa, e guarda APENAS
- * o token de sessão num cookie httpOnly. A senha nunca é gravada nem
- * devolvida — ela morre nesta função.
+ * Não há mais cadastro no app: o usuário entra com email/CPF + senha da
+ * conta da Bateu. Esta rota:
+ *  1. valida na casa e pega o token de sessão;
+ *  2. provisiona a conta do app a partir do que a casa devolveu (ver
+ *     houseProvision) — sem o usuário nunca ter feito cadastro aqui;
+ *  3. estabelece a sessão do app (signInWithPassword com a senha derivada);
+ *  4. guarda só o token da casa num cookie httpOnly.
  *
- * Ter conta na casa é o que libera o app (o portão de acesso). Um login
- * bem-sucedido é prova de que a conta existe, então promovemos o usuário
- * aqui: fecha o ciclo sem depender do postback.
+ * A senha da casa nunca é gravada nem devolvida — morre nesta função.
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "dados_invalidos" }, { status: 400 });
   }
 
-  const result = await authenticateWithHouse(parsed.data.login, parsed.data.password);
-
-  await trackServerEvent({
-    eventName: "HouseLoginAttempted",
-    userId: user.id,
-    properties: { ok: result.ok, reason: result.ok ? "ok" : result.reason },
-  }).catch(() => {});
-
-  if (!result.ok) {
-    const status = result.reason === "credenciais" ? 401 : 502;
-    return NextResponse.json({ error: result.reason }, { status });
+  // 1. Autentica na casa.
+  const auth = await authenticateWithHouse(parsed.data.login, parsed.data.password);
+  if (!auth.ok) {
+    await trackServerEvent({ eventName: "HouseLoginFailed", properties: { reason: auth.reason } }).catch(() => {});
+    const status = auth.reason === "credenciais" ? 401 : 502;
+    return NextResponse.json({ error: auth.reason }, { status });
   }
 
-  // Login válido = tem conta na casa. Libera o app.
-  await promoteAccessLevel(user.id, "REGISTERED_USER").catch((error) => {
-    console.error("[house-login] falha ao promover", error);
-  });
+  // 2. Identidade a partir da resposta da casa.
+  const identity = extractHouseIdentity(auth.raw ?? null, parsed.data.login);
+  if (!identity) {
+    console.error("[house-login] login ok mas sem email na resposta", auth.raw ? Object.keys(auth.raw) : null);
+    return NextResponse.json({ error: "sem_email" }, { status: 502 });
+  }
+
+  const leadId = request.cookies.get(LEAD_ID_COOKIE)?.value ?? null;
+
+  // 3. Provisiona a conta do app e estabelece a sessão.
+  let userId: string;
+  try {
+    const provisioned = await provisionAppUser(identity, leadId);
+    userId = provisioned.userId;
+
+    const supabase = await createServerSupabaseClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: provisioned.email,
+      password: provisioned.password,
+    });
+    if (signInError) {
+      console.error("[house-login] provisionou mas nao logou no app", signInError);
+      return NextResponse.json({ error: "sessao_falhou" }, { status: 500 });
+    }
+  } catch (error) {
+    console.error("[house-login] falha ao provisionar", error);
+    return NextResponse.json({ error: "provisionamento_falhou" }, { status: 500 });
+  }
+
+  // Login válido na casa = tem conta lá = libera o app.
+  await promoteAccessLevel(userId, "REGISTERED_USER").catch((e) => console.error("[house-login] promote", e));
+  await trackServerEvent({ eventName: "HouseLoginSucceeded", userId, properties: { hasExternalId: Boolean(identity.externalId) } }).catch(() => {});
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(HOUSE_TOKEN_COOKIE, result.token, {
+  response.cookies.set(HOUSE_TOKEN_COOKIE, auth.token, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    // Sessão da casa costuma durar pouco; se expirar, o usuário reautentica.
     maxAge: 60 * 60 * 12,
   });
   return response;
