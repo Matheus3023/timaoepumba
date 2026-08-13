@@ -55,11 +55,13 @@ export function OddsTab({
   houseName,
   eventId,
   eventName,
+  houseToken,
 }: {
   markets: OddsMarket[];
   houseName: string;
   eventId: string;
   eventName: string;
+  houseToken: string | null;
 }) {
   const [slip, setSlip] = useState<SlipSelection[]>([]);
   const [apostando, setApostando] = useState(false);
@@ -261,6 +263,7 @@ export function OddsTab({
           onClose={() => setApostando(false)}
           houseName={houseName}
           eventName={eventName}
+          token={houseToken}
           oddIds={slip.map((item) => Number(item.providerOddId)).filter((n) => Number.isFinite(n))}
         />
       ) : null}

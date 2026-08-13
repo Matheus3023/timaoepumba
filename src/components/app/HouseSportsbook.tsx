@@ -25,6 +25,7 @@ declare global {
       init: (config: Record<string, unknown>) => Promise<void> | void;
       addSportsBook: (options: { props?: Record<string, unknown>; container: HTMLElement }) => void;
       toggleSelections: (oddIds: number[]) => void;
+      setAccessToken: (token: string) => void;
     };
   }
 }
@@ -55,10 +56,13 @@ export type EstadoSportsbook = "carregando" | "pronto" | "erro";
 
 export function HouseSportsbook({
   oddIds,
+  token,
   onEstado,
 }: {
   /** Cotações que já vêm marcadas do nosso boletim. */
   oddIds: number[];
+  /** Token da sessão da casa — deixa o widget montar JA LOGADO. */
+  token?: string | null;
   onEstado?: (estado: EstadoSportsbook) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -83,6 +87,9 @@ export function HouseSportsbook({
           culture: "pt-BR",
           countryCode: "BR",
           themeName: process.env.NEXT_PUBLIC_HOUSE_THEME_NAME ?? "dark",
+          // Com token, o widget ja monta logado com a conta da casa do
+          // usuario — sem token, monta deslogado (so navega odds).
+          ...(token ? { token } : {}),
         });
         if (!vivo || !container.current) return;
 
@@ -92,6 +99,16 @@ export function HouseSportsbook({
           props: { page: "overview" },
           container: container.current,
         });
+
+        // Reforca a sessao apos montar: o init pode ignorar o token em algumas
+        // versoes, e setAccessToken e o caminho explicito.
+        if (token) {
+          try {
+            window.altenarWSDK.setAccessToken(token);
+          } catch {
+            /* seguir deslogado e melhor do que quebrar a camada */
+          }
+        }
 
         setEstado("pronto");
 

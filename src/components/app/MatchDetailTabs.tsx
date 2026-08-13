@@ -35,6 +35,7 @@ export function MatchDetailTabs({
   houseMarkets,
   houseName,
   houseEventId,
+  houseToken,
 }: {
   kickoffLabel: string;
   competition: string;
@@ -53,6 +54,7 @@ export function MatchDetailTabs({
   houseMarkets: OddsMarket[];
   houseName: string;
   houseEventId: string;
+  houseToken: string | null;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
   const statEntries = Object.entries(statistics);
@@ -102,6 +104,7 @@ export function MatchDetailTabs({
             markets={houseMarkets}
             houseName={houseName}
             eventId={houseEventId}
+            houseToken={houseToken}
             eventName={`${homeTeamName} x ${awayTeamName}`}
           />
         ) : null}

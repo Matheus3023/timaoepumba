@@ -25,12 +25,15 @@ export function BetSheet({
   houseName,
   eventName,
   oddIds,
+  token,
 }: {
   onClose: () => void;
   houseName: string;
   eventName: string;
   /** Cotações marcadas no nosso boletim, para chegarem prontas no dela. */
   oddIds: number[];
+  /** Token da sessão da casa (login do usuario), para o widget montar logado. */
+  token?: string | null;
 }) {
   const [estado, setEstado] = useState<EstadoSportsbook>("carregando");
   const aoMudarEstado = useCallback((e: EstadoSportsbook) => setEstado(e), []);
@@ -75,7 +78,7 @@ export function BetSheet({
         </button>
       </header>
 
-      <HouseSportsbook oddIds={oddIds} onEstado={aoMudarEstado} />
+      <HouseSportsbook oddIds={oddIds} token={token} onEstado={aoMudarEstado} />
 
       <footer className="flex flex-col gap-1.5 border-t border-surface-elevated px-4 py-2.5">
         {demorou || estado === "erro" ? (

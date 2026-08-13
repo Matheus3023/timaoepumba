@@ -28,8 +28,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // fechado. Fica DEPOIS do onboarding de proposito — o usuario precisa ter
   // conta aqui (e portanto lead_id) antes de ser mandado para a casa, senao
   // nao ha a quem atribuir o cadastro quando o postback voltar.
+  // Sem conta na casa liberada, o app fica fechado. O usuario entra com a
+  // conta da casa em /entrar; um login valido promove e libera. /entrar tem
+  // tambem o caminho de criar conta na casa para quem ainda nao tem.
   if (needsRegistration(appUser?.access_level)) {
-    redirect("/liberar");
+    redirect("/entrar");
   }
 
   // Self-heals community room membership on every app page view (not just

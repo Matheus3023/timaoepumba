@@ -4,6 +4,8 @@ import { trackServerEvent } from "@/lib/tracking/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { TeamAvatar } from "@/components/app/TeamAvatar";
 import { MatchDetailTabs } from "@/components/app/MatchDetailTabs";
+import { cookies } from "next/headers";
+import { HOUSE_TOKEN_COOKIE } from "@/lib/odds/houseSession";
 import { BackButton } from "@/components/ui/BackButton";
 import { getHouseOddsForMatch, sortMarketsForDisplay } from "@/lib/odds/matchHouseOdds";
 
@@ -32,6 +34,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   const houseMarkets = houseOdds ? sortMarketsForDisplay(houseOdds) : [];
   const houseEventId = houseOdds?.providerEventId ?? "";
+  const houseToken = (await cookies()).get(HOUSE_TOKEN_COOKIE)?.value ?? null;
   const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
 
   const supabase = await createServerSupabaseClient();
@@ -111,6 +114,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         houseMarkets={houseMarkets}
         houseName={houseName}
         houseEventId={houseEventId}
+        houseToken={houseToken}
       />
     </div>
   );
