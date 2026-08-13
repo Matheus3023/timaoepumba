@@ -4,6 +4,8 @@ import { trackServerEvent } from "@/lib/tracking/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { TeamAvatar } from "@/components/app/TeamAvatar";
 import { MatchDetailTabs } from "@/components/app/MatchDetailTabs";
+import { PreLiveCard } from "@/components/app/PreLiveCard";
+import { projectPreLive } from "@/lib/sports/preLive";
 import { cookies } from "next/headers";
 import { HOUSE_TOKEN_COOKIE } from "@/lib/odds/houseSession";
 import { BackButton } from "@/components/ui/BackButton";
@@ -33,6 +35,10 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   ]);
 
   const houseMarkets = houseOdds ? sortMarketsForDisplay(houseOdds) : [];
+
+  // Funil de pré-live: projeção da partida a partir do histórico já carregado
+  // (recentes + H2H). Custo zero de API. Some quando o jogo acaba.
+  const preLive = projectPreLive({ homeRecent: homeTeamRecent, awayRecent: awayTeamRecent, h2h });
   const houseEventId = houseOdds?.providerEventId ?? "";
   const houseToken = (await cookies()).get(HOUSE_TOKEN_COOKIE)?.value ?? null;
   const houseName = process.env.NEXT_PUBLIC_HOUSE_NAME ?? "Bateu Bet";
@@ -95,6 +101,10 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           </div>
         )}
       </div>
+
+      {match.status !== "finished" && (
+        <PreLiveCard projection={preLive} houseMarkets={houseMarkets} houseName={houseName} />
+      )}
 
       <MatchDetailTabs
         kickoffLabel={new Date(match.kickoffAt).toLocaleString("pt-BR", { dateStyle: "full", timeStyle: "short" })}
