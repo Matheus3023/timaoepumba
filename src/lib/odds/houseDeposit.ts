@@ -9,13 +9,19 @@ import "server-only";
  * carteira da casa e devolvemos o PIX (QR + copia-e-cola) para o app exibir —
  * sem o usuário sair para o site da casa.
  *
- * Contrato observado no fluxo real da Bateu:
+ * Contrato observado no fluxo real da Bateu (request capturada no site):
  *   POST {base}/api/wallet/add-credit
- *   body: { user_id, credit_amount, payment_method, currency, utm_source, ga_client_id }
- *   resp: { success, message, transaction_id, qr_code, br_code, checkout_url, payment_link, value }
+ *   headers (além de Authorization: Bearer <jwt>): tenant e origin-domain =
+ *     host da casa (bateu.bet.br) — identificam a casa e destravam a validação
+ *     de auth; + country/country_alpha3/currency/jurisdiction/lang/language.
+ *   body: { user_id (number), credit_amount (EM CENTAVOS), payment_method,
+ *           currency, utm_source (ref do afiliado), ga_client_id }
+ *   resp: { success, message, transaction_id, qr_code, br_code, checkout_url,
+ *           payment_link, value (em centavos) }
  *
+ * ATENÇÃO: `credit_amount` e `value` são em CENTAVOS — R$ 10,00 vira 1000.
  * `br_code` é o EMV copia-e-cola (começa em "0002..."); `qr_code` é a imagem
- * do QR (URL http(s) ou data:image). O `user_id` sai do claim `sub` do JWT.
+ * do QR (URL). O `user_id` sai do claim `sub` do JWT (número).
  *
  * Como é endpoint interno da casa (não contrato de parceiro), base/caminho e
  * método padrão saem de env, para trocar sem tocar em código se a casa mudar.
@@ -26,7 +32,18 @@ import "server-only";
 const HOUSE_BASE = process.env.HOUSE_AUTH_BASE_URL ?? "https://bateu.bet.br";
 const DEPOSIT_PATH = process.env.HOUSE_DEPOSIT_PATH ?? "/api/wallet/add-credit";
 const DEFAULT_METHOD = process.env.HOUSE_DEPOSIT_METHOD ?? "efibank";
+// Ref do afiliado Timão e Pumba (atribuição do depósito). Ver bateubet-afiliado.
+const AFFILIATE_REF = process.env.HOUSE_AFFILIATE_REF ?? "537615";
 const DEFAULT_TIMEOUT_MS = 20_000;
+
+/** Host da casa sem protocolo — vai nos headers `tenant` e `origin-domain`. */
+function houseHost(): string {
+  try {
+    return new URL(HOUSE_BASE).host;
+  } catch {
+    return "bateu.bet.br";
+  }
+}
 
 /** Métodos de depósito ativos na casa (payments API: deposit[].slug). */
 export const HOUSE_DEPOSIT_METHODS = ["efibank", "paag", "triopay"] as const;
@@ -98,6 +115,10 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
     : DEFAULT_METHOD;
 
   const url = `${HOUSE_BASE.replace(/\/+$/, "")}${DEPOSIT_PATH}`;
+  const host = houseHost();
+  // Valor vai em CENTAVOS (R$ 10,00 → 1000). user_id como número.
+  const amountCents = Math.round(value * 100);
+  const userIdNum = Number(userId);
 
   let response: Response;
   try {
@@ -105,24 +126,32 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
       method: "POST",
       headers: {
         "content-type": "application/json",
-        accept: "application/json, text/plain, */*",
-        "accept-language": "pt-BR,pt;q=0.9",
-        // A casa autentica a carteira SÓ pelo header Authorization: Bearer —
-        // o cookie jwt_token é ignorado ("Token not provided"). Mandamos o
-        // cookie junto por inofensivo, mas o que vale é o Bearer.
-        cookie: `jwt_token=${input.token}`,
+        accept: "application/json",
+        // A casa autentica a carteira pelo header Authorization: Bearer. Além
+        // dele, `tenant` e `origin-domain` (= host da casa) identificam a casa
+        // e são o que destrava a validação ("Wrong auth validation" sem eles).
         authorization: `Bearer ${input.token}`,
+        cookie: `jwt_token=${input.token}`,
+        tenant: host,
+        "origin-domain": host,
+        // Contexto geo/locale que o site manda junto.
+        country: "BR",
+        country_alpha3: "BRA",
+        currency: "BRL",
+        jurisdiction: "BR",
+        lang: "pt-br",
+        language: "pt-br",
         origin: HOUSE_BASE,
         referer: `${HOUSE_BASE.replace(/\/+$/, "")}/`,
         "user-agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
       },
       body: JSON.stringify({
-        user_id: userId,
-        credit_amount: value,
+        user_id: Number.isFinite(userIdNum) ? userIdNum : userId,
+        credit_amount: amountCents,
         payment_method: method,
         currency: "BRL",
-        utm_source: input.utmSource ?? "",
+        utm_source: input.utmSource || AFFILIATE_REF,
         ga_client_id: input.gaClientId ?? "",
       }),
       signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
@@ -179,6 +208,8 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
     qrCodeImage,
     checkoutUrl: str(data.checkout_url),
     paymentLink: str(data.payment_link),
-    value: typeof data.value === "number" ? data.value : value,
+    // Sempre devolvemos em REAIS (o que o usuário pediu). data.value vem em
+    // centavos; não usamos para não mostrar R$ 1000 num depósito de R$ 10.
+    value,
   };
 }

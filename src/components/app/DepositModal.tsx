@@ -61,10 +61,10 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
       });
       const data = await resp.json().catch(() => null);
       if (!resp.ok || !data?.ok) {
-        // 401 = sessão da casa venceu/ausente. O token da Bateu expira e a
-        // sessão do app dura mais; a única forma de renovar é refazer o login.
-        // Desloga o app e manda pra tela de login (sem botão manual).
-        if (resp.status === 401) {
+        // Cookie da casa ausente (sessão venceu): a única forma de renovar o
+        // token da Bateu é refazer o login. Desloga e manda pra /entrar — só
+        // nesse caso, para não entrar em loop quando o erro é outro.
+        if (data?.error === "sessao_casa_ausente") {
           setError("Sua conexão com a Bateu expirou. Redirecionando para o login…");
           try {
             await createClient().auth.signOut();
