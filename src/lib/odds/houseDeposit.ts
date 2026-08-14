@@ -83,17 +83,31 @@ export type HouseDepositResult =
  * só precisamos do id, e o token já foi validado pela casa quando foi emitido.
  */
 function userIdFromToken(token: string): string | null {
+  const claims = tokenClaims(token);
+  const sub = claims?.sub;
+  if (typeof sub === "string" && sub) return sub;
+  if (typeof sub === "number") return String(sub);
+  return null;
+}
+
+/** Decodifica o payload do JWT (sem validar assinatura) para diagnóstico. */
+function tokenClaims(token: string): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   try {
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as Record<string, unknown>;
-    const sub = payload.sub;
-    if (typeof sub === "string" && sub) return sub;
-    if (typeof sub === "number") return String(sub);
-    return null;
+    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as Record<string, unknown>;
   } catch {
     return null;
   }
+}
+
+/** Resumo não-sensível das claims (ha/iss/sub/exp) para comparar contexto. */
+function tokenSummary(token: string): string {
+  const c = tokenClaims(token);
+  if (!c) return "nao-jwt";
+  const iss = typeof c.iss === "string" ? c.iss.replace(/^https?:\/\//, "").split("/")[0] : "?";
+  const exp = typeof c.exp === "number" ? new Date(c.exp * 1000).toISOString().slice(0, 16) : "?";
+  return `ha=${c.ha ?? "-"} iss=${iss} sub=${c.sub ?? "-"} exp=${exp}`;
 }
 
 export async function createHouseDeposit(input: HouseDepositInput): Promise<HouseDepositResult> {
@@ -182,7 +196,8 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
     return {
       ok: false,
       reason: "sessao_invalida",
-      detail: `casa HTTP ${response.status}${houseMsg ? `: ${houseMsg}` : ""}`,
+      // Inclui o resumo do NOSSO token para comparar contexto com o da casa.
+      detail: `casa HTTP ${response.status}${houseMsg ? `: ${houseMsg}` : ""} | token[${tokenSummary(input.token)}]`,
     };
   }
   if (!response.ok) {
