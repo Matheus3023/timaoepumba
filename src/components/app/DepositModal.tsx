@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Modal de depósito PIX — gera o PIX por DENTRO do app (igual ao JR Club),
@@ -38,7 +39,6 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
   const [method, setMethod] = useState<string>(METHODS[0].slug);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needsRelogin, setNeedsRelogin] = useState(false);
   const [result, setResult] = useState<DepositResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -53,7 +53,6 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
     }
     setLoading(true);
     setError(null);
-    setNeedsRelogin(false);
     try {
       const resp = await fetch("/api/house/deposit", {
         method: "POST",
@@ -62,14 +61,20 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
       });
       const data = await resp.json().catch(() => null);
       if (!resp.ok || !data?.ok) {
-        // 401 = sessão da casa venceu/ausente → precisa entrar de novo (o
-        // token da Bateu expira e o cadastro do app dura mais). Mostra botão.
+        // 401 = sessão da casa venceu/ausente. O token da Bateu expira e a
+        // sessão do app dura mais; a única forma de renovar é refazer o login.
+        // Desloga o app e manda pra tela de login (sem botão manual).
         if (resp.status === 401) {
-          setNeedsRelogin(true);
-          setError("Sua conexão com a Bateu expirou. Entre de novo para depositar.");
-        } else {
-          setError("Não foi possível gerar o PIX agora. Tente novamente em instantes.");
+          setError("Sua conexão com a Bateu expirou. Redirecionando para o login…");
+          try {
+            await createClient().auth.signOut();
+          } catch {
+            /* segue pro login mesmo se o signOut falhar */
+          }
+          window.location.href = "/entrar";
+          return;
         }
+        setError("Não foi possível gerar o PIX agora. Tente novamente em instantes.");
         return;
       }
       setResult({ brCode: data.brCode ?? null, qrCodeImage: data.qrCodeImage ?? null, value: data.value ?? value });
@@ -185,15 +190,7 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
 
             <p className="mb-3 text-xs text-text-muted">Valor mínimo: R$ {MIN_VALUE},00</p>
 
-            {error && <p className="mb-2 text-sm text-red-400">{error}</p>}
-            {needsRelogin && (
-              <a
-                href="/entrar"
-                className="mb-3 flex min-h-[48px] w-full items-center justify-center rounded-xl border border-primary/60 text-sm font-bold text-primary"
-              >
-                Entrar de novo na Bateu
-              </a>
-            )}
+            {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
             <button
               onClick={generate}
