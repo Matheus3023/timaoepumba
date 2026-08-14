@@ -81,12 +81,15 @@ export async function POST(request: NextRequest) {
   await trackServerEvent({ eventName: "HouseLoginSucceeded", userId, properties: { hasExternalId: Boolean(identity.externalId) } }).catch(() => {});
 
   const response = NextResponse.json({ ok: true });
+  // Vida do cookie = vida do JWT da Bateu (7 dias). Antes eram 12h, e como a
+  // sessão do app (Supabase) dura mais, o token da casa vencia primeiro e o
+  // usuário ficava "logado" mas sem token pra depositar (sessao_casa_ausente).
   response.cookies.set(HOUSE_TOKEN_COOKIE, auth.token, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 12,
+    maxAge: 60 * 60 * 24 * 7,
   });
   return response;
 }

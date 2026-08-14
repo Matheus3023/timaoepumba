@@ -38,6 +38,7 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
   const [method, setMethod] = useState<string>(METHODS[0].slug);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsRelogin, setNeedsRelogin] = useState(false);
   const [result, setResult] = useState<DepositResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -52,6 +53,7 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
     }
     setLoading(true);
     setError(null);
+    setNeedsRelogin(false);
     try {
       const resp = await fetch("/api/house/deposit", {
         method: "POST",
@@ -60,13 +62,13 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
       });
       const data = await resp.json().catch(() => null);
       if (!resp.ok || !data?.ok) {
-        // Diagnóstico temporário: mostra o motivo/detalhe real vindo da API,
-        // para depurar o primeiro depósito. (Trocar por texto amigável depois.)
-        const diag = [data?.error, data?.detail].filter(Boolean).join(" — ");
+        // 401 = sessão da casa venceu/ausente → precisa entrar de novo (o
+        // token da Bateu expira e o cadastro do app dura mais). Mostra botão.
         if (resp.status === 401) {
-          setError(`Sessão da casa recusada${diag ? `: ${diag}` : ". Saia e entre de novo."}`);
+          setNeedsRelogin(true);
+          setError("Sua conexão com a Bateu expirou. Entre de novo para depositar.");
         } else {
-          setError(`Não foi possível gerar o PIX${diag ? `: ${diag}` : ". Tente novamente."}`);
+          setError("Não foi possível gerar o PIX agora. Tente novamente em instantes.");
         }
         return;
       }
@@ -183,7 +185,15 @@ export function DepositModal({ onClose }: { onClose: () => void }) {
 
             <p className="mb-3 text-xs text-text-muted">Valor mínimo: R$ {MIN_VALUE},00</p>
 
-            {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+            {error && <p className="mb-2 text-sm text-red-400">{error}</p>}
+            {needsRelogin && (
+              <a
+                href="/entrar"
+                className="mb-3 flex min-h-[48px] w-full items-center justify-center rounded-xl border border-primary/60 text-sm font-bold text-primary"
+              >
+                Entrar de novo na Bateu
+              </a>
+            )}
 
             <button
               onClick={generate}
