@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { authenticateWithHouse } from "@/lib/odds/houseAuth";
-import { HOUSE_TOKEN_COOKIE } from "@/lib/odds/houseSession";
+import { HOUSE_TOKEN_COOKIE, HOUSE_SESSION_COOKIE } from "@/lib/odds/houseSession";
 import { extractHouseIdentity, provisionAppUser } from "@/lib/odds/houseProvision";
 import { LEAD_ID_COOKIE } from "@/lib/tracking/leadId";
 import { promoteAccessLevel } from "@/lib/entitlements/rules";
@@ -91,5 +91,15 @@ export async function POST(request: NextRequest) {
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
+  // Sessão da casa (bet7k_session) — a carteira valida contra ela no depósito.
+  if (auth.sessionCookie) {
+    response.cookies.set(HOUSE_SESSION_COOKIE, auth.sessionCookie, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  }
   return response;
 }

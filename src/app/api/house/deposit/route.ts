@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { HOUSE_TOKEN_COOKIE } from "@/lib/odds/houseSession";
+import { HOUSE_TOKEN_COOKIE, HOUSE_SESSION_COOKIE } from "@/lib/odds/houseSession";
 import { createHouseDeposit } from "@/lib/odds/houseDeposit";
 import { trackServerEvent } from "@/lib/tracking/events";
 
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
   if (!token) {
     return NextResponse.json({ error: "sessao_casa_ausente" }, { status: 401 });
   }
+  const sessionCookie = request.cookies.get(HOUSE_SESSION_COOKIE)?.value ?? null;
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
 
   const result = await createHouseDeposit({
     token,
+    sessionCookie,
     value: parsed.data.value,
     method: parsed.data.method,
     utmSource,

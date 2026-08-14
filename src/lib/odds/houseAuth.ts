@@ -23,7 +23,14 @@ const AUTH_PATH = process.env.HOUSE_AUTH_PATH ?? "/api/auth/login";
 const DEFAULT_TIMEOUT_MS = 12_000;
 
 export type HouseAuthResult =
-  | { ok: true; token: string; raw: Record<string, unknown> | null }
+  | {
+      ok: true;
+      token: string;
+      /** Cookie de sessão (bet7k_session) que o login seta; a carteira valida
+       *  contra ele. Guardamos e reenviamos junto do Bearer no depósito. */
+      sessionCookie: string | null;
+      raw: Record<string, unknown> | null;
+    }
   | { ok: false; reason: "credenciais" | "indisponivel" | "sem_token" };
 
 /**
@@ -71,16 +78,44 @@ export async function authenticateWithHouse(
     return { ok: false, reason: "indisponivel" };
   }
 
+  // A casa entrega o token da carteira no cookie `jwt_token` (Set-Cookie), não
+  // (só) no corpo. É esse valor que o site usa como Bearer; o token do corpo é
+  // rejeitado pela carteira ("Wrong auth validation"). Preferimos o do cookie.
+  const setCookies = readSetCookies(response);
+  const cookieToken = cookieValue(setCookies, "jwt_token");
+  const sessionCookie = cookieValue(setCookies, "bet7k_session");
+
   const data = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-  const token = extractToken(data);
+  const token = cookieToken ?? extractToken(data);
   if (!token) {
     // Autenticou mas não achamos o token no formato esperado — tratamos como
     // indisponível em vez de "credencial", para não culpar o usuário por um
     // descasamento nosso com o formato da casa.
-    console.error("[house-auth] resposta sem token reconhecível", data ? Object.keys(data) : null);
+    console.error("[house-auth] resposta sem token reconhecível", {
+      setCookieNames: setCookies.map((c) => c.split("=")[0]),
+      bodyKeys: data ? Object.keys(data) : null,
+    });
     return { ok: false, reason: "sem_token" };
   }
-  return { ok: true, token, raw: data };
+  console.log(`[house-auth] token via ${cookieToken ? "cookie jwt_token" : "corpo"}; sessao=${sessionCookie ? "sim" : "nao"}`);
+  return { ok: true, token, sessionCookie, raw: data };
+}
+
+/** Lê os headers Set-Cookie da resposta (undici expõe getSetCookie). */
+function readSetCookies(response: Response): string[] {
+  const h = response.headers as Headers & { getSetCookie?: () => string[] };
+  if (typeof h.getSetCookie === "function") return h.getSetCookie();
+  const single = response.headers.get("set-cookie");
+  return single ? [single] : [];
+}
+
+/** Extrai o valor de um cookie pelo nome, a partir dos Set-Cookie. */
+function cookieValue(setCookies: string[], name: string): string | null {
+  for (const c of setCookies) {
+    const m = c.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`));
+    if (m) return decodeURIComponent(m[1]);
+  }
+  return null;
 }
 
 /**

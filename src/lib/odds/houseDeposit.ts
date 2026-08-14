@@ -50,8 +50,10 @@ export const HOUSE_DEPOSIT_METHODS = ["efibank", "paag", "triopay"] as const;
 export type HouseDepositMethod = (typeof HOUSE_DEPOSIT_METHODS)[number];
 
 export interface HouseDepositInput {
-  /** Token de sessão da casa (cookie tp_house_token). */
+  /** Token de sessão da casa (cookie tp_house_token / jwt_token). */
   token: string;
+  /** Cookie de sessão da casa (bet7k_session), reenviado junto do Bearer. */
+  sessionCookie?: string | null;
   /** Valor em reais. Mínimo R$ 10,00. */
   value: number;
   method?: string;
@@ -145,7 +147,10 @@ export async function createHouseDeposit(input: HouseDepositInput): Promise<Hous
         // dele, `tenant` e `origin-domain` (= host da casa) identificam a casa
         // e são o que destrava a validação ("Wrong auth validation" sem eles).
         authorization: `Bearer ${input.token}`,
-        cookie: `jwt_token=${input.token}`,
+        // jwt_token + a sessão do login (bet7k_session), exatamente como o site.
+        cookie: [`jwt_token=${input.token}`, input.sessionCookie ? `bet7k_session=${input.sessionCookie}` : ""]
+          .filter(Boolean)
+          .join("; "),
         tenant: host,
         "origin-domain": host,
         // Contexto geo/locale que o site manda junto.
